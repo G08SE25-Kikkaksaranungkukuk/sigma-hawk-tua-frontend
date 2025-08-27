@@ -11,6 +11,8 @@ interface ProfileSetupScreenProps {
   onContinue: () => void;
 }
 
+
+
 export default function ProfileSetupScreen({ userName, onContinue }: ProfileSetupScreenProps) {
   return (
     <div className="min-h-screen bg-black p-4 bg-floating-shapes">
