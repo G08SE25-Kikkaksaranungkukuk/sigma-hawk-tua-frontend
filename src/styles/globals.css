@@ -1,0 +1,448 @@
+@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --font-size: 14px;
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #1a1a1a;
+  --card-foreground: #ffffff;
+  --popover: #1a1a1a;
+  --popover-foreground: #ffffff;
+  --primary: #ff6600;
+  --primary-foreground: #000000;
+  --secondary: #2a2a2a;
+  --secondary-foreground: #ffffff;
+  --muted: #2a2a2a;
+  --muted-foreground: #a1a1aa;
+  --accent: #ff6600;
+  --accent-foreground: #000000;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: rgba(255, 102, 0, 0.2);
+  --input: transparent;
+  --input-background: #1a1a1a;
+  --switch-background: #2a2a2a;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --ring: #ff6600;
+  --chart-1: #ff6600;
+  --chart-2: #ff8533;
+  --chart-3: #ff9966;
+  --chart-4: #ffb399;
+  --chart-5: #ffccb3;
+  --radius: 0.625rem;
+  --sidebar: #1a1a1a;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ff6600;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #2a2a2a;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #2a2a2a;
+  --sidebar-ring: #ff6600;
+  
+  /* Orange and Black theme colors */
+  --travel-primary: #ff6600;
+  --travel-primary-light: #ff8533;
+  --travel-primary-dark: #e55a00;
+  --travel-secondary: #000000;
+  --travel-secondary-light: #1a1a1a;
+  --travel-accent: #ff6600;
+  --travel-accent-secondary: #2a2a2a;
+  --travel-accent-orange: #ff8533;
+  --travel-accent-dark: #333333;
+  --travel-accent-light: #ff9966;
+  --travel-success: #22c55e;
+  --travel-success-light: #4ade80;
+  --travel-warning: #ff6600;
+  --travel-warning-light: #ff8533;
+  --travel-danger: #ef4444;
+  --travel-danger-light: #f87171;
+  
+  /* Orange/Black gradient colors */
+  --gradient-primary: linear-gradient(135deg, #ff6600 0%, #000000 100%);
+  --gradient-secondary: linear-gradient(135deg, #ff8533 0%, #1a1a1a 100%);
+  --gradient-sunset: linear-gradient(135deg, #ff6600 0%, #ff8533 50%, #ff9966 100%);
+  --gradient-ocean: linear-gradient(135deg, #000000 0%, #ff6600 100%);
+  --gradient-forest: linear-gradient(135deg, #1a1a1a 0%, #ff6600 100%);
+  --gradient-playful: linear-gradient(135deg, #ff6600 0%, #000000 50%, #ff8533 100%);
+  --gradient-orange: linear-gradient(135deg, #ff9966 0%, #ff6600 50%, #e55a00 100%);
+  --gradient-dark: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #2a2a2a 100%);
+}
+
+.dark {
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #1a1a1a;
+  --card-foreground: #ffffff;
+  --popover: #1a1a1a;
+  --popover-foreground: #ffffff;
+  --primary: #ff6600;
+  --primary-foreground: #000000;
+  --secondary: #2a2a2a;
+  --secondary-foreground: #ffffff;
+  --muted: #2a2a2a;
+  --muted-foreground: #a1a1aa;
+  --accent: #ff6600;
+  --accent-foreground: #000000;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: rgba(255, 102, 0, 0.2);
+  --input: #1a1a1a;
+  --ring: #ff6600;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --chart-1: #ff6600;
+  --chart-2: #ff8533;
+  --chart-3: #ff9966;
+  --chart-4: #ffb399;
+  --chart-5: #ffccb3;
+  --sidebar: #1a1a1a;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ff6600;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #2a2a2a;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #2a2a2a;
+  --sidebar-ring: #ff6600;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  
+  /* Travel app colors */
+  --color-travel-primary: var(--travel-primary);
+  --color-travel-primary-light: var(--travel-primary-light);
+  --color-travel-primary-dark: var(--travel-primary-dark);
+  --color-travel-secondary: var(--travel-secondary);
+  --color-travel-secondary-light: var(--travel-secondary-light);
+  --color-travel-accent: var(--travel-accent);
+  --color-travel-accent-secondary: var(--travel-accent-secondary);
+  --color-travel-accent-orange: var(--travel-accent-orange);
+  --color-travel-accent-dark: var(--travel-accent-dark);
+  --color-travel-accent-light: var(--travel-accent-light);
+  --color-travel-success: var(--travel-success);
+  --color-travel-success-light: var(--travel-success-light);
+  --color-travel-warning: var(--travel-warning);
+  --color-travel-warning-light: var(--travel-warning-light);
+  --color-travel-danger: var(--travel-danger);
+  --color-travel-danger-light: var(--travel-danger-light);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Kanit', sans-serif;
+  }
+}
+
+/**
+ * Base typography. This is not applied to elements which have an ancestor with a Tailwind text class.
+ */
+@layer base {
+  :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) {
+    h1 {
+      font-size: var(--text-2xl);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    h2 {
+      font-size: var(--text-xl);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    h3 {
+      font-size: var(--text-lg);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    h4 {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    p {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-normal);
+      line-height: 1.5;
+    }
+
+    label {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    button {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    input {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-normal);
+      line-height: 1.5;
+    }
+  }
+}
+
+html {
+  font-size: var(--font-size);
+}
+
+/* Enhanced travel app styles with orange/black theme */
+@layer utilities {
+  .travel-primary {
+    background-color: var(--travel-primary);
+  }
+  
+  .travel-primary-light {
+    background-color: var(--travel-primary-light);
+  }
+  
+  .travel-accent {
+    background-color: var(--travel-accent);
+  }
+  
+  .travel-accent-secondary {
+    background-color: var(--travel-accent-secondary);
+  }
+  
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+  
+  .gradient-secondary {
+    background: var(--gradient-secondary);
+  }
+  
+  .gradient-sunset {
+    background: var(--gradient-sunset);
+  }
+  
+  .gradient-ocean {
+    background: var(--gradient-ocean);
+  }
+  
+  .gradient-forest {
+    background: var(--gradient-forest);
+  }
+  
+  .gradient-playful {
+    background: var(--gradient-playful);
+  }
+  
+  .gradient-orange {
+    background: var(--gradient-orange);
+  }
+  
+  .gradient-dark {
+    background: var(--gradient-dark);
+  }
+  
+  /* Floating animations */
+  .float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .float-delayed {
+    animation: float 6s ease-in-out infinite;
+    animation-delay: -2s;
+  }
+  
+  .float-delayed-2 {
+    animation: float 6s ease-in-out infinite;
+    animation-delay: -4s;
+  }
+  
+  /* Pulse animations */
+  .pulse-soft {
+    animation: pulse-soft 4s ease-in-out infinite;
+  }
+  
+  /* Bounce entrance */
+  .bounce-in {
+    animation: bounce-in 0.6s ease-out;
+  }
+  
+  /* Slide up animation */
+  .slide-up {
+    animation: slide-up 0.5s ease-out;
+  }
+  
+  /* Button hover effects */
+  .btn-hover-lift {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .btn-hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(255, 102, 0, 0.3);
+  }
+  
+  /* Card hover effects */
+  .card-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(255, 102, 0, 0.2);
+  }
+  
+  /* Chip animations */
+  .chip-bounce {
+    transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+  
+  .chip-bounce:hover {
+    transform: scale(1.05);
+  }
+  
+  .chip-bounce:active {
+    transform: scale(0.95);
+  }
+  
+  /* Orange glow effect */
+  .orange-glow {
+    box-shadow: 0 0 20px rgba(255, 102, 0, 0.5);
+  }
+  
+  .orange-glow:hover {
+    box-shadow: 0 0 30px rgba(255, 102, 0, 0.7);
+  }
+}
+
+/* Keyframe animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Background decorations with orange/black theme */
+.bg-floating-shapes::before,
+.bg-floating-shapes::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.1;
+  z-index: -1;
+}
+
+.bg-floating-shapes::before {
+  width: 200px;
+  height: 200px;
+  background: var(--travel-primary);
+  top: 10%;
+  right: 10%;
+  animation: float 8s ease-in-out infinite;
+}
+
+.bg-floating-shapes::after {
+  width: 150px;
+  height: 150px;
+  background: var(--travel-primary-light);
+  bottom: 15%;
+  left: 15%;
+  animation: float 6s ease-in-out infinite reverse;
+}
+
+/* Orange accent borders */
+.border-orange {
+  border-color: var(--travel-primary);
+}
+
+.border-orange-light {
+  border-color: var(--travel-primary-light);
+}
