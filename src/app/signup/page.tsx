@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signUpSchema, type SignUpFormData } from "../../components/schemas";
@@ -7,8 +8,16 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Checkbox } from "../../components/ui/checkbox";
+// aca
+import { Calendar } from "../../components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { ArrowLeft, Loader2, Sparkles, Users, MapPin } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles, Users, MapPin, ChevronDownIcon } from "lucide-react";
 
 interface SignUpScreenProps {
   onBack: () => void;
@@ -32,6 +41,10 @@ const travelStyles = [
 ];
 
 export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
+
+  const [open, setOpen] = React.useState(false);
+  const [date, setDate] = React.useState<Date | undefined>(undefined);
+
   const [isLoading, setIsLoading] = useState(false);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [selectedTravelStyles, setSelectedTravelStyles] = useState<string[]>([]);
@@ -65,7 +78,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
     const newInterests = selectedInterests.includes(interestId)
       ? selectedInterests.filter(id => id !== interestId)
       : [...selectedInterests, interestId];
-    
+
     setSelectedInterests(newInterests);
     setValue("interests", newInterests, { shouldValidate: true });
   };
@@ -74,7 +87,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
     const newStyles = selectedTravelStyles.includes(styleId)
       ? selectedTravelStyles.filter(id => id !== styleId)
       : [...selectedTravelStyles, styleId];
-    
+
     setSelectedTravelStyles(newStyles);
     setValue("travelStyle", newStyles, { shouldValidate: true });
   };
@@ -94,37 +107,67 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
       <div className="max-w-md mx-auto relative z-10">
         {/* Header */}
         <div className="flex items-center mb-6 pt-4 slide-up">
-        <a href="/">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onBack}
-            className="mr-2 p-2 hover:bg-orange-500/10 rounded-full text-orange-400"
-          >
-            
-                <ArrowLeft className="w-5 h-5" />
-            
-            
-          </Button>
-        </a>
+          <a href="/">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              className="mr-2 p-2 hover:bg-orange-500/10 rounded-full text-orange-400"
+            >
+
+              <ArrowLeft className="w-5 h-5" />
+
+
+            </Button>
+          </a>
           <h1 className="text-xl font-semibold text-white">Create Account</h1>
         </div>
 
         <Card className="card-hover shadow-2xl border border-orange-500/20 bg-gray-900/80 backdrop-blur-sm bounce-in">
           <CardHeader className="text-center bg-gradient-to-r from-orange-500 to-orange-600 text-black rounded-t-lg">
-            <CardTitle className="text-2xl font-bold">Join TravelMatch! ✨</CardTitle>
-            <p className="text-black/80">Start your adventure today</p>
+            <CardTitle className="text-2xl font-bold ">Join TravelMatch!</CardTitle>
+            <p className="text-black/80 text-center pb-2">Start your adventure today</p>
           </CardHeader>
           <CardContent className="p-6">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              {/* Name */}
+              {/* First Name */}
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-orange-300 font-semibold">👤 Name</Label>
+                <Label htmlFor="name" className="text-orange-300 font-semibold">👤 First Name</Label>
+                <Input
+                  id="name"
+
+                  className="h-12 border-2 border-orange-500/30 focus:border-orange-500 rounded-xl bg-gray-800/50 text-white placeholder:text-gray-400"
+                  placeholder="Enter your first Name"
+                />
+                {errors.name && (
+                  <p className="text-sm text-red-400 flex items-center gap-1">
+                    ⚠️ {errors.name.message}
+                  </p>
+                )}
+              </div>
+              {/* Last Name */}
+              <div className="space-y-2">
+                <Label htmlFor="lastName" className="text-orange-300 font-semibold">👥 Last Name</Label>
                 <Input
                   id="name"
                   {...register("name")}
                   className="h-12 border-2 border-orange-500/30 focus:border-orange-500 rounded-xl bg-gray-800/50 text-white placeholder:text-gray-400"
-                  placeholder="Enter your full name"
+                  placeholder="Enter your last Name"
+                />
+                {errors.name && (
+                  <p className="text-sm text-red-400 flex items-center gap-1">
+                    ⚠️ {errors.name.message}
+                  </p>
+                )}
+              </div>
+              {/* Middle Name */}
+              <div className="space-y-2">
+                <Label htmlFor="middleName" className="text-orange-300 font-semibold">🎟 Middle name (optional)</Label>
+                <Input
+                  id="name"
+                  {...register("name")}
+                  className="h-12 border-2 border-orange-500/30 focus:border-orange-500 rounded-xl bg-gray-800/50 text-white placeholder:text-gray-400"
+                  placeholder="Enter your middle name"
                 />
                 {errors.name && (
                   <p className="text-sm text-red-400 flex items-center gap-1">
@@ -133,23 +176,33 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                 )}
               </div>
 
-              {/* Age */}
+              {/* Birth Date */}
               <div className="space-y-2">
-                <Label htmlFor="age" className="text-orange-300 font-semibold">🎂 Age</Label>
-                <Input
-                  id="age"
-                  type="number"
-                  {...register("age", { valueAsNumber: true })}
-                  className="h-12 border-2 border-orange-500/30 focus:border-orange-500 rounded-xl bg-gray-800/50 text-white placeholder:text-gray-400"
-                  placeholder="Enter your age"
-                  min="18"
-                  max="100"
-                />
-                {errors.age && (
-                  <p className="text-sm text-red-400 flex items-center gap-1">
-                    ⚠️ {errors.age.message}
-                  </p>
-                )}
+                <Label htmlFor="age" className="text-orange-300 font-semibold">🎂 Birth Date</Label>
+                <Popover open={open} onOpenChange={setOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      id="date"
+                      className="h-12 justify-between w-full border-2 border-orange-500/30 focus:border-orange-500 rounded-xl bg-gray-800/50 text-gray-400 placeholder:text-gray-400 opacity-100"
+                    >
+                      {date ? date.toLocaleDateString() : "Select date"}
+                      <ChevronDownIcon />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={date}
+                      captionLayout="dropdown"
+                      onSelect={(date) => {
+                        setDate(date)
+                        setOpen(false)
+                      }}
+                      
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
 
               {/* Gender */}
@@ -165,11 +218,10 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                       key={gender.value}
                       type="button"
                       onClick={() => setValue("gender", gender.value as any, { shouldValidate: true })}
-                      className={`flex-1 px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all chip-bounce ${
-                        watchGender === gender.value
+                      className={`flex-1 px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all chip-bounce ${watchGender === gender.value
                           ? `bg-gradient-to-r ${gender.color} text-black border-transparent shadow-lg orange-glow`
                           : "bg-gray-800/50 text-orange-300 border-orange-500/30 hover:border-orange-500 hover:bg-orange-500/10"
-                      }`}
+                        }`}
                     >
                       {gender.label}
                     </button>
@@ -191,11 +243,10 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                       key={interest.id}
                       type="button"
                       onClick={() => toggleInterest(interest.id)}
-                      className={`px-3 py-2 rounded-full border-2 text-sm font-medium transition-all chip-bounce ${
-                        selectedInterests.includes(interest.id)
+                      className={`px-3 py-2 rounded-full border-2 text-sm font-medium transition-all chip-bounce ${selectedInterests.includes(interest.id)
                           ? `${interest.color} shadow-md scale-105 orange-glow`
                           : "bg-gray-800/50 text-orange-300 border-orange-500/30 hover:border-orange-500"
-                      }`}
+                        }`}
                     >
                       {interest.label}
                     </button>
@@ -308,7 +359,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                   className="mt-1 border-2 border-orange-500/50"
                 />
                 <Label htmlFor="consent" className="text-sm leading-relaxed text-orange-200">
-                  ✅ I agree to the <span className="text-orange-400 font-semibold">Terms of Service</span> and <span className="text-orange-400 font-semibold">Privacy Policy</span> (PDPA)
+                  I agree <span className="text-orange-400 font-semibold">Terms of Service</span> and <span className="text-orange-400 font-semibold">Privacy Policy</span> (PDPA)
                 </Label>
               </div>
               {errors.consent && (

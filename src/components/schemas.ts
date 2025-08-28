@@ -3,8 +3,8 @@ import { z } from "zod";
 export const signUpSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").max(50, "Name must be less than 50 characters"),
   age: z.number().min(18, "Must be at least 18 years old").max(100, "Age must be realistic"),
-  gender: z.enum(["male", "female", "other"], {
-    required_error: "Please select a gender",
+  gender: z.string().refine((val) => ["male", "female", "other"].includes(val), {
+    message: "Please select a gender",
   }),
   interests: z.array(z.string()).min(1, "Please select at least one interest"),
   travelStyle: z.array(z.string()).min(1, "Please select at least one travel style"),

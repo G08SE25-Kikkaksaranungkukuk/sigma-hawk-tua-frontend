@@ -9,6 +9,9 @@ import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { ArrowLeft, Loader2, Lock, Mail, Heart, Sparkles } from "lucide-react";
+import "aos/dist/aos.css";
+import { useEffect } from "react";
+import AOS from "aos";
 
 interface LoginScreenProps {
   onBack: () => void;
@@ -16,9 +19,13 @@ interface LoginScreenProps {
   onForgotPassword: () => void;
 }
 
-export function LoginScreen({ onBack, onLogin, onForgotPassword }: LoginScreenProps) {
-  const [isLoading, setIsLoading] = useState(false);
 
+
+export default function LoginScreen({ onBack, onLogin, onForgotPassword }: LoginScreenProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  useEffect(() => {
+    AOS.init(); // เริ่มต้นการทำงานของ AOS
+  }, []);
   const {
     register,
     handleSubmit,
@@ -35,8 +42,10 @@ export function LoginScreen({ onBack, onLogin, onForgotPassword }: LoginScreenPr
     onLogin(data);
   };
 
+  
+
   return (
-    <div className="min-h-screen bg-black p-4 bg-floating-shapes">
+    <div className="min-h-screen bg-black p-4 bg-floating-shapes" >
       {/* Floating decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-20 left-10 w-14 h-14 bg-orange-500/20 rounded-full float"></div>
@@ -47,7 +56,7 @@ export function LoginScreen({ onBack, onLogin, onForgotPassword }: LoginScreenPr
         <Lock className="absolute top-1/2 right-10 text-orange-300/30 w-4 h-4 float-delayed-2" />
       </div>
 
-      <div className="max-w-md mx-auto relative z-10">
+      <div className="max-w-md mx-auto relative z-10" data-aos="zoom-in-up">
         {/* Header */}
         <div className="flex items-center mb-6 pt-4 slide-up">
           <Button
@@ -56,7 +65,7 @@ export function LoginScreen({ onBack, onLogin, onForgotPassword }: LoginScreenPr
             onClick={onBack}
             className="mr-2 p-2 hover:bg-orange-500/10 rounded-full text-orange-400"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <a href="/"><ArrowLeft className="w-5 h-5" /></a>
           </Button>
           <h1 className="text-xl font-semibold text-white">Welcome Back</h1>
         </div>
@@ -67,7 +76,7 @@ export function LoginScreen({ onBack, onLogin, onForgotPassword }: LoginScreenPr
               <Heart className="w-8 h-8 text-black" />
             </div>
             <CardTitle className="text-2xl font-bold">Welcome Back! 👋</CardTitle>
-            <p className="text-black/80">Ready for your next adventure?</p>
+            <p className="text-black/80 pb-4">Ready for your next adventure?</p>
           </CardHeader>
           <CardContent className="p-6">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -175,16 +184,16 @@ export function LoginScreen({ onBack, onLogin, onForgotPassword }: LoginScreenPr
 
 
 
-export default function LoginPage() {
-  const router = useRouter();
+// export default function LoginPage() {
+//   const router = useRouter();
 
-  return (
-    <LoginScreen
-      onBack={() => router.back()}
-      onLogin={(data) => {
-        router.push("/");
-      }}
-      onForgotPassword={() => router.push("/forgot-password")}
-    />
-  );
-}
+//   return (
+//     <LoginScreen
+//       onBack={() => router.back()}
+//       onLogin={(data) => {
+//         router.push("/");
+//       }}
+//       onForgotPassword={() => router.push("/forgot-password")}
+//     />
+//   );
+// }

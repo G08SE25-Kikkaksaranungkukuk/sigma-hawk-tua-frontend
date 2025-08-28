@@ -79,9 +79,9 @@ export default function WelcomeScreen({ onGetStarted, onLogin }: WelcomeScreenPr
             <Button 
               onClick={onLogin}
               variant="outline"
-              className="w-full h-14 border-2 border-orange-500/50 text-orange-400 hover:bg-orange-500/10 text-lg rounded-2xl backdrop-blur-sm btn-hover-lift"
+              className="w-full h-14 border-2 border-orange-500/50 text-orange-500 bg-black hover:bg-orange-500/10 hover:text-white text-lg rounded-2xl backdrop-blur-sm btn-hover-lift"
             >
-              ✨ Welcome Back
+              <a href="/login">✨ Welcome Back</a>
             </Button>
           </div>
 
