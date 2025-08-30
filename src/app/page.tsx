@@ -99,4 +99,3 @@ export default function WelcomeScreen({ onGetStarted, onLogin }: WelcomeScreenPr
     </div>
   );
 }
-

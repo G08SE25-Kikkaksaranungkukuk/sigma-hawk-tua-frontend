@@ -24,3 +24,28 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Add these custom styles */
+.bg-navy-900 {
+  background-color: #000033;
+}
+
+.bg-navy-800 {
+  background-color: #000044;
+}
+
+/* Optional animation for the popup */
+@keyframes slideIn {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.card {
+  animation: slideIn 0.3s ease-out;
+}
