@@ -310,7 +310,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                   onCheckedChange={(checked) => setValue("consent", !!checked, { shouldValidate: true })}
                   className="mt-1 border-2 border-orange-500/50"
                 />
-                <Label htmlFor="consent" className="text-sm leading-relaxed text-orange-200">
+                <div className="text-sm leading-relaxed text-orange-200">
                   ✅ I agree to the{" "}
                   <span
                     className="text-orange-400 font-semibold cursor-pointer underline"
@@ -326,7 +326,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                     Privacy Policy
                   </span>{" "}
                   (PDPA)
-                </Label>
+                </div>
               </div>
               {errors.consent && (
                 <p className="text-sm text-red-400 flex items-center gap-1">
