@@ -98,6 +98,8 @@ export default function WelcomeScreen({ onGetStarted, onLogin }: WelcomeScreenPr
               Connect • Explore • Create memories together
             </p>
           </div>
+
+          {/* Placeholder button for testing TravelInviteModal */}
           {/* Invite button */}
           <Button 
             onClick={() => setIsInviteModalOpen(true)}
