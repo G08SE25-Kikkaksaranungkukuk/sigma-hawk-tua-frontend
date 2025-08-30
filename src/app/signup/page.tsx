@@ -65,7 +65,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
     const newInterests = selectedInterests.includes(interestId)
       ? selectedInterests.filter(id => id !== interestId)
       : [...selectedInterests, interestId];
-    
+
     setSelectedInterests(newInterests);
     setValue("interests", newInterests, { shouldValidate: true });
   };
@@ -74,7 +74,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
     const newStyles = selectedTravelStyles.includes(styleId)
       ? selectedTravelStyles.filter(id => id !== styleId)
       : [...selectedTravelStyles, styleId];
-    
+
     setSelectedTravelStyles(newStyles);
     setValue("travelStyle", newStyles, { shouldValidate: true });
   };
@@ -94,19 +94,19 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
       <div className="max-w-md mx-auto relative z-10">
         {/* Header */}
         <div className="flex items-center mb-6 pt-4 slide-up">
-        <a href="/">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onBack}
-            className="mr-2 p-2 hover:bg-orange-500/10 rounded-full text-orange-400"
-          >
-            
-                <ArrowLeft className="w-5 h-5" />
-            
-            
-          </Button>
-        </a>
+          <a href="/">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              className="mr-2 p-2 hover:bg-orange-500/10 rounded-full text-orange-400"
+            >
+
+              <ArrowLeft className="w-5 h-5" />
+
+
+            </Button>
+          </a>
           <h1 className="text-xl font-semibold text-white">Create Account</h1>
         </div>
 
@@ -165,11 +165,10 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                       key={gender.value}
                       type="button"
                       onClick={() => setValue("gender", gender.value as any, { shouldValidate: true })}
-                      className={`flex-1 px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all chip-bounce ${
-                        watchGender === gender.value
+                      className={`flex-1 px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all chip-bounce ${watchGender === gender.value
                           ? `bg-gradient-to-r ${gender.color} text-black border-transparent shadow-lg orange-glow`
                           : "bg-gray-800/50 text-orange-300 border-orange-500/30 hover:border-orange-500 hover:bg-orange-500/10"
-                      }`}
+                        }`}
                     >
                       {gender.label}
                     </button>
@@ -191,11 +190,10 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                       key={interest.id}
                       type="button"
                       onClick={() => toggleInterest(interest.id)}
-                      className={`px-3 py-2 rounded-full border-2 text-sm font-medium transition-all chip-bounce ${
-                        selectedInterests.includes(interest.id)
+                      className={`px-3 py-2 rounded-full border-2 text-sm font-medium transition-all chip-bounce ${selectedInterests.includes(interest.id)
                           ? `${interest.color} shadow-md scale-105 orange-glow`
                           : "bg-gray-800/50 text-orange-300 border-orange-500/30 hover:border-orange-500"
-                      }`}
+                        }`}
                     >
                       {interest.label}
                     </button>
@@ -304,7 +302,8 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
               <div className="flex items-start space-x-3 bg-orange-500/10 p-4 rounded-xl border border-orange-500/30">
                 <Checkbox
                   id="consent"
-                  {...register("consent")}
+                  checked={watch("consent")}
+                  onCheckedChange={(checked) => setValue("consent", !!checked, { shouldValidate: true })}
                   className="mt-1 border-2 border-orange-500/50"
                 />
                 <Label htmlFor="consent" className="text-sm leading-relaxed text-orange-200">
