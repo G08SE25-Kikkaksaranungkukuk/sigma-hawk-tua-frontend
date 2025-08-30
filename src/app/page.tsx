@@ -1,6 +1,8 @@
 "use client";
+import { useState } from "react";
 import { Plane, Heart, Map, Camera, Globe, Users } from "lucide-react";
 import { Button } from "../components/ui/button";
+import TravelInviteModal from "../components/TravelInviteModal";
 
 interface WelcomeScreenProps {
   onGetStarted: () => void;
@@ -8,7 +10,9 @@ interface WelcomeScreenProps {
 }
 
 export default function WelcomeScreen({ onGetStarted, onLogin }: WelcomeScreenProps) {
-  return (
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+
+  return (    
     <div className="min-h-screen bg-black relative overflow-hidden bg-floating-shapes">
       {/* Floating decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
@@ -94,6 +98,19 @@ export default function WelcomeScreen({ onGetStarted, onLogin }: WelcomeScreenPr
               Connect • Explore • Create memories together
             </p>
           </div>
+          {/* Invite button */}
+          <Button 
+            onClick={() => setIsInviteModalOpen(true)}
+            className="bg-orange-500 hover:bg-orange-600 text-black font-semibold px-6 py-2 rounded-full"
+          >
+            Invite Travelers
+          </Button>
+
+          {/* Travel Invite Modal */}
+          <TravelInviteModal 
+            isOpen={isInviteModalOpen}
+            onClose={() => setIsInviteModalOpen(false)}
+          />
         </div>
       </div>
     </div>
