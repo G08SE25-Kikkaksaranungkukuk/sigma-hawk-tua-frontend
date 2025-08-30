@@ -8,7 +8,9 @@ import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Checkbox } from "../../components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { ArrowLeft, Loader2, Sparkles, Users, MapPin } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles, Users, MapPin, X } from "lucide-react"; // Add X import for close icon
+import { termsOfService } from "./termsOfService"; // Import terms of service text
+import { privacyPolicy  } from "./privacyPolicy"; // Import privacy policy text
 
 interface SignUpScreenProps {
   onBack: () => void;
@@ -35,6 +37,8 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [selectedTravelStyles, setSelectedTravelStyles] = useState<string[]>([]);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
   const {
     register,
@@ -166,8 +170,8 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                       type="button"
                       onClick={() => setValue("gender", gender.value as any, { shouldValidate: true })}
                       className={`flex-1 px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all chip-bounce ${watchGender === gender.value
-                          ? `bg-gradient-to-r ${gender.color} text-black border-transparent shadow-lg orange-glow`
-                          : "bg-gray-800/50 text-orange-300 border-orange-500/30 hover:border-orange-500 hover:bg-orange-500/10"
+                        ? `bg-gradient-to-r ${gender.color} text-black border-transparent shadow-lg orange-glow`
+                        : "bg-gray-800/50 text-orange-300 border-orange-500/30 hover:border-orange-500 hover:bg-orange-500/10"
                         }`}
                     >
                       {gender.label}
@@ -191,8 +195,8 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                       type="button"
                       onClick={() => toggleInterest(interest.id)}
                       className={`px-3 py-2 rounded-full border-2 text-sm font-medium transition-all chip-bounce ${selectedInterests.includes(interest.id)
-                          ? `${interest.color} shadow-md scale-105 orange-glow`
-                          : "bg-gray-800/50 text-orange-300 border-orange-500/30 hover:border-orange-500"
+                        ? `${interest.color} shadow-md scale-105 orange-glow`
+                        : "bg-gray-800/50 text-orange-300 border-orange-500/30 hover:border-orange-500"
                         }`}
                     >
                       {interest.label}
@@ -306,9 +310,23 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                   onCheckedChange={(checked) => setValue("consent", !!checked, { shouldValidate: true })}
                   className="mt-1 border-2 border-orange-500/50"
                 />
-                <Label htmlFor="consent" className="text-sm leading-relaxed text-orange-200">
-                  ✅ I agree to the <span className="text-orange-400 font-semibold">Terms of Service</span> and <span className="text-orange-400 font-semibold">Privacy Policy</span> (PDPA)
-                </Label>
+                <div className="text-sm leading-relaxed text-orange-200">
+                  ✅ I agree to the{" "}
+                  <span
+                    className="text-orange-400 font-semibold cursor-pointer underline"
+                    onClick={() => setShowTermsModal(true)}
+                  >
+                    Terms of Service
+                  </span>{" "}
+                  and{" "}
+                  <span
+                    className="text-orange-400 font-semibold cursor-pointer underline"
+                    onClick={() => setShowPrivacyModal(true)}
+                  >
+                    Privacy Policy
+                  </span>{" "}
+                  (PDPA)
+                </div>
               </div>
               {errors.consent && (
                 <p className="text-sm text-red-400 flex items-center gap-1">
@@ -333,6 +351,44 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                   </>
                 )}
               </Button>
+
+              {/* Terms of Service Modal */}
+              {showTermsModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+                  <div className="bg-gray-900 border border-orange-500/30 rounded-xl p-6 max-w-lg w-full relative shadow-2xl">
+                    <button
+                      className="absolute top-3 right-3 text-orange-400 hover:text-orange-600"
+                      onClick={() => setShowTermsModal(false)}
+                      aria-label="Close"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                    <h2 className="text-xl font-bold text-orange-400 mb-2">Terms of Service</h2>
+                    <div className="text-orange-200 text-sm max-h-64 overflow-y-auto whitespace-pre-line">
+                      {termsOfService}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Privacy Policy Modal */}
+              {showPrivacyModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+                  <div className="bg-gray-900 border border-orange-500/30 rounded-xl p-6 max-w-lg w-full relative shadow-2xl">
+                    <button
+                      className="absolute top-3 right-3 text-orange-400 hover:text-orange-600"
+                      onClick={() => setShowPrivacyModal(false)}
+                      aria-label="Close"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                    <h2 className="text-xl font-bold text-orange-400 mb-2">Privacy Policy (PDPA)</h2>
+                    <div className="text-orange-200 text-sm max-h-64 overflow-y-auto whitespace-pre-line">
+                      {privacyPolicy}
+                    </div>
+                  </div>
+                </div>
+              )}
             </form>
           </CardContent>
         </Card>
