@@ -1,3 +1,5 @@
+// Same as card, but we change format into a popup that we (Tanont & Ball) want
+
 import * as React from "react";
 import { cn } from "./utils";
 

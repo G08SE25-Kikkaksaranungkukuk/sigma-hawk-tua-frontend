@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { PopupCard } from "./ui/popup-card";
+import { PopupCard } from "./ui/popup-card"; // Made new UI in ./ui
 import { Button } from "./ui/button";
 import { X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -12,6 +12,8 @@ interface TravelInviteModalProps {
 
 export default function TravelInviteModal({ isOpen, onClose }: TravelInviteModalProps) {
   const [copied, setCopied] = useState(false);
+
+  // This inviteLink is currently a placeholder. Link generation is to be added.
   const inviteLink = "https://sigmatour.com/bIAHbleHBlu";
 
   const copyToClipboard = async () => {
@@ -73,7 +75,7 @@ export default function TravelInviteModal({ isOpen, onClose }: TravelInviteModal
                       {copied ? "Copied!" : "Copy"}
                     </Button>
                   </div>
-
+                  {/* Still deciding if invite link should expire or not, so this is a placeholder text for it. */}
                   <p className="text-gray-400">Your invite link expires in 3 days.</p>
                 </div>
               </PopupCard>
