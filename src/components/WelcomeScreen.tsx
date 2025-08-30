@@ -1,13 +1,12 @@
-"use client";
 import { Plane, Heart, Map, Camera, Globe, Users } from "lucide-react";
-import { Button } from "../components/ui/button";
+import { Button } from "./ui/button";
 
 interface WelcomeScreenProps {
   onGetStarted: () => void;
   onLogin: () => void;
 }
 
-export default function WelcomeScreen({ onGetStarted, onLogin }: WelcomeScreenProps) {
+export function WelcomeScreen({ onGetStarted, onLogin }: WelcomeScreenProps) {
   return (
     <div className="min-h-screen bg-black relative overflow-hidden bg-floating-shapes">
       {/* Floating decorative elements */}
@@ -69,11 +68,10 @@ export default function WelcomeScreen({ onGetStarted, onLogin }: WelcomeScreenPr
           {/* CTA Buttons */}
           <div className="space-y-4 slide-up">
             <Button 
-              
+              onClick={onGetStarted}
               className="w-full h-14 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-black text-lg rounded-2xl font-semibold shadow-xl btn-hover-lift border-0 orange-glow"
             >
-              <a href="/signup">🚀 Start Your Journey</a>
-              
+              🚀 Start Your Journey
             </Button>
             
             <Button 
@@ -99,4 +97,3 @@ export default function WelcomeScreen({ onGetStarted, onLogin }: WelcomeScreenPr
     </div>
   );
 }
-
