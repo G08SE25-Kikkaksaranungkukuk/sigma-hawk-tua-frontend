@@ -3,6 +3,7 @@ import { useState } from "react";
 import { PopupCard } from "./ui/popup-card";
 import { Button } from "./ui/button";
 import { X } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 interface TravelInviteModalProps {
   isOpen: boolean;
@@ -12,8 +13,6 @@ interface TravelInviteModalProps {
 export default function TravelInviteModal({ isOpen, onClose }: TravelInviteModalProps) {
   const [copied, setCopied] = useState(false);
   const inviteLink = "https://sigmatour.com/bIAHbleHBlu";
-
-  if (!isOpen) return null;
 
   const copyToClipboard = async () => {
     try {
@@ -26,44 +25,62 @@ export default function TravelInviteModal({ isOpen, onClose }: TravelInviteModal
   };
 
   return (
-    <div className="fixed inset-0 z-50">
-      <div className="min-h-screen bg-black/90 flex items-center justify-center p-4">
-        <PopupCard className="max-w-2xl w-full bg-navy-900 border border-orange-500/20 p-8 relative">
-          <button 
-            className="absolute top-4 right-4 text-gray-400 hover:text-white"
-            onClick={onClose}
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          className="fixed inset-0 z-50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <motion.div
+            className="min-h-screen bg-black/90 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
           >
-            <X className="w-6 h-6" />
-          </button>
+            <motion.div
+              initial={{ y: 16, scale: 0.98, opacity: 0 }}
+              animate={{ y: 0, scale: 1, opacity: 1 }}
+              exit={{ y: 16, scale: 0.98, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25, mass: 0.6 }}
+            >
+              <PopupCard className="max-w-2xl w-full bg-navy-900 border border-orange-500/20 p-8 relative">
+                <button
+                  className="absolute top-4 right-4 text-gray-400 hover:text-white"
+                  onClick={onClose}
+                >
+                  <X className="w-6 h-6" />
+                </button>
 
-          {/* Rest of the content remains the same */}
-          <div className="text-center space-y-6">
-            <h1 className="text-4xl font-bold text-orange-300/70">
-              Invite your fellow travelers now!
-            </h1>
+                <div className="text-center space-y-6">
+                  <h1 className="text-4xl font-bold text-orange-300/70">
+                    Invite your fellow travelers now!
+                  </h1>
 
-            <div className="flex items-center gap-2 p-2 bg-slate-900/80 rounded-2xl border-4 border-orange-500/40">
-              <div className="flex-1 px-4 py-2 text-gray-400 text-left truncate">
-                {inviteLink}
-              </div>
-              <Button
-                onClick={copyToClipboard}
-                className={`px-6 py-2 rounded-2 font-semibold transition-all ${
-                  copied 
-                    ? "bg-green-500 text-white"
-                    : "bg-orange-500 hover:bg-orange-600 text-black"
-                }`}
-              >
-                {copied ? "Copied!" : "Copy"}
-              </Button>
-            </div>
+                  <div className="flex items-center gap-2 p-2 bg-slate-900/80 rounded-2xl border-4 border-orange-500/40">
+                    <div className="flex-1 px-4 py-2 text-gray-400 text-left truncate">
+                      {inviteLink}
+                    </div>
+                    <Button
+                      onClick={copyToClipboard}
+                      className={`px-6 py-2 rounded-2 font-semibold transition-all ${
+                        copied
+                          ? "bg-green-500 text-white"
+                          : "bg-orange-500 hover:bg-orange-600 text-black"
+                      }`}
+                    >
+                      {copied ? "Copied!" : "Copy"}
+                    </Button>
+                  </div>
 
-            <p className="text-gray-400">
-              Your invite link expires in 3 days.
-            </p>
-          </div>
-        </PopupCard>
-      </div>
-    </div>
+                  <p className="text-gray-400">Your invite link expires in 3 days.</p>
+                </div>
+              </PopupCard>
+            </motion.div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
