@@ -8,6 +8,7 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Checkbox } from "../../components/ui/checkbox";
+
 // aca
 import { Calendar } from "../../components/ui/calendar";
 import {
@@ -17,7 +18,7 @@ import {
 } from "@/components/ui/popover"
 
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { ArrowLeft, Loader2, Sparkles, Users, MapPin, X } from "lucide-react"; // Add X import for close icon
+import { ArrowLeft, Loader2, Sparkles, Users, MapPin, X ,ChevronDown} from "lucide-react"; // Add X import for close icon
 import { termsOfService } from "./termsOfService"; // Import terms of service text
 import { privacyPolicy  } from "./privacyPolicy"; // Import privacy policy text
 
@@ -126,19 +127,6 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
 
             </Button>
           </a>
-          <a href="/">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onBack}
-              className="mr-2 p-2 hover:bg-orange-500/10 rounded-full text-orange-400"
-            >
-
-              <ArrowLeft className="w-5 h-5" />
-
-
-            </Button>
-          </a>
           <h1 className="text-xl font-semibold text-white">Create Account</h1>
         </div>
 
@@ -206,7 +194,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                       className="h-12 justify-between w-full border-2 border-orange-500/30 focus:border-orange-500 rounded-xl bg-gray-800/50 text-gray-400 placeholder:text-gray-400 opacity-100"
                     >
                       {date ? date.toLocaleDateString() : "Select date"}
-                      <ChevronDownIcon />
+                      <ChevronDown />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto overflow-hidden p-0" align="start">
