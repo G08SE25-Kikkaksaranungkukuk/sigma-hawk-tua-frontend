@@ -47,13 +47,15 @@ const mockGroups = [
 ];
 
 const themeTags = [
-    "Adventure",
-    "Culture",
-    "Relaxation",
-    "Tech",
-    "Science",
-    "Education",
-    "Nature",
+    { id: "Adventure", label: "🏔️ Adventure", color: "bg-red-500/20 border-red-500/50 text-red-300 hover:bg-red-500/30" },
+    { id: "Culture", label: "🏛️ Culture", color: "bg-orange-400/20 border-orange-400/50 text-orange-300 hover:bg-orange-400/30" },
+    { id: "Relaxation", label: "🛏️ Relaxation", color: "bg-orange-300/20 border-orange-300/50 text-orange-300 hover:bg-orange-300/30" },
+    { id: "Tech", label: "💻 Tech", color: "bg-gray-500/20 border-gray-500/50 text-gray-300 hover:bg-gray-500/30" },
+    { id: "Science", label: "🔬 Science", color: "bg-orange-600/20 border-orange-600/50 text-orange-300 hover:bg-orange-600/30" },
+    { id: "Education", label: "📚 Education", color: "bg-orange-500/20 border-orange-500/50 text-orange-300 hover:bg-orange-500/30" },
+    { id: "Nature", label: "🌿 Nature", color: "bg-orange-500/20 border-orange-500/50 text-orange-300 hover:bg-orange-500/30" },
+    { id: "Beach", label: "🏖️ Beach", color: "bg-orange-300/20 border-orange-300/50 text-orange-300 hover:bg-orange-300/30" },
+    { id: "Food", label: "🍜 Food", color: "bg-orange-600/20 border-orange-600/50 text-orange-300 hover:bg-orange-600/30" },
 ];
 
 const GROUPS_PER_PAGE = 8;
@@ -64,12 +66,11 @@ export default function GroupSearchPage() {
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [page, setPage] = useState(1);
 
-    const handleTagChange = (tag: string) => {
+    const toggleThemeTag = (tagId: string) => {
         setSelectedTags(prev => {
-            const newTags = prev.includes(tag)
-                ? prev.filter(t => t !== tag)
-                : [...prev, tag];
-            // Call handleSearch after updating tags
+            const newTags = prev.includes(tagId)
+                ? prev.filter(t => t !== tagId)
+                : [...prev, tagId];
             setTimeout(() => handleSearch(newTags), 0);
             return newTags;
         });
@@ -134,19 +135,19 @@ export default function GroupSearchPage() {
                             Filter by Theme:
                         </span>
                         <div className="flex flex-wrap gap-2 mt-2">
-                            {themeTags.map(tag => (
-                                <label
-                                    key={tag}
-                                    className="flex items-center gap-1 text-orange-200"
+                            {themeTags.map(theme => (
+                                <button
+                                    key={theme.id}
+                                    type="button"
+                                    onClick={() => toggleThemeTag(theme.id)}
+                                    className={`px-3 py-2 rounded-full border-2 text-sm font-medium transition-all chip-bounce ${
+                                        selectedTags.includes(theme.id)
+                                            ? `${theme.color} shadow-md scale-105 orange-glow`
+                                            : "bg-gray-800/50 text-orange-300 border-orange-500/30 hover:border-orange-500"
+                                    }`}
                                 >
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedTags.includes(tag)}
-                                        onChange={() => handleTagChange(tag)}
-                                        className="accent-orange-500"
-                                    />
-                                    <span className="text-xs">{tag}</span>
-                                </label>
+                                    {theme.label}
+                                </button>
                             ))}
                         </div>
                     </div>
