@@ -23,5 +23,31 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
+export type Member = {
+  id: string;
+  name: string;
+  role: "Host" | "Co‑host" | "Member";
+  avatar?: string;
+};
+
+export type GroupInfo = {
+  title: string;
+  destination: string;
+  dates: string;
+  timezone?: string;
+  description: string;
+  privacy: "Public" | "Private";
+  maxSize: number;
+  currentSize: number;
+  pace: "Chill" | "Balanced" | "Packed";
+  languages: string[];
+  interests: string[];
+  requirements: string[];
+  rules: string[];
+  itinerary: { day: string; plan: string }[];
+  hostNote?: string;
+  members: Member[];
+};
+
 export type SignUpFormData = z.infer<typeof signUpSchema>;
 export type LoginFormData = z.infer<typeof loginSchema>;
