@@ -1,13 +1,19 @@
+// import { User, Camera, MapPin, Star, Sparkles, Trophy, Globe } from "lucide-react";
+// import { Button } from "./ui/button";
+// import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+
 import { User, Camera, MapPin, Star, Sparkles, Trophy, Globe } from "lucide-react";
-import { Button } from "./ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Button } from "../../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 
 interface ProfileSetupScreenProps {
   userName: string;
   onContinue: () => void;
 }
 
-export function ProfileSetupScreen({ userName, onContinue }: ProfileSetupScreenProps) {
+
+
+export default function ProfileSetupScreen({ userName, onContinue }: ProfileSetupScreenProps) {
   return (
     <div className="min-h-screen bg-black p-4 bg-floating-shapes">
       {/* Floating decorative elements */}
