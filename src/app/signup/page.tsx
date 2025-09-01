@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,7 +8,7 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Checkbox } from "../../components/ui/checkbox";
-
+// import { api } from "../../lib/api";
 // aca
 import { Calendar } from "../../components/ui/calendar";
 import {
@@ -43,11 +43,13 @@ const travelStyles = [
   { id: "backpack", label: "🎒 Backpack", color: "text-orange-400" },
 ];
 
+
+
 export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
 
   const [open, setOpen] = React.useState(false);
   const [date, setDate] = React.useState<Date | undefined>(undefined);
-
+  
   const [isLoading, setIsLoading] = useState(false);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [selectedTravelStyles, setSelectedTravelStyles] = useState<string[]>([]);
@@ -74,6 +76,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
   const onSubmit = async (data: SignUpFormData) => {
     setIsLoading(true);
     // Simulate API call
+
     await new Promise(resolve => setTimeout(resolve, 2000));
     setIsLoading(false);
     onSignUp(data);
@@ -98,6 +101,34 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
     setSelectedTravelStyles(newStyles);
     setValue("travelStyle", newStyles, { shouldValidate: true });
   };
+
+
+
+  //API
+  const [firstname, setFirstname] = useState("");
+  const [lastname, setLastname] = useState("");
+  const [middlename, setMiddlename] = useState("");
+  const [age, setAge] = useState(0);
+  const [email, setEmail] = useState("");
+
+
+  const createUser = async () => {
+    try {
+      setLoading(true);
+      const payload = { name, email };
+      const res = await axios.post("https://api.example.com/users", payload);
+
+      alert("✅ User created: " + JSON.stringify(res.data));
+    } catch (err: any) {
+      alert("❌ Error: " + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  
+
+
 
   return (
     <div className="min-h-screen bg-black p-4 bg-floating-shapes">
@@ -139,10 +170,10 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               {/* First Name */}
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-orange-300 font-semibold">👤 First Name</Label>
+                <Label htmlFor="firstName" className="text-orange-300 font-semibold">👤 First Name</Label>
                 <Input
-                  id="name"
-
+                  value={firstname}
+                  onChange={(e) => setFirstname(e.target.value)}
                   className="h-12 border-2 border-orange-500/30 focus:border-orange-500 rounded-xl bg-gray-800/50 text-white placeholder:text-gray-400"
                   placeholder="Enter your first Name"
                 />
@@ -156,8 +187,8 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
               <div className="space-y-2">
                 <Label htmlFor="lastName" className="text-orange-300 font-semibold">👥 Last Name</Label>
                 <Input
-                  id="name"
-                  {...register("name")}
+                  value={lastname}
+                  onChange={(e) => setLastname(e.target.value)}
                   className="h-12 border-2 border-orange-500/30 focus:border-orange-500 rounded-xl bg-gray-800/50 text-white placeholder:text-gray-400"
                   placeholder="Enter your last Name"
                 />
@@ -171,8 +202,8 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
               <div className="space-y-2">
                 <Label htmlFor="middleName" className="text-orange-300 font-semibold">🎟 Middle name (optional)</Label>
                 <Input
-                  id="name"
-                  {...register("name")}
+                  value={middlename}
+                  onChange={(e) => setMiddlename(e.target.value)}
                   className="h-12 border-2 border-orange-500/30 focus:border-orange-500 rounded-xl bg-gray-800/50 text-white placeholder:text-gray-400"
                   placeholder="Enter your middle name"
                 />
