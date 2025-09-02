@@ -252,7 +252,6 @@ export default function EditProfilePage() {
               onClick={handleSave}
               className="w-full bg-orange-500 hover:bg-orange-600 text-black font-semibold py-4 rounded-lg flex items-center justify-center gap-2"
             >
-              <span className="text-black"></span>
               Confirm Changes
             </Button>
           </div>
