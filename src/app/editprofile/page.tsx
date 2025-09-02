@@ -1,139 +1,221 @@
-// import { User, Camera, MapPin, Star, Sparkles, Trophy, Globe } from "lucide-react";
-// import { Button } from "./ui/button";
-// import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+"use client";
 
-import { User, Camera, MapPin, Star, Sparkles, Trophy, Globe } from "lucide-react";
+import { useState } from "react";
+import { Camera, Save, Heart, Star, Sparkles, ArrowLeft } from "lucide-react";
 import { Button } from "../../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import ProfilePictureModal from "../../components/ProfilePictureModal";
 
-interface ProfileSetupScreenProps {
-  userName: string;
-  onContinue: () => void;
-}
+const interestOptions = [
+  "CAFE", "NATIONAL PARK", "HISTORICAL", "ISLAND", 
+  "AMUSEMENT PARK", "TEMPLE", "ZOO", "SHOPPING MALL",
+  "WATERFALL", "MARKET", "MOUNTAIN", "THEATRE"
+];
 
+export default function EditProfilePage() {
+  const [formData, setFormData] = useState({
+    name: "",
+    phoneNumber: "",
+    email: "",
+    interests: [] as string[]
+  });
 
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-export default function ProfileSetupScreen({ userName, onContinue }: ProfileSetupScreenProps) {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleInterestToggle = (interest: string) => {
+    setFormData(prev => ({
+      ...prev,
+      interests: prev.interests.includes(interest)
+        ? prev.interests.filter(i => i !== interest)
+        : [...prev.interests, interest]
+    }));
+  };
+
+  const handleSave = () => {
+    console.log("Saving profile data:", formData);
+  };
+
+  const handleResetPassword = () => {
+    console.log("Reset password requested");
+  };
+
+  const handleImageSelect = (imageFile: File | null) => {
+    if (imageFile) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setProfileImage(e.target?.result as string);
+      };
+      reader.readAsDataURL(imageFile);
+    } else {
+      setProfileImage(null);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-black p-4 bg-floating-shapes">
+    <div className="min-h-screen bg-black relative overflow-hidden">
       {/* Floating decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 left-10 w-16 h-16 bg-orange-500/20 rounded-full float"></div>
-        <div className="absolute top-60 right-16 w-12 h-12 bg-orange-400/30 rounded-full float-delayed"></div>
-        <div className="absolute bottom-40 left-20 w-20 h-20 bg-orange-600/20 rounded-full float-delayed-2"></div>
-        <Star className="absolute top-32 right-32 text-orange-500/40 w-6 h-6 float" />
-        <Sparkles className="absolute bottom-32 left-32 text-orange-400/40 w-5 h-5 float-delayed" />
-        <Trophy className="absolute top-1/2 right-10 text-orange-300/40 w-4 h-4 float-delayed-2" />
-        <Globe className="absolute top-1/4 left-16 text-orange-400/30 w-5 h-5 float" />
+        <div className="absolute top-20 left-10 w-16 h-16 bg-orange-500/20 rounded-full animate-bounce"></div>
+        <div className="absolute top-60 right-16 w-12 h-12 bg-orange-400/30 rounded-full animate-pulse"></div>
+        <div className="absolute bottom-40 left-20 w-20 h-20 bg-orange-600/20 rounded-full animate-bounce"></div>
+        <div className="absolute top-40 right-32 w-8 h-8 bg-orange-500/25 rounded-full animate-pulse"></div>
+        <Star className="absolute top-32 right-32 text-orange-500/40 w-6 h-6 animate-pulse" />
+        <Sparkles className="absolute bottom-32 left-32 text-orange-400/40 w-5 h-5 animate-bounce" />
+        <Heart className="absolute top-1/2 right-10 text-orange-300/40 w-4 h-4 animate-pulse" />
+        <div className="absolute top-1/4 left-16 w-6 h-6 bg-orange-400/30 rounded-full animate-bounce"></div>
       </div>
 
-      <div className="max-w-md mx-auto pt-8 relative z-10">
-        <Card className="card-hover shadow-2xl border border-orange-500/20 bg-gray-900/80 backdrop-blur-sm bounce-in">
-          <CardHeader className="text-center bg-gradient-to-r from-orange-500 to-orange-600 text-black rounded-t-lg">
-            <div className="relative">
-              <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-black/20 backdrop-blur-sm flex items-center justify-center pulse-soft">
-                <User className="w-12 h-12 text-black" />
-              </div>
-              <div className="absolute -top-2 -right-2 w-8 h-8 bg-orange-300 rounded-full flex items-center justify-center shadow-lg">
-                <Star className="w-4 h-4 text-black" />
-              </div>
+      {/* Header */}
+      <div className="flex justify-center mt-6">
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 shadow-md w-full max-w-md">
+          <div className="flex items-center">
+            <ArrowLeft className="w-6 h-6 text-black mr-3" />
+            <h1 className="text-black text-xl font-bold flex-1 text-center mr-9">
+              Edit your Profile
+            </h1>
+            <Star className="w-6 h-6 text-black" />
+          </div>
+        </div>
+      </div>
+
+
+      <div className="max-w-md mx-auto bg-slate-800 min-h-screen relative z-10">
+        {/* Profile Picture Section */}
+        <div className="bg-slate-700 px-6 py-8 text-center">
+          <div className="relative inline-block">
+            <div className="w-32 h-32 bg-gray-400 rounded-full mx-auto mb-4 flex items-center justify-center overflow-hidden">
+              {profileImage ? (
+                <img 
+                  src={profileImage} 
+                  alt="Profile" 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <Camera className="w-12 h-12 text-gray-600" />
+              )}
             </div>
-            <CardTitle className="text-2xl font-bold">Welcome, {userName}! 🎉</CardTitle>
-            <p className="text-black/80">
-              Let's make your profile shine ✨
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-6 p-6">
-            {/* Progress indicator */}
-            <div className="bg-gradient-to-r from-orange-500/10 to-orange-600/10 p-4 rounded-xl border-2 border-orange-500/30">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-semibold text-orange-300">Profile Completion</span>
-                <span className="text-sm font-bold text-orange-400">25%</span>
-              </div>
-              <div className="w-full bg-gray-700 rounded-full h-2">
-                <div className="bg-gradient-to-r from-orange-500 to-orange-600 h-2 rounded-full orange-glow" style={{ width: '25%' }}></div>
-              </div>
-            </div>
-
-            {/* Profile completion steps */}
-            <div className="space-y-4">
-              <div className="flex items-center p-4 bg-gradient-to-r from-orange-500/10 to-red-500/10 rounded-xl border-2 border-orange-500/30 card-hover">
-                <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center mr-4">
-                  <Camera className="w-6 h-6 text-black" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-orange-300">📸 Add Profile Photo</h3>
-                  <p className="text-sm text-orange-400/70">Show your amazing smile</p>
-                </div>
-                <Button variant="outline" size="sm" className="btn-hover-lift border-orange-500/50 text-orange-400 hover:bg-orange-500/10">
-                  Upload
-                </Button>
-              </div>
-
-              <div className="flex items-center p-4 bg-gradient-to-r from-orange-600/10 to-orange-500/10 rounded-xl border-2 border-orange-500/30 card-hover">
-                <div className="w-12 h-12 bg-gradient-to-r from-orange-600 to-orange-500 rounded-full flex items-center justify-center mr-4">
-                  <MapPin className="w-6 h-6 text-black" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-orange-300">📍 Set Location</h3>
-                  <p className="text-sm text-orange-400/70">Find travelers near you</p>
-                </div>
-                <Button variant="outline" size="sm" className="btn-hover-lift border-orange-500/50 text-orange-400 hover:bg-orange-500/10">
-                  Set
-                </Button>
-              </div>
-
-              <div className="flex items-center p-4 bg-gradient-to-r from-orange-400/10 to-orange-600/10 rounded-xl border-2 border-orange-500/30 card-hover">
-                <div className="w-12 h-12 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full flex items-center justify-center mr-4">
-                  <User className="w-6 h-6 text-black" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-orange-300">✍️ Bio & Preferences</h3>
-                  <p className="text-sm text-orange-400/70">Tell your travel story</p>
-                </div>
-                <Button variant="outline" size="sm" className="btn-hover-lift border-orange-500/50 text-orange-400 hover:bg-orange-500/10">
-                  Add
-                </Button>
-              </div>
-            </div>
-
-            {/* Achievement section */}
-            <div className="bg-gradient-to-r from-orange-500/10 to-orange-600/10 p-4 rounded-xl border-2 border-orange-500/30">
-              <div className="flex items-center justify-center space-x-2 mb-2">
-                <Trophy className="w-5 h-5 text-orange-500" />
-                <span className="font-semibold text-orange-300">First Achievement Unlocked!</span>
-              </div>
-              <p className="text-center text-sm text-orange-400/70">
-                🎯 <span className="font-medium text-orange-400">New Explorer</span> - Welcome to TravelMatch!
-              </p>
-            </div>
-
-            {/* Continue Button */}
-            <Button
-              onClick={onContinue}
-              className="w-full h-14 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-black rounded-xl font-semibold text-lg shadow-xl btn-hover-lift border-0 orange-glow"
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="absolute bottom-4 right-4 bg-gray-800 p-2 rounded-full border border-gray-600 hover:bg-gray-700 transition-colors"
             >
-              🌟 Continue to Dashboard
-            </Button>
+              <Camera className="w-4 h-4 text-white" />
+            </button>
+          </div>
+        </div>
 
-            <div className="text-center space-y-2">
-              <p className="text-xs text-orange-400/70">
-                🕐 You can complete these steps later in your profile settings
-              </p>
-              <div className="flex justify-center space-x-4 text-xs text-orange-400/50">
-                <span className="flex items-center space-x-1">
-                  <Globe className="w-3 h-3" />
-                  <span>50K+ travelers</span>
-                </span>
-                <span className="flex items-center space-x-1">
-                  <Star className="w-3 h-3" />
-                  <span>4.9 rating</span>
-                </span>
-              </div>
+        {/* Form Fields */}
+        <div className="px-6 py-6 space-y-6">
+          {/* Name Field */}
+          <div>
+            <Label htmlFor="name" className="text-orange-500 text-sm flex items-center gap-2">
+              <span className="text-orange-500">👤</span> Name
+            </Label>
+            <Input
+              id="name"
+              name="name"
+              type="text"
+              value={formData.name}
+              onChange={handleInputChange}
+              className="mt-1 bg-slate-700 border-slate-600 text-white"
+              placeholder="Current Name"
+            />
+          </div>
+
+          {/* Interests Section */}
+          <div>
+            <Label className="text-orange-500 text-sm flex items-center gap-2">
+              <span className="text-orange-500">❤️</span> Interests
+            </Label>
+            <div className="grid grid-cols-2 gap-3 mt-3">
+              {interestOptions.map((interest) => (
+                <button
+                  key={interest}
+                  onClick={() => handleInterestToggle(interest)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    formData.interests.includes(interest)
+                      ? 'bg-orange-500 text-black'
+                      : 'bg-slate-700 text-orange-500 border border-orange-500'
+                  }`}
+                >
+                  {interest}
+                </button>
+              ))}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+
+          {/* Phone Number Field */}
+          <div>
+            <Label htmlFor="phoneNumber" className="text-orange-500 text-sm flex items-center gap-2">
+              <span className="text-orange-500">📱</span> Phone Number
+            </Label>
+            <Input
+              id="phoneNumber"
+              name="phoneNumber"
+              type="tel"
+              value={formData.phoneNumber}
+              onChange={handleInputChange}
+              className="mt-1 bg-slate-700 border-slate-600 text-white"
+              placeholder="Current Phone Number"
+            />
+          </div>
+
+          {/* Email Field */}
+          <div>
+            <Label htmlFor="email" className="text-orange-500 text-sm flex items-center gap-2">
+              <span className="text-orange-500">📧</span> Email
+            </Label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              className="mt-1 bg-slate-700 border-slate-600 text-white"
+              placeholder="Current Email"
+            />
+          </div>
+
+          {/* Change Password Section */}
+          <div>
+            <Label className="text-white text-sm">Change password</Label>
+            <Button
+              onClick={handleResetPassword}
+              className="w-full mt-2 bg-orange-500 hover:bg-orange-600 text-black font-semibold py-3 rounded-lg"
+            >
+              Reset Password
+            </Button>
+          </div>
+
+          {/* Confirm Changes Button */}
+          <div className="pt-4">
+            <Button
+              onClick={handleSave}
+              className="w-full bg-orange-500 hover:bg-orange-600 text-black font-semibold py-4 rounded-lg flex items-center justify-center gap-2"
+            >
+              <span className="text-black"></span>
+              Confirm Changes
+            </Button>
+          </div>
+        </div>
       </div>
+
+      {/* Profile Picture Modal */}
+      <ProfilePictureModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onImageSelect={handleImageSelect}
+        currentImage={profileImage || undefined}
+      />
     </div>
   );
 }
