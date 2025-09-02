@@ -9,10 +9,52 @@ import ProfilePictureModal from "../../components/ProfilePictureModal";
 import ResetPasswordModal from "../../components/ResetPasswordModal";
 
 const interestOptions = [
-  "CAFE", "NATIONAL PARK", "HISTORICAL", "ISLAND", 
-  "AMUSEMENT PARK", "TEMPLE", "ZOO", "SHOPPING MALL",
-  "WATERFALL", "MARKET", "MOUNTAIN", "THEATRE"
+  { id: "nature", label: "🌿 Nature", color: "green" },
+  { id: "food", label: "🍴 Food", color: "red" },
+  { id: "culture", label: "🏛️ Culture", color: "purple" },
+  { id: "adventure", label: "🏔️ Adventure", color: "blue" },
+  { id: "beach", label: "🏖️ Beach", color: "cyan" },
+  { id: "city", label: "🏙️ City", color: "slate" },
+  { id: "cafe", label: "☕ Cafe", color: "amber" },
+  { id: "historical", label: "🏛️ Historical", color: "yellow" },
+  { id: "island", label: "🏝️ Island", color: "teal" },
+  { id: "amusement", label: "🎢 Amusement Park", color: "pink" },
+  { id: "temple", label: "🙏 Temple", color: "indigo" },
+  { id: "zoo", label: "🦁 Zoo", color: "emerald" },
+  { id: "shopping", label: "🛍️ Shopping Mall", color: "violet" },
+  { id: "waterfall", label: "💧 Waterfall", color: "sky" },
+  { id: "market", label: "🏪 Market", color: "orange" },
+  { id: "theatre", label: "🎭 Theatre", color: "rose" }
 ];
+
+const getColorClasses = (color: string, isSelected: boolean) => {
+  if (!isSelected) {
+    // ยังไม่คลิก: สีดำ + กรอบส้มอ่อน
+    return "bg-slate-900 text-orange-300 border-2 border-orange-400/60 hover:border-orange-300 hover:text-orange-200";
+  }
+  
+  // คลิกแล้ว: สีอ่อนๆ + กรอบสีที่ match
+  const colorMap: { [key: string]: string } = {
+    green: "bg-green-200/25 text-green-300 border-2 border-green-400/70",
+    red: "bg-red-200/25 text-red-300 border-2 border-red-400/70",
+    purple: "bg-purple-200/25 text-purple-300 border-2 border-purple-400/70",
+    blue: "bg-blue-200/25 text-blue-300 border-2 border-blue-400/70",
+    cyan: "bg-cyan-200/25 text-cyan-300 border-2 border-cyan-400/70",
+    slate: "bg-slate-200/25 text-slate-300 border-2 border-slate-400/70",
+    amber: "bg-amber-200/25 text-amber-300 border-2 border-amber-400/70",
+    yellow: "bg-yellow-200/25 text-yellow-300 border-2 border-yellow-400/70",
+    teal: "bg-teal-200/25 text-teal-300 border-2 border-teal-400/70",
+    pink: "bg-pink-200/25 text-pink-300 border-2 border-pink-400/70",
+    indigo: "bg-indigo-200/25 text-indigo-300 border-2 border-indigo-400/70",
+    emerald: "bg-emerald-200/25 text-emerald-300 border-2 border-emerald-400/70",
+    violet: "bg-violet-200/25 text-violet-300 border-2 border-violet-400/70",
+    sky: "bg-sky-200/25 text-sky-300 border-2 border-sky-400/70",
+    orange: "bg-orange-200/25 text-orange-300 border-2 border-orange-400/70",
+    rose: "bg-rose-200/25 text-rose-300 border-2 border-rose-400/70"
+  };
+  
+  return colorMap[color] || "bg-orange-200/25 text-orange-300 border-2 border-orange-400/70";
+};
 
 export default function EditProfilePage() {
   const [formData, setFormData] = useState({
@@ -34,12 +76,12 @@ export default function EditProfilePage() {
     }));
   };
 
-  const handleInterestToggle = (interest: string) => {
+  const handleInterestToggle = (interestId: string) => {
     setFormData(prev => ({
       ...prev,
-      interests: prev.interests.includes(interest)
-        ? prev.interests.filter(i => i !== interest)
-        : [...prev.interests, interest]
+      interests: prev.interests.includes(interestId)
+        ? prev.interests.filter(i => i !== interestId)
+        : [...prev.interests, interestId]
     }));
   };
 
@@ -97,9 +139,9 @@ export default function EditProfilePage() {
       </div>
 
 
-      <div className="max-w-md mx-auto bg-slate-800 min-h-screen relative z-10">
+      <div className="max-w-md mx-auto bg-slate-900 min-h-screen relative z-10">
         {/* Profile Picture Section */}
-        <div className="bg-slate-700 px-6 py-8 text-center">
+        <div className="bg-slate-800 px-6 py-8 text-center">
           <div className="relative inline-block">
             <div className="w-32 h-32 bg-gray-400 rounded-full mx-auto mb-4 flex items-center justify-center overflow-hidden">
               {profileImage ? (
@@ -134,7 +176,7 @@ export default function EditProfilePage() {
               type="text"
               value={formData.name}
               onChange={handleInputChange}
-              className="mt-1 bg-slate-700 border-slate-600 text-white"
+              className="mt-1 bg-slate-800 border-slate-700 text-white"
               placeholder="Current Name"
             />
           </div>
@@ -144,20 +186,20 @@ export default function EditProfilePage() {
             <Label className="text-orange-500 text-sm flex items-center gap-2">
               <span className="text-orange-500">❤️</span> Interests
             </Label>
-            <div className="grid grid-cols-2 gap-3 mt-3">
-              {interestOptions.map((interest) => (
-                <button
-                  key={interest}
-                  onClick={() => handleInterestToggle(interest)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                    formData.interests.includes(interest)
-                      ? 'bg-orange-500 text-black'
-                      : 'bg-slate-700 text-orange-500 border border-orange-500'
-                  }`}
-                >
-                  {interest}
-                </button>
-              ))}
+            <div className="my-3">
+              {interestOptions.map((interest) => {
+                const isSelected = formData.interests.includes(interest.id);
+                const colorClasses = getColorClasses(interest.color, isSelected);
+                return (
+                  <button
+                    key={interest.id}
+                    onClick={() => handleInterestToggle(interest.id)}
+                    className={`px-4 py-3 mx-1 my-1 rounded-full text-sm font-medium transition-all duration-200 transform hover:scale-105 w-fit shadow-md backdrop-blur-sm ${colorClasses}`}
+                  >
+                    {interest.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -172,7 +214,7 @@ export default function EditProfilePage() {
               type="tel"
               value={formData.phoneNumber}
               onChange={handleInputChange}
-              className="mt-1 bg-slate-700 border-slate-600 text-white"
+              className="mt-1 bg-slate-800 border-slate-700 text-white"
               placeholder="Current Phone Number"
             />
           </div>
@@ -188,7 +230,7 @@ export default function EditProfilePage() {
               type="email"
               value={formData.email}
               onChange={handleInputChange}
-              className="mt-1 bg-slate-700 border-slate-600 text-white"
+              className="mt-1 bg-slate-800 border-slate-700 text-white"
               placeholder="Current Email"
             />
           </div>

@@ -170,7 +170,7 @@ export default function ResetPasswordModal({
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-slate-800 rounded-lg p-6 w-full max-w-md relative border border-slate-600"
+            className="bg-slate-900 rounded-lg p-6 w-full max-w-md relative border border-slate-700"
           >
             {/* Close Button */}
             <button
