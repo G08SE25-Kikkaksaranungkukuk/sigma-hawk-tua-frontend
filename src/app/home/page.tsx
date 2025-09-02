@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import {
@@ -17,6 +18,12 @@ import {
 } from "lucide-react";
 
 export default function homePage() {
+    const router = useRouter();
+
+    const handleProfileClick = () => {
+        router.push('/editprofile');
+    };
+
     return (
         <div className="min-h-screen bg-black relative overflow-hidden">
             {/* Navigation Bar */}
@@ -74,6 +81,7 @@ export default function homePage() {
                             variant="ghost"
                             size="icon"
                             className="text-orange-400 hover:bg-orange-500/10"
+                            onClick={handleProfileClick}
                         >
                             <User className="w-5 h-5" />
                         </Button>
