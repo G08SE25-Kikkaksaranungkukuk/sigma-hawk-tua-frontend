@@ -1,7 +1,10 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
+import { AppHeader } from "../../components/shared";
+import { AppIntro, AppStats, YourGroupsSection } from "../../components/home";
+import { useUserGroups, useGroupSearch } from "../../lib/hooks/home";
+import { Group } from "../../lib/types/home";
 import {
     Plane,
     Heart,
@@ -19,82 +22,33 @@ import {
 
 export default function homePage() {
     const router = useRouter();
+    const { groups, loading, error, refreshGroups } = useUserGroups();
+    const { searchGroups } = useGroupSearch();
 
     const handleProfileClick = () => {
         router.push('/editprofile');
     };
 
+    const handleCreateGroup = () => {
+        // TODO: Implement create group modal or navigate to create group page
+        console.log('Create group clicked');
+    };
+
+    const handleViewGroup = (group: Group) => {
+        // TODO: Navigate to group detail page
+        console.log('View group:', group);
+    };
+
+    const handleSearchGroups = () => {
+        // TODO: Navigate to search groups page
+        router.push('/groupSearch');
+        console.log('Navigate to search groups page');
+    };
+
     return (
         <div className="min-h-screen bg-black relative overflow-hidden">
             {/* Navigation Bar */}
-            <nav className="relative z-20 bg-gray-900/90 backdrop-blur-sm border-b border-orange-500/20 px-6 py-4">
-                <div className="max-w-6xl mx-auto flex items-center justify-between">
-                    {/* Logo */}
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center">
-                            <Plane className="w-5 h-5 text-black" />
-                        </div>
-                        <span className="text-xl font-bold text-white">
-                            TravelMatch
-                        </span>
-                    </div>
-
-                    {/* Navigation Links */}
-                    <div className="hidden md:flex items-center gap-6">
-                        <Button
-                            variant="ghost"
-                            className="text-orange-300 hover:text-orange-400"
-                        >
-                            Discover
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            className="text-orange-300 hover:text-orange-400"
-                        >
-                            My Groups
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            className="text-orange-300 hover:text-orange-400"
-                        >
-                            Messages
-                        </Button>
-                    </div>
-
-                    {/* Right Side Icons */}
-                    <div className="flex items-center gap-3">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-orange-400 hover:bg-orange-500/10"
-                        >
-                            <Bell className="w-5 h-5" />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-orange-400 hover:bg-orange-500/10"
-                        >
-                            <Settings className="w-5 h-5" />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-orange-400 hover:bg-orange-500/10"
-                            onClick={handleProfileClick}
-                        >
-                            <User className="w-5 h-5" />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="md:hidden text-orange-400 hover:bg-orange-500/10"
-                        >
-                            <Menu className="w-5 h-5" />
-                        </Button>
-                    </div>
-                </div>
-            </nav>
+            <AppHeader onProfileClick={handleProfileClick} />
 
             {/* Floating decorative elements */}
             <div className="absolute inset-0 overflow-hidden">
@@ -113,213 +67,25 @@ export default function homePage() {
                 </div>
             </div>
 
-            {/* Header */}
-            <header className="relative z-10 flex items-center justify-center pt-16 pb-8">
-                <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center shadow-2xl">
-                        <Plane className="w-8 h-8 text-black" />
-                    </div>
-                    <div>
-                        <h1 className="text-4xl font-bold text-white">
-                            TravelMatch
-                        </h1>
-                        <p className="text-orange-300">
-                            Find your perfect travel companion
-                        </p>
-                    </div>
-                </div>
-            </header>
-
-            {/* Feature highlights */}
-            <div className="relative z-10 flex justify-center mb-12">
-                <div className="grid grid-cols-3 gap-8">
-                    <div className="text-center text-orange-200/80">
-                        <Heart className="w-8 h-8 mx-auto mb-2 text-orange-400" />
-                        <p className="text-sm">Connect</p>
-                    </div>
-                    <div className="text-center text-orange-200/80">
-                        <MapPin className="w-8 h-8 mx-auto mb-2 text-orange-400" />
-                        <p className="text-sm">Explore</p>
-                    </div>
-                    <div className="text-center text-orange-200/80">
-                        <Camera className="w-8 h-8 mx-auto mb-2 text-orange-400" />
-                        <p className="text-sm">Create</p>
-                    </div>
-                </div>
-            </div>
+            {/* App Introduction */}
+            <AppIntro />
 
             {/* Main Content */}
-            <main className="relative z-10 max-w-4xl mx-auto px-8">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Your Groups Section */}
-                    <section className="bg-gray-900/60 backdrop-blur-sm rounded-2xl p-6 border border-orange-500/20">
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-2xl font-bold text-orange-400">
-                                Your Groups
-                            </h2>
-                            <Button
-                                variant="outline"
-                                className="border-orange-500 text-orange-400 hover:bg-orange-500/10"
-                            >
-                                <Plus className="w-4 h-4 mr-2" /> Create Group
-                            </Button>
-                        </div>
-
-                        <div className="space-y-4">
-                            <div className="bg-gray-800/60 border border-orange-500/20 rounded-xl p-4 hover:bg-gray-800/80 transition-colors">
-                                <h3 className="text-lg font-semibold text-orange-300 mb-2">
-                                    Thailand Adventure
-                                </h3>
-                                <p className="text-sm text-orange-200/80 mb-3">
-                                    Exploring temples and beaches in Thailand
-                                </p>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs text-orange-400">
-                                        5 members
-                                    </span>
-                                    <Button
-                                        size="sm"
-                                        className="bg-orange-500 text-black hover:bg-orange-600"
-                                    >
-                                        View
-                                    </Button>
-                                </div>
-                            </div>
-
-                            <div className="bg-gray-800/60 border border-orange-500/20 rounded-xl p-4 hover:bg-gray-800/80 transition-colors">
-                                <h3 className="text-lg font-semibold text-orange-300 mb-2">
-                                    Europe Backpack
-                                </h3>
-                                <p className="text-sm text-orange-200/80 mb-3">
-                                    Budget backpacking across Europe
-                                </p>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs text-orange-400">
-                                        3 members
-                                    </span>
-                                    <Button
-                                        size="sm"
-                                        className="bg-orange-500 text-black hover:bg-orange-600"
-                                    >
-                                        View
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    {/* Group Search Section */}
-                    <section className="bg-gray-900/60 backdrop-blur-sm rounded-2xl p-6 border border-orange-500/20">
-                        <h2 className="text-2xl font-bold text-orange-400 mb-6">
-                            Search Groups
-                        </h2>
-
-                        <div className="flex gap-2 mb-6">
-                            <Input
-                                placeholder="Search for groups..."
-                                className="flex-1 border-orange-500/30 focus:border-orange-500 bg-gray-800/50 text-white"
-                            />
-                            <Button className="bg-orange-500 text-black hover:bg-orange-600">
-                                <Search className="w-4 h-4" />
-                            </Button>
-                        </div>
-
-                        <div className="space-y-3">
-                            <div className="bg-gray-800/60 border border-orange-500/20 rounded-xl p-4 hover:bg-gray-800/80 transition-colors cursor-pointer">
-                                <h3 className="text-lg font-semibold text-orange-300 mb-1">
-                                    Travel Buddies Thailand
-                                </h3>
-                                <p className="text-sm text-orange-200/80 mb-2">
-                                    A group for travelers in Thailand
-                                </p>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs text-orange-400">
-                                        12 members
-                                    </span>
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="border-orange-500 text-orange-400"
-                                    >
-                                        Join
-                                    </Button>
-                                </div>
-                            </div>
-
-                            <div className="bg-gray-800/60 border border-orange-500/20 rounded-xl p-4 hover:bg-gray-800/80 transition-colors cursor-pointer">
-                                <h3 className="text-lg font-semibold text-orange-300 mb-1">
-                                    Europe Adventure
-                                </h3>
-                                <p className="text-sm text-orange-200/80 mb-2">
-                                    Find companions for your Europe trip
-                                </p>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs text-orange-400">
-                                        8 members
-                                    </span>
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="border-orange-500 text-orange-400"
-                                    >
-                                        Join
-                                    </Button>
-                                </div>
-                            </div>
-
-                            <div className="bg-gray-800/60 border border-orange-500/20 rounded-xl p-4 hover:bg-gray-800/80 transition-colors cursor-pointer">
-                                <h3 className="text-lg font-semibold text-orange-300 mb-1">
-                                    Japan Culture Trip
-                                </h3>
-                                <p className="text-sm text-orange-200/80 mb-2">
-                                    Explore Japanese culture and traditions
-                                </p>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs text-orange-400">
-                                        15 members
-                                    </span>
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="border-orange-500 text-orange-400"
-                                    >
-                                        Join
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
+            <main className="relative z-10 max-w-6xl mx-auto px-8">
+                {/* Your Groups Section - 1/3 Width */}
+                <div className="w-1/2 mx-auto">
+                    <YourGroupsSection
+                        groups={groups}
+                        loading={loading}
+                        error={error}
+                        onCreateGroup={handleCreateGroup}
+                        onViewGroup={handleViewGroup}
+                        onSearchGroups={handleSearchGroups}
+                    />
                 </div>
 
                 {/* Bottom stats */}
-                <div className="mt-12 mb-8 bg-gray-900/40 backdrop-blur-sm rounded-2xl p-6 border border-orange-500/20">
-                    <div className="grid grid-cols-3 gap-6 text-center">
-                        <div>
-                            <p className="text-2xl font-bold text-orange-400">
-                                50K+
-                            </p>
-                            <p className="text-sm text-orange-300/70">
-                                Travelers
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-orange-500">
-                                120+
-                            </p>
-                            <p className="text-sm text-orange-300/70">
-                                Countries
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-orange-600">
-                                1M+
-                            </p>
-                            <p className="text-sm text-orange-300/70">
-                                Matches
-                            </p>
-                        </div>
-                    </div>
-                </div>
+                <AppStats />
             </main>
 
             {/* Footer */}
