@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/group-badge";
 import { brand } from "@/components/ui/utils";
 import { Pill } from "@/components/ui/pill";
 import { MemberPill } from "@/components/ui/member-pill";
+import TravelInviteModal from "@/components/TravelInviteModal";
 
 function Section({ title, icon }: { title: string; icon?: React.ReactNode }) {
   return (
@@ -67,6 +68,7 @@ const SAMPLE: GroupInfo = {
 export default function TravelGroupInformationUI({ group = SAMPLE }: { group?: GroupInfo }) {
   const [expanded, setExpanded] = useState(false);
   const [requested, setRequested] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const available = useMemo(() => Math.max(group.maxSize - group.currentSize, 0), [group]);
 
@@ -212,6 +214,7 @@ export default function TravelGroupInformationUI({ group = SAMPLE }: { group?: G
                   <button
                     className="rounded-xl px-4 py-2 text-sm font-medium"
                     style={{ background: "#171926", color: brand.fg, border: `1px solid ${brand.border}` }}
+                    onClick={() => setIsModalOpen(true)}
                   >
                     <span className="inline-flex items-center gap-2 justify-center w-full"><Share2 className="h-4 w-4" /> Share</span>
                   </button>
@@ -264,6 +267,12 @@ export default function TravelGroupInformationUI({ group = SAMPLE }: { group?: G
           </div>
         </aside>
       </div>
+      
+      {/* Travel Invite Modal */}
+      <TravelInviteModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />
     </div>
   );
 }
