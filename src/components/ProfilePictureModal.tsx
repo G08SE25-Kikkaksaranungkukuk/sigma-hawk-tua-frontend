@@ -144,7 +144,7 @@ export default function ProfilePictureModal({
                 <Button
                   onClick={handleSave}
                   className="flex-1 bg-orange-500 hover:bg-orange-600 text-black font-semibold"
-                  disabled={!selectedFile && !currentImage}
+                  disabled={!selectedFile}
                 >
                   Save
                 </Button>
