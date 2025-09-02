@@ -205,15 +205,14 @@ export default function TravelGroupInformationUI({ group = SAMPLE }: { group?: G
               <div className="mt-5 grid gap-3">
                 <button
                   onClick={() => setRequested((v) => !v)}
-                  className="w-full rounded-xl px-4 py-3 text-sm font-semibold transition active:scale-[0.99]"
-                  style={{ background: brand.accent, color: brand.bg }}
+                  className="w-full rounded-xl px-4 py-3 text-sm font-semibold transition active:scale-[0.99] bg-[#ff6600] hover:bg-[#e65a00] text-[#0b0b0c]"
                 >
                   {requested ? "Request sent ✓" : "Request to join"}
                 </button>
                 <div className="grid grid-cols-1 gap-3">
                   <button
-                    className="rounded-xl px-4 py-2 text-sm font-medium"
-                    style={{ background: "#171926", color: brand.fg, border: `1px solid ${brand.border}` }}
+                    className="rounded-xl px-4 py-2 text-sm font-semibold bg-[#171926] hover:bg-[#212124] hover:text-[#ff6600] transition text-[#e8eaee] border"
+                    style={{ borderColor: brand.border }}
                     onClick={() => setIsModalOpen(true)}
                   >
                     <span className="inline-flex items-center gap-2 justify-center w-full"><Share2 className="h-4 w-4" /> Share</span>
@@ -255,12 +254,8 @@ export default function TravelGroupInformationUI({ group = SAMPLE }: { group?: G
             <p className="mt-2 text-sm" style={{ color: brand.sub }}>Questions before joining? Ping the host and we’ll get back within a day.</p>
             <button
               onClick={() => console.log("Contact host")}
-              className="mt-5 w-full rounded-full px-4 py-2.5 text-sm font-medium transition active:scale-[0.99]"
-              style={{
-                background: brand.accent,
-                color: brand.bg,
-                border: `1px solid ${brand.border}`,
-              }}
+              className="mt-5 w-full rounded-full px-4 py-2.5 text-sm font-semibold transition active:scale-[0.99] bg-[#ff6600] hover:bg-[#e65a00] text-[#0b0b0c] border"
+              style={{ borderColor: brand.border }}
             >
               Host Contact
             </button>

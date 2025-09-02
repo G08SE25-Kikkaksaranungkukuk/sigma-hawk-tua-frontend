@@ -56,7 +56,7 @@ export default function TravelInviteModal({ isOpen, onClose }: TravelInviteModal
                 </button>
 
                 <div className="text-center space-y-6">
-                  <h1 className="text-4xl font-bold text-orange-300/70">
+                  <h1 className="text-3xl font-bold text-orange-300/70">
                     Invite your fellow travelers now!
                   </h1>
 
