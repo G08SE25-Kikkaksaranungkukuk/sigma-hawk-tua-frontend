@@ -1,139 +1,277 @@
-// import { User, Camera, MapPin, Star, Sparkles, Trophy, Globe } from "lucide-react";
-// import { Button } from "./ui/button";
-// import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+"use client";
 
-import { User, Camera, MapPin, Star, Sparkles, Trophy, Globe } from "lucide-react";
+import { useState } from "react";
+import { Camera, Save, Heart, Star, Sparkles, ArrowLeft } from "lucide-react";
 import { Button } from "../../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import ProfilePictureModal from "../../components/ProfilePictureModal";
+import ResetPasswordModal from "../../components/ResetPasswordModal";
 
-interface ProfileSetupScreenProps {
-  userName: string;
-  onContinue: () => void;
-}
+const interestOptions = [
+  { id: "nature", label: "🌿 Nature", color: "green" },
+  { id: "food", label: "🍴 Food", color: "red" },
+  { id: "culture", label: "🏛️ Culture", color: "purple" },
+  { id: "adventure", label: "🏔️ Adventure", color: "blue" },
+  { id: "beach", label: "🏖️ Beach", color: "cyan" },
+  { id: "city", label: "🏙️ City", color: "slate" },
+  { id: "cafe", label: "☕ Cafe", color: "amber" },
+  { id: "historical", label: "🏛️ Historical", color: "yellow" },
+  { id: "island", label: "🏝️ Island", color: "teal" },
+  { id: "amusement", label: "🎢 Amusement Park", color: "pink" },
+  { id: "temple", label: "🙏 Temple", color: "indigo" },
+  { id: "zoo", label: "🦁 Zoo", color: "emerald" },
+  { id: "shopping", label: "🛍️ Shopping Mall", color: "violet" },
+  { id: "waterfall", label: "💧 Waterfall", color: "sky" },
+  { id: "market", label: "🏪 Market", color: "orange" },
+  { id: "theatre", label: "🎭 Theatre", color: "rose" }
+];
 
+const getColorClasses = (color: string, isSelected: boolean) => {
+  if (!isSelected) {
+    // ยังไม่คลิก: สีดำ + กรอบส้มอ่อน
+    return "bg-slate-900 text-orange-300 border-2 border-orange-400/60 hover:border-orange-300 hover:text-orange-200";
+  }
+  
+  // คลิกแล้ว: สีอ่อนๆ + กรอบสีที่ match
+  const colorMap: { [key: string]: string } = {
+    green: "bg-green-200/25 text-green-300 border-2 border-green-400/70",
+    red: "bg-red-200/25 text-red-300 border-2 border-red-400/70",
+    purple: "bg-purple-200/25 text-purple-300 border-2 border-purple-400/70",
+    blue: "bg-blue-200/25 text-blue-300 border-2 border-blue-400/70",
+    cyan: "bg-cyan-200/25 text-cyan-300 border-2 border-cyan-400/70",
+    slate: "bg-slate-200/25 text-slate-300 border-2 border-slate-400/70",
+    amber: "bg-amber-200/25 text-amber-300 border-2 border-amber-400/70",
+    yellow: "bg-yellow-200/25 text-yellow-300 border-2 border-yellow-400/70",
+    teal: "bg-teal-200/25 text-teal-300 border-2 border-teal-400/70",
+    pink: "bg-pink-200/25 text-pink-300 border-2 border-pink-400/70",
+    indigo: "bg-indigo-200/25 text-indigo-300 border-2 border-indigo-400/70",
+    emerald: "bg-emerald-200/25 text-emerald-300 border-2 border-emerald-400/70",
+    violet: "bg-violet-200/25 text-violet-300 border-2 border-violet-400/70",
+    sky: "bg-sky-200/25 text-sky-300 border-2 border-sky-400/70",
+    orange: "bg-orange-200/25 text-orange-300 border-2 border-orange-400/70",
+    rose: "bg-rose-200/25 text-rose-300 border-2 border-rose-400/70"
+  };
+  
+  return colorMap[color] || "bg-orange-200/25 text-orange-300 border-2 border-orange-400/70";
+};
 
+export default function EditProfilePage() {
+  const [formData, setFormData] = useState({
+    name: "",
+    phoneNumber: "",
+    email: "",
+    interests: [] as string[]
+  });
 
-export default function ProfileSetupScreen({ userName, onContinue }: ProfileSetupScreenProps) {
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleInterestToggle = (interestId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      interests: prev.interests.includes(interestId)
+        ? prev.interests.filter(i => i !== interestId)
+        : [...prev.interests, interestId]
+    }));
+  };
+
+  const handleSave = () => {
+    console.log("Saving profile data:", formData);
+  };
+
+  const handleResetPassword = () => {
+    setIsResetPasswordModalOpen(true);
+  };
+
+  const handlePasswordReset = (passwordData: { oldPassword: string; newPassword: string; confirmPassword: string }) => {
+    console.log("Password reset data:", passwordData);
+    // Here you would typically call an API to reset the password
+    // For now, we'll just log the data
+  };
+
+  const handleImageSelect = (imageFile: File | null) => {
+    if (imageFile) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setProfileImage(e.target?.result as string);
+      };
+      reader.readAsDataURL(imageFile);
+    } else {
+      setProfileImage(null);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-black p-4 bg-floating-shapes">
+    <div className="min-h-screen bg-black relative overflow-hidden">
       {/* Floating decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 left-10 w-16 h-16 bg-orange-500/20 rounded-full float"></div>
-        <div className="absolute top-60 right-16 w-12 h-12 bg-orange-400/30 rounded-full float-delayed"></div>
-        <div className="absolute bottom-40 left-20 w-20 h-20 bg-orange-600/20 rounded-full float-delayed-2"></div>
-        <Star className="absolute top-32 right-32 text-orange-500/40 w-6 h-6 float" />
-        <Sparkles className="absolute bottom-32 left-32 text-orange-400/40 w-5 h-5 float-delayed" />
-        <Trophy className="absolute top-1/2 right-10 text-orange-300/40 w-4 h-4 float-delayed-2" />
-        <Globe className="absolute top-1/4 left-16 text-orange-400/30 w-5 h-5 float" />
+        <div className="absolute top-20 left-10 w-16 h-16 bg-orange-500/20 rounded-full animate-bounce"></div>
+        <div className="absolute top-60 right-16 w-12 h-12 bg-orange-400/30 rounded-full animate-pulse"></div>
+        <div className="absolute bottom-40 left-20 w-20 h-20 bg-orange-600/20 rounded-full animate-bounce"></div>
+        <div className="absolute top-40 right-32 w-8 h-8 bg-orange-500/25 rounded-full animate-pulse"></div>
+        <Star className="absolute top-32 right-32 text-orange-500/40 w-6 h-6 animate-pulse" />
+        <Sparkles className="absolute bottom-32 left-32 text-orange-400/40 w-5 h-5 animate-bounce" />
+        <Heart className="absolute top-1/2 right-10 text-orange-300/40 w-4 h-4 animate-pulse" />
+        <div className="absolute top-1/4 left-16 w-6 h-6 bg-orange-400/30 rounded-full animate-bounce"></div>
       </div>
 
-      <div className="max-w-md mx-auto pt-8 relative z-10">
-        <Card className="card-hover shadow-2xl border border-orange-500/20 bg-gray-900/80 backdrop-blur-sm bounce-in">
-          <CardHeader className="text-center bg-gradient-to-r from-orange-500 to-orange-600 text-black rounded-t-lg">
-            <div className="relative">
-              <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-black/20 backdrop-blur-sm flex items-center justify-center pulse-soft">
-                <User className="w-12 h-12 text-black" />
-              </div>
-              <div className="absolute -top-2 -right-2 w-8 h-8 bg-orange-300 rounded-full flex items-center justify-center shadow-lg">
-                <Star className="w-4 h-4 text-black" />
-              </div>
+      {/* Header */}
+      <div className="flex justify-center mt-6">
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 shadow-md w-full max-w-md">
+          <div className="flex items-center">
+            <ArrowLeft className="w-6 h-6 text-black mr-3" />
+            <h1 className="text-black text-xl font-bold flex-1 text-center mr-9">
+              Edit your Profile
+            </h1>
+            <Star className="w-6 h-6 text-black" />
+          </div>
+        </div>
+      </div>
+
+
+      <div className="max-w-md mx-auto bg-slate-900 min-h-screen relative z-10">
+        {/* Profile Picture Section */}
+        <div className="bg-slate-800 px-6 py-8 text-center">
+          <div className="relative inline-block">
+            <div className="w-32 h-32 bg-gray-400 rounded-full mx-auto mb-4 flex items-center justify-center overflow-hidden">
+              {profileImage ? (
+                <img 
+                  src={profileImage} 
+                  alt="Profile" 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <Camera className="w-12 h-12 text-gray-600" />
+              )}
             </div>
-            <CardTitle className="text-2xl font-bold">Welcome, {userName}! 🎉</CardTitle>
-            <p className="text-black/80">
-              Let's make your profile shine ✨
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-6 p-6">
-            {/* Progress indicator */}
-            <div className="bg-gradient-to-r from-orange-500/10 to-orange-600/10 p-4 rounded-xl border-2 border-orange-500/30">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-semibold text-orange-300">Profile Completion</span>
-                <span className="text-sm font-bold text-orange-400">25%</span>
-              </div>
-              <div className="w-full bg-gray-700 rounded-full h-2">
-                <div className="bg-gradient-to-r from-orange-500 to-orange-600 h-2 rounded-full orange-glow" style={{ width: '25%' }}></div>
-              </div>
-            </div>
-
-            {/* Profile completion steps */}
-            <div className="space-y-4">
-              <div className="flex items-center p-4 bg-gradient-to-r from-orange-500/10 to-red-500/10 rounded-xl border-2 border-orange-500/30 card-hover">
-                <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center mr-4">
-                  <Camera className="w-6 h-6 text-black" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-orange-300">📸 Add Profile Photo</h3>
-                  <p className="text-sm text-orange-400/70">Show your amazing smile</p>
-                </div>
-                <Button variant="outline" size="sm" className="btn-hover-lift border-orange-500/50 text-orange-400 hover:bg-orange-500/10">
-                  Upload
-                </Button>
-              </div>
-
-              <div className="flex items-center p-4 bg-gradient-to-r from-orange-600/10 to-orange-500/10 rounded-xl border-2 border-orange-500/30 card-hover">
-                <div className="w-12 h-12 bg-gradient-to-r from-orange-600 to-orange-500 rounded-full flex items-center justify-center mr-4">
-                  <MapPin className="w-6 h-6 text-black" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-orange-300">📍 Set Location</h3>
-                  <p className="text-sm text-orange-400/70">Find travelers near you</p>
-                </div>
-                <Button variant="outline" size="sm" className="btn-hover-lift border-orange-500/50 text-orange-400 hover:bg-orange-500/10">
-                  Set
-                </Button>
-              </div>
-
-              <div className="flex items-center p-4 bg-gradient-to-r from-orange-400/10 to-orange-600/10 rounded-xl border-2 border-orange-500/30 card-hover">
-                <div className="w-12 h-12 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full flex items-center justify-center mr-4">
-                  <User className="w-6 h-6 text-black" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-orange-300">✍️ Bio & Preferences</h3>
-                  <p className="text-sm text-orange-400/70">Tell your travel story</p>
-                </div>
-                <Button variant="outline" size="sm" className="btn-hover-lift border-orange-500/50 text-orange-400 hover:bg-orange-500/10">
-                  Add
-                </Button>
-              </div>
-            </div>
-
-            {/* Achievement section */}
-            <div className="bg-gradient-to-r from-orange-500/10 to-orange-600/10 p-4 rounded-xl border-2 border-orange-500/30">
-              <div className="flex items-center justify-center space-x-2 mb-2">
-                <Trophy className="w-5 h-5 text-orange-500" />
-                <span className="font-semibold text-orange-300">First Achievement Unlocked!</span>
-              </div>
-              <p className="text-center text-sm text-orange-400/70">
-                🎯 <span className="font-medium text-orange-400">New Explorer</span> - Welcome to TravelMatch!
-              </p>
-            </div>
-
-            {/* Continue Button */}
-            <Button
-              onClick={onContinue}
-              className="w-full h-14 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-black rounded-xl font-semibold text-lg shadow-xl btn-hover-lift border-0 orange-glow"
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="absolute bottom-4 right-4 bg-gray-800 p-2 rounded-full border border-gray-600 hover:bg-gray-700 transition-colors"
             >
-              🌟 Continue to Dashboard
-            </Button>
+              <Camera className="w-4 h-4 text-white" />
+            </button>
+          </div>
+        </div>
 
-            <div className="text-center space-y-2">
-              <p className="text-xs text-orange-400/70">
-                🕐 You can complete these steps later in your profile settings
-              </p>
-              <div className="flex justify-center space-x-4 text-xs text-orange-400/50">
-                <span className="flex items-center space-x-1">
-                  <Globe className="w-3 h-3" />
-                  <span>50K+ travelers</span>
-                </span>
-                <span className="flex items-center space-x-1">
-                  <Star className="w-3 h-3" />
-                  <span>4.9 rating</span>
-                </span>
-              </div>
+        {/* Form Fields */}
+        <div className="px-6 py-6 space-y-6">
+          {/* Name Field */}
+          <div>
+            <Label htmlFor="name" className="text-orange-500 text-sm flex items-center gap-2">
+              <span className="text-orange-500">👤</span> Name
+            </Label>
+            <Input
+              id="name"
+              name="name"
+              type="text"
+              value={formData.name}
+              onChange={handleInputChange}
+              className="mt-1 bg-slate-800 border-slate-700 text-white"
+              placeholder="Current Name"
+            />
+          </div>
+
+          {/* Interests Section */}
+          <div>
+            <Label className="text-orange-500 text-sm flex items-center gap-2">
+              <span className="text-orange-500">❤️</span> Interests
+            </Label>
+            <div className="my-3">
+              {interestOptions.map((interest) => {
+                const isSelected = formData.interests.includes(interest.id);
+                const colorClasses = getColorClasses(interest.color, isSelected);
+                return (
+                  <button
+                    key={interest.id}
+                    onClick={() => handleInterestToggle(interest.id)}
+                    className={`px-4 py-3 mx-1 my-1 rounded-full text-sm font-medium transition-all duration-200 transform hover:scale-105 w-fit shadow-md backdrop-blur-sm ${colorClasses}`}
+                  >
+                    {interest.label}
+                  </button>
+                );
+              })}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+
+          {/* Phone Number Field */}
+          <div>
+            <Label htmlFor="phoneNumber" className="text-orange-500 text-sm flex items-center gap-2">
+              <span className="text-orange-500">📱</span> Phone Number
+            </Label>
+            <Input
+              id="phoneNumber"
+              name="phoneNumber"
+              type="tel"
+              value={formData.phoneNumber}
+              onChange={handleInputChange}
+              className="mt-1 bg-slate-800 border-slate-700 text-white"
+              placeholder="Current Phone Number"
+            />
+          </div>
+
+          {/* Email Field */}
+          <div>
+            <Label htmlFor="email" className="text-orange-500 text-sm flex items-center gap-2">
+              <span className="text-orange-500">📧</span> Email
+            </Label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              className="mt-1 bg-slate-800 border-slate-700 text-white"
+              placeholder="Current Email"
+            />
+          </div>
+
+          {/* Change Password Section */}
+          <div>
+            <Label className="text-white text-sm">Change password</Label>
+            <Button
+              onClick={handleResetPassword}
+              className="w-full mt-2 bg-orange-500 hover:bg-orange-600 text-black font-semibold py-3 rounded-lg"
+            >
+              Reset Password
+            </Button>
+          </div>
+
+          {/* Confirm Changes Button */}
+          <div className="pt-4">
+            <Button
+              onClick={handleSave}
+              className="w-full bg-orange-500 hover:bg-orange-600 text-black font-semibold py-4 rounded-lg flex items-center justify-center gap-2"
+            >
+              Confirm Changes
+            </Button>
+          </div>
+        </div>
       </div>
+
+      {/* Profile Picture Modal */}
+      <ProfilePictureModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onImageSelect={handleImageSelect}
+        currentImage={profileImage || undefined}
+      />
+
+      {/* Reset Password Modal */}
+      <ResetPasswordModal
+        isOpen={isResetPasswordModalOpen}
+        onClose={() => setIsResetPasswordModalOpen(false)}
+        onConfirm={handlePasswordReset}
+      />
     </div>
   );
 }
