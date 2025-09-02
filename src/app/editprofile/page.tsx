@@ -6,6 +6,7 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import ProfilePictureModal from "../../components/ProfilePictureModal";
+import ResetPasswordModal from "../../components/ResetPasswordModal";
 
 const interestOptions = [
   "CAFE", "NATIONAL PARK", "HISTORICAL", "ISLAND", 
@@ -23,6 +24,7 @@ export default function EditProfilePage() {
 
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -46,7 +48,13 @@ export default function EditProfilePage() {
   };
 
   const handleResetPassword = () => {
-    console.log("Reset password requested");
+    setIsResetPasswordModalOpen(true);
+  };
+
+  const handlePasswordReset = (passwordData: { oldPassword: string; newPassword: string; confirmPassword: string }) => {
+    console.log("Password reset data:", passwordData);
+    // Here you would typically call an API to reset the password
+    // For now, we'll just log the data
   };
 
   const handleImageSelect = (imageFile: File | null) => {
@@ -215,6 +223,13 @@ export default function EditProfilePage() {
         onClose={() => setIsModalOpen(false)}
         onImageSelect={handleImageSelect}
         currentImage={profileImage || undefined}
+      />
+
+      {/* Reset Password Modal */}
+      <ResetPasswordModal
+        isOpen={isResetPasswordModalOpen}
+        onClose={() => setIsResetPasswordModalOpen(false)}
+        onConfirm={handlePasswordReset}
       />
     </div>
   );
