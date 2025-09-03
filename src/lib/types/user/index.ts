@@ -7,6 +7,7 @@ export interface UserProfile {
   email: string;
   phoneNumber: string;
   interests: string[];
+  travelStyle?: string[];
   profileImage?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -18,6 +19,7 @@ export interface UpdateUserProfile {
   middleName?: string;
   phoneNumber: string;
   interests: string[];
+  travelStyle?: string[];
   profileImage?: string;
 }
 
