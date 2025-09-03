@@ -1,7 +1,9 @@
 // User-related type definitions
 export interface UserProfile {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
+  middleName?: string;
   email: string;
   phoneNumber: string;
   interests: string[];
@@ -11,7 +13,9 @@ export interface UserProfile {
 }
 
 export interface UpdateUserProfile {
-  name: string;
+  firstName: string;
+  lastName: string;
+  middleName?: string;
   phoneNumber: string;
   interests: string[];
   profileImage?: string;

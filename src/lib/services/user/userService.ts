@@ -19,7 +19,9 @@ class UserService {
       // For now, return mock data with the example email
       return {
         id: userId,
-        name: "",
+        firstName: "",
+        lastName: "",
+        middleName: "",
         email: "example@hotmail.com", // This will come from database
         phoneNumber: "",
         interests: [],

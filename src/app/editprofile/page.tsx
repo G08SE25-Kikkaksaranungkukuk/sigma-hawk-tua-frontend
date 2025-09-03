@@ -62,7 +62,9 @@ export default function EditProfilePage() {
   const { userProfile, userEmail, loading, error, updateProfile } = useUserProfile();
 
   const [formData, setFormData] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
+    middleName: "",
     phoneNumber: "",
     interests: [] as string[]
   });
@@ -75,7 +77,9 @@ export default function EditProfilePage() {
   useEffect(() => {
     if (userProfile) {
       setFormData({
-        name: userProfile.name,
+        firstName: userProfile.firstName,
+        lastName: userProfile.lastName,
+        middleName: userProfile.middleName || "",
         phoneNumber: userProfile.phoneNumber,
         interests: userProfile.interests
       });
@@ -105,7 +109,9 @@ export default function EditProfilePage() {
     
     try {
       const success = await updateProfile({
-        name: formData.name,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        middleName: formData.middleName || undefined,
         phoneNumber: formData.phoneNumber,
         interests: formData.interests,
         profileImage: profileImage || undefined
@@ -215,20 +221,55 @@ export default function EditProfilePage() {
 
         {/* Form Fields */}
         <div className="px-6 py-6 space-y-6">
-          {/* Name Field */}
-          <div>
-            <Label htmlFor="name" className="text-orange-500 text-sm flex items-center gap-2">
-              <span className="text-orange-500">👤</span> Name
-            </Label>
-            <Input
-              id="name"
-              name="name"
-              type="text"
-              value={formData.name}
-              onChange={handleInputChange}
-              className="mt-1 bg-slate-800 border-slate-700 text-white"
-              placeholder="Current Name"
-            />
+          {/* Name Fields */}
+          <div className="space-y-4">
+            {/* First Name Field */}
+            <div>
+              <Label htmlFor="firstName" className="text-orange-500 text-sm flex items-center gap-2">
+                <span className="text-orange-500">👤</span> First Name
+              </Label>
+              <Input
+                id="firstName"
+                name="firstName"
+                type="text"
+                value={formData.firstName}
+                onChange={handleInputChange}
+                className="mt-1 bg-slate-800 border-slate-700 text-white"
+                placeholder="Enter your first name"
+              />
+            </div>
+
+            {/* Last Name Field */}
+            <div>
+              <Label htmlFor="lastName" className="text-orange-500 text-sm flex items-center gap-2">
+                <span className="text-orange-500">👤</span> Last Name
+              </Label>
+              <Input
+                id="lastName"
+                name="lastName"
+                type="text"
+                value={formData.lastName}
+                onChange={handleInputChange}
+                className="mt-1 bg-slate-800 border-slate-700 text-white"
+                placeholder="Enter your last name"
+              />
+            </div>
+
+            {/* Middle Name Field (Optional) */}
+            <div>
+              <Label htmlFor="middleName" className="text-orange-500 text-sm flex items-center gap-2">
+                <span className="text-orange-500">👤</span> Middle Name <span className="text-gray-400 text-xs">(optional)</span>
+              </Label>
+              <Input
+                id="middleName"
+                name="middleName"
+                type="text"
+                value={formData.middleName}
+                onChange={handleInputChange}
+                className="mt-1 bg-slate-800 border-slate-700 text-white"
+                placeholder="Enter your middle name (optional)"
+              />
+            </div>
           </div>
 
           {/* Interests Section */}

@@ -139,16 +139,16 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               {/* First Name */}
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-orange-300 font-semibold">👤 First Name</Label>
+                <Label htmlFor="firstName" className="text-orange-300 font-semibold">👤 First Name</Label>
                 <Input
-                  id="name"
-
+                  id="firstName"
+                  {...register("firstName")}
                   className="h-12 border-2 border-orange-500/30 focus:border-orange-500 rounded-xl bg-gray-800/50 text-white placeholder:text-gray-400"
-                  placeholder="Enter your first Name"
+                  placeholder="Enter your first name"
                 />
-                {errors.name && (
+                {errors.firstName && (
                   <p className="text-sm text-red-400 flex items-center gap-1">
-                    ⚠️ {errors.name.message}
+                    ⚠️ {errors.firstName.message}
                   </p>
                 )}
               </div>
@@ -156,14 +156,14 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
               <div className="space-y-2">
                 <Label htmlFor="lastName" className="text-orange-300 font-semibold">👥 Last Name</Label>
                 <Input
-                  id="name"
-                  {...register("name")}
+                  id="lastName"
+                  {...register("lastName")}
                   className="h-12 border-2 border-orange-500/30 focus:border-orange-500 rounded-xl bg-gray-800/50 text-white placeholder:text-gray-400"
-                  placeholder="Enter your last Name"
+                  placeholder="Enter your last name"
                 />
-                {errors.name && (
+                {errors.lastName && (
                   <p className="text-sm text-red-400 flex items-center gap-1">
-                    ⚠️ {errors.name.message}
+                    ⚠️ {errors.lastName.message}
                   </p>
                 )}
               </div>
@@ -171,14 +171,14 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
               <div className="space-y-2">
                 <Label htmlFor="middleName" className="text-orange-300 font-semibold">🎟 Middle name (optional)</Label>
                 <Input
-                  id="name"
-                  {...register("name")}
+                  id="middleName"
+                  {...register("middleName")}
                   className="h-12 border-2 border-orange-500/30 focus:border-orange-500 rounded-xl bg-gray-800/50 text-white placeholder:text-gray-400"
-                  placeholder="Enter your middle name"
+                  placeholder="Enter your middle name (optional)"
                 />
-                {errors.name && (
+                {errors.middleName && (
                   <p className="text-sm text-red-400 flex items-center gap-1">
-                    ⚠️ {errors.name.message}
+                    ⚠️ {errors.middleName.message}
                   </p>
                 )}
               </div>
