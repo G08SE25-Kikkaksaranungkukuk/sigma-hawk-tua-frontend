@@ -1,6 +1,5 @@
 "use client";
 import React, { useState } from "react";
-import { signUpSchema, type SignUpFormData } from "../utils/schemas";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
@@ -13,6 +12,7 @@ import { termsOfService } from "./termsOfService";
 import { privacyPolicy } from "./privacyPolicy";
 import axios from "axios";
 import { useFormValidation } from "../utils/validation";
+import { useRouter } from "next/navigation";
 
 interface SignUpScreenProps {
   onBack: () => void;
@@ -38,7 +38,7 @@ const travelStyles = [
 export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
   // Validation Hook
   const { validateForm, clearError, getError } = useFormValidation();
-
+  const router = useRouter();
   // UI States
   const [open, setOpen] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
@@ -124,10 +124,12 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
       console.log("Sending payload:", payload);
 
       const response = await axios.post("http://localhost:8080/auth/register", payload);
-      
-      console.log("Response:", response.data);
-      // เรียก callback function
-      onSignUp(response.data);
+
+      console.log("Registration successful:", response.data);
+
+      setTimeout(() => {
+        router.push("/login"); 
+      }, 2000);
 
     } catch (err: any) {
       console.error("Registration error:", err);
@@ -151,14 +153,14 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
       <div className="max-w-md mx-auto relative z-10">
         {/* Header */}
         <div className="flex items-center mb-6 pt-4 slide-up">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onBack}
-            className="mr-2 p-2 hover:bg-orange-500/10 rounded-full text-orange-400"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
+          <a href="/">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mr-2 p-2 hover:bg-orange-500/10 rounded-full text-orange-400"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button></a>
           <h1 className="text-xl font-semibold text-white">Create Account</h1>
         </div>
 
@@ -182,9 +184,8 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                     setFirstName(e.target.value);
                     clearError("first_name");
                   }}
-                  className={`h-12 border-2 focus:border-orange-500 rounded-xl bg-gray-800/50 text-white placeholder:text-gray-400 ${
-                    getError("first_name") ? "border-red-500" : "border-orange-500/30"
-                  }`}
+                  className={`h-12 border-2 focus:border-orange-500 rounded-xl bg-gray-800/50 text-white placeholder:text-gray-400 ${getError("first_name") ? "border-red-500" : "border-orange-500/30"
+                    }`}
                   placeholder="Enter your first name"
                 />
                 {getError("first_name") && (
@@ -206,9 +207,8 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                     setLastName(e.target.value);
                     clearError("last_name");
                   }}
-                  className={`h-12 border-2 focus:border-orange-500 rounded-xl bg-gray-800/50 text-white placeholder:text-gray-400 ${
-                    getError("last_name") ? "border-red-500" : "border-orange-500/30"
-                  }`}
+                  className={`h-12 border-2 focus:border-orange-500 rounded-xl bg-gray-800/50 text-white placeholder:text-gray-400 ${getError("last_name") ? "border-red-500" : "border-orange-500/30"
+                    }`}
                   placeholder="Enter your last name"
                 />
                 {getError("last_name") && (
@@ -218,7 +218,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                 )}
               </div>
 
-          
+
 
               {/* Birth Date */}
               <div className="space-y-2">
@@ -228,9 +228,8 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                     <Button
                       variant="outline"
                       type="button"
-                      className={`h-12 justify-between w-full border-2 focus:border-orange-500 rounded-xl bg-gray-800/50 text-gray-200 ${
-                        getError("birth_date") ? "border-red-500" : "border-orange-500/30"
-                      }`}
+                      className={`h-12 justify-between w-full border-2 focus:border-orange-500 rounded-xl bg-gray-800/50 text-gray-200 ${getError("birth_date") ? "border-red-500" : "border-orange-500/30"
+                        }`}
                     >
                       {date ? date.toLocaleDateString() : "Select date"}
                       <ChevronDown />
@@ -272,11 +271,10 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                         setSex(g.value as "male" | "female" | "other");
                         clearError("sex");
                       }}
-                      className={`flex-1 px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all chip-bounce ${
-                        sex === g.value
+                      className={`flex-1 px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all chip-bounce ${sex === g.value
                           ? `bg-gradient-to-r ${g.color} text-black border-transparent shadow-lg orange-glow`
                           : "bg-gray-800/50 text-orange-300 border-orange-500/30 hover:border-orange-500 hover:bg-orange-500/10"
-                      }`}
+                        }`}
                     >
                       {g.label}
                     </button>
@@ -298,11 +296,10 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                       key={interest.id}
                       type="button"
                       onClick={() => toggleInterest(interest.id)}
-                      className={`px-3 py-2 rounded-full border-2 text-sm font-medium transition-all chip-bounce ${
-                        selectedInterests.includes(interest.id)
+                      className={`px-3 py-2 rounded-full border-2 text-sm font-medium transition-all chip-bounce ${selectedInterests.includes(interest.id)
                           ? `${interest.color} shadow-md scale-105 orange-glow`
                           : "bg-gray-800/50 text-orange-300 border-orange-500/30 hover:border-orange-500"
-                      }`}
+                        }`}
                     >
                       {interest.label}
                     </button>
@@ -352,9 +349,8 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                     setPhone(e.target.value);
                     clearError("phone");
                   }}
-                  className={`h-12 border-2 focus:border-orange-500 rounded-xl bg-gray-800/50 text-white placeholder:text-gray-400 ${
-                    getError("phone") ? "border-red-500" : "border-orange-500/30"
-                  }`}
+                  className={`h-12 border-2 focus:border-orange-500 rounded-xl bg-gray-800/50 text-white placeholder:text-gray-400 ${getError("phone") ? "border-red-500" : "border-orange-500/30"
+                    }`}
                   placeholder="Enter your phone number"
                 />
                 {getError("phone") && (
@@ -377,9 +373,8 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                     setEmail(e.target.value);
                     clearError("email");
                   }}
-                  className={`h-12 border-2 focus:border-orange-500 rounded-xl bg-gray-800/50 text-white placeholder:text-gray-400 ${
-                    getError("email") ? "border-red-500" : "border-orange-500/30"
-                  }`}
+                  className={`h-12 border-2 focus:border-orange-500 rounded-xl bg-gray-800/50 text-white placeholder:text-gray-400 ${getError("email") ? "border-red-500" : "border-orange-500/30"
+                    }`}
                   placeholder="Enter your email address"
                 />
                 {getError("email") && (
@@ -402,9 +397,8 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                     setPassword(e.target.value);
                     clearError("password");
                   }}
-                  className={`h-12 border-2 focus:border-orange-500 rounded-xl bg-gray-800/50 text-white placeholder:text-gray-400 ${
-                    getError("password") ? "border-red-500" : "border-orange-500/30"
-                  }`}
+                  className={`h-12 border-2 focus:border-orange-500 rounded-xl bg-gray-800/50 text-white placeholder:text-gray-400 ${getError("password") ? "border-red-500" : "border-orange-500/30"
+                    }`}
                   placeholder="Create a strong password"
                 />
                 {getError("password") && (
@@ -427,9 +421,8 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                     setConfirmPassword(e.target.value);
                     clearError("confirmPassword");
                   }}
-                  className={`h-12 border-2 focus:border-orange-500 rounded-xl bg-gray-800/50 text-white placeholder:text-gray-400 ${
-                    getError("confirmPassword") ? "border-red-500" : "border-orange-500/30"
-                  }`}
+                  className={`h-12 border-2 focus:border-orange-500 rounded-xl bg-gray-800/50 text-white placeholder:text-gray-400 ${getError("confirmPassword") ? "border-red-500" : "border-orange-500/30"
+                    }`}
                   placeholder="Confirm your password"
                 />
                 {getError("confirmPassword") && (
