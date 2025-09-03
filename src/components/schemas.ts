@@ -1,13 +1,15 @@
 import { z } from "zod";
 
+// ให้ตรงกับโครงสร้างใน page.tsx (เช่นชื่อ state, field, และ array)
 export const signUpSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters").max(50, "Name must be less than 50 characters"),
-  age: z.number().min(18, "Must be at least 18 years old").max(100, "Age must be realistic"),
-  gender: z.string().refine((val) => ["male", "female", "other"].includes(val), {
+  first_name: z.string().min(2, "First name must be at least 2 characters").max(50, "First name must be less than 50 characters"),
+  last_name: z.string().min(2, "Last name must be at least 2 characters").max(50, "Last name must be less than 50 characters"),
+  birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Please enter a valid birth date (YYYY-MM-DD)"),
+  sex: z.string().refine((val) => ["male", "female", "other"].includes(val), {
     message: "Please select a gender",
   }),
   interests: z.array(z.string()).min(1, "Please select at least one interest"),
-  travelStyle: z.array(z.string()).min(1, "Please select at least one travel style"),
+  travel_styles: z.array(z.string()).min(1, "Please select at least one travel style"),
   phone: z.string().min(10, "Phone number must be at least 10 digits").regex(/^[0-9+\-\s()]+$/, "Invalid phone number format"),
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(8, "Password must be at least 8 characters").regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, "Password must contain at least one lowercase letter, one uppercase letter, and one number"),
