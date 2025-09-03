@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Info, ChevronDown, ChevronUp, Mail } from "lucide-react";
 import { brand } from "@/components/ui/utils";
-import { UI_TEXT } from "@/config/ui-text";
-import { APP_CONFIG } from "@/config/app-config";
+import { UI_TEXT } from "@/config/group/ui-text";
+import { APP_CONFIG } from "@/config/group/app-config";
 
 interface GroupContactProps {
   onContactHost: () => void;

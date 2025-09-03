@@ -1,8 +1,8 @@
 import React from "react";
 import { Users, Share2 } from "lucide-react";
 import { brand } from "@/components/ui/utils";
-import { UI_TEXT } from "@/config/ui-text";
-import { APP_CONFIG } from "@/config/app-config";
+import { UI_TEXT } from "@/config/group/ui-text";
+import { APP_CONFIG } from "@/config/group/app-config";
 import type { GroupInfo } from "@/components/schemas";
 
 interface GroupSidebarProps {

@@ -7,9 +7,9 @@ import { GroupDetails } from "@/components/group/GroupDetails";
 import { GroupSidebar } from "@/components/group/GroupSidebar";
 import { GroupContact } from "@/components/group/GroupContact";
 import { GroupPageSkeleton, ErrorState } from "@/components/group/LoadingStates";
-import { useGroupData } from "@/hooks/useGroupData";
-import { useGroupActions } from "@/hooks/useGroupActions";
-import { SAMPLE_GROUP_DATA } from "@/services/group-service";
+import { useGroupData } from "@/lib/hooks/group/useGroupData";
+import { useGroupActions } from "@/lib/hooks/group/useGroupActions";
+import { SAMPLE_GROUP_DATA } from "@/lib/services/group/group-service";
 
 interface TravelGroupPageProps {
   params?: { groupId?: string };

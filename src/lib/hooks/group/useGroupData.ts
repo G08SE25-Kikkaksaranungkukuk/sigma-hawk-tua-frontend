@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { groupService } from '@/services/group-service';
+import { groupService } from '@/lib/services/group/group-service';
 import type { GroupInfo } from '@/components/schemas';
 
 interface UseGroupDataReturn {

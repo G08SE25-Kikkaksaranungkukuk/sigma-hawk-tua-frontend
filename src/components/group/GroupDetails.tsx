@@ -3,7 +3,7 @@ import { Info, CalendarDays, ShieldCheck, Sparkles } from "lucide-react";
 import { Pill } from "@/components/ui/pill";
 import { MemberPill } from "@/components/ui/member-pill";
 import { brand } from "@/components/ui/utils";
-import { UI_TEXT } from "@/config/ui-text";
+import { UI_TEXT } from "@/config/group/ui-text";
 import type { GroupInfo } from "@/components/schemas";
 
 interface GroupDetailsProps {
