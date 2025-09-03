@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Camera, Upload, X } from "lucide-react";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface ProfilePictureModalProps {
