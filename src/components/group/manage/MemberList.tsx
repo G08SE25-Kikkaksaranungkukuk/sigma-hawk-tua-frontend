@@ -46,7 +46,7 @@ export default function MemberList({ members, onDelete, onTransfer }: Props) {
                         <button className="bg-amber-500/80 rounded-md p-1 w-auto font-semibold" onClick={()=>onTransfer(m.id)}>
                             <p className="text-sm">Promote</p>
                         </button>
-                        <div className="bg-rose-400 rounded-md p-1 h-auto flex items-center justify-center" onClick={()=>{onDelete(m.id)}}><Trash2 size={18}></Trash2></div>
+                        <button className="bg-rose-400 rounded-md p-1 h-auto flex items-center justify-center" onClick={()=>{onDelete(m.id)}}><Trash2 size={18}></Trash2></button>
                     </div>
                 </div>
             </div>
