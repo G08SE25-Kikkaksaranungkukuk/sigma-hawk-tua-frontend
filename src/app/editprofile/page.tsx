@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { Camera, Save, Heart, Star, Sparkles, ArrowLeft } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Camera, Save, Heart, Star, Sparkles, ArrowLeft, Lock } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import ProfilePictureModal from "../../components/editprofile/ProfilePictureModal";
 import ResetPasswordModal from "../../components/editprofile/ResetPasswordModal";
+import { useUserProfile } from "../../lib/hooks";
 
 const interestOptions = [
   { id: "nature", label: "🌿 Nature", color: "green" },
@@ -57,16 +58,30 @@ const getColorClasses = (color: string, isSelected: boolean) => {
 };
 
 export default function EditProfilePage() {
+  // Use the custom hook for user profile management
+  const { userProfile, userEmail, loading, error, updateProfile } = useUserProfile();
+
   const [formData, setFormData] = useState({
     name: "",
     phoneNumber: "",
-    email: "",
     interests: [] as string[]
   });
 
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
+
+  // Update form data when user profile is loaded
+  useEffect(() => {
+    if (userProfile) {
+      setFormData({
+        name: userProfile.name,
+        phoneNumber: userProfile.phoneNumber,
+        interests: userProfile.interests
+      });
+      setProfileImage(userProfile.profileImage || null);
+    }
+  }, [userProfile]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -85,8 +100,27 @@ export default function EditProfilePage() {
     }));
   };
 
-  const handleSave = () => {
-    console.log("Saving profile data:", formData);
+  const handleSave = async () => {
+    if (loading) return;
+    
+    try {
+      const success = await updateProfile({
+        name: formData.name,
+        phoneNumber: formData.phoneNumber,
+        interests: formData.interests,
+        profileImage: profileImage || undefined
+      });
+      
+      if (success) {
+        console.log("Profile updated successfully");
+        // You can add a toast notification here
+      } else {
+        console.log("Failed to update profile");
+        // You can add error handling here
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+    }
   };
 
   const handleResetPassword = () => {
@@ -113,6 +147,22 @@ export default function EditProfilePage() {
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
+      {/* Loading overlay */}
+      {loading && (
+        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 p-6 rounded-lg">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
+            <p className="text-white mt-2">Loading profile...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Error display */}
+      {error && (
+        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-red-500/90 text-white px-4 py-2 rounded-lg z-40">
+          {error}
+        </div>
+      )}
       {/* Floating decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-20 left-10 w-16 h-16 bg-orange-500/20 rounded-full animate-bounce"></div>
@@ -219,20 +269,27 @@ export default function EditProfilePage() {
             />
           </div>
 
-          {/* Email Field */}
+          {/* Email Field - Read Only */}
           <div>
             <Label htmlFor="email" className="text-orange-500 text-sm flex items-center gap-2">
               <span className="text-orange-500">📧</span> Email
+              <Lock className="w-3 h-3 text-gray-400" />
             </Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              className="mt-1 bg-slate-800 border-slate-700 text-white"
-              placeholder="Current Email"
-            />
+            <div className="relative">
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={userEmail || "example@hotmail.com"}
+                readOnly
+                className="mt-1 bg-slate-700 border-slate-600 text-gray-300"
+                placeholder="Email from database"
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                <Lock className="w-4 h-4 text-gray-400" />
+              </div>
+            </div>
+            <p className="text-xs text-gray-400 mt-1">Email cannot be changed here</p>
           </div>
 
           {/* Change Password Section */}
@@ -250,9 +307,10 @@ export default function EditProfilePage() {
           <div className="pt-4">
             <Button
               onClick={handleSave}
-              className="w-full bg-orange-500 hover:bg-orange-600 text-black font-semibold py-4 rounded-lg flex items-center justify-center gap-2"
+              disabled={loading}
+              className="w-full bg-orange-500 hover:bg-orange-600 text-black font-semibold py-4 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Confirm Changes
+              {loading ? "Saving..." : "Confirm Changes"}
             </Button>
           </div>
         </div>
