@@ -2,11 +2,11 @@
 import React, { useState } from "react";
 import { brand } from "@/components/ui/utils";
 import TravelInviteModal from "@/components/TravelInviteModal";
-import { GroupHeader } from "@/components/group/GroupHeader";
-import { GroupDetails } from "@/components/group/GroupDetails";
-import { GroupSidebar } from "@/components/group/GroupSidebar";
-import { GroupContact } from "@/components/group/GroupContact";
-import { GroupPageSkeleton, ErrorState } from "@/components/group/LoadingStates";
+import { GroupHeader } from "@/components/group/info/GroupHeader";
+import { GroupDetails } from "@/components/group/info/GroupDetails";
+import { GroupSidebar } from "@/components/group/info/GroupSidebar";
+import { GroupContact } from "@/components/group/info/GroupContact";
+import { GroupPageSkeleton, ErrorState } from "@/components/group/info/LoadingStates";
 import { useGroupData } from "@/lib/hooks/group/useGroupData";
 import { useGroupActions } from "@/lib/hooks/group/useGroupActions";
 import { SAMPLE_GROUP_DATA } from "@/lib/services/group/group-service";
