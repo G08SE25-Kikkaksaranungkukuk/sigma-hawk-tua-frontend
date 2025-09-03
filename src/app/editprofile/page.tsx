@@ -267,6 +267,11 @@ export default function EditProfilePage() {
     // For now, we'll just log the data
   };
 
+  // Back button navigation handler
+  const handleBackClick = () => {
+    router.push("/home");
+  };
+
   const handleImageSelect = (imageFile: File | null) => {
     if (imageFile) {
       const reader = new FileReader();
@@ -298,7 +303,7 @@ export default function EditProfilePage() {
         </div>
       )}
       {/* Floating decorative elements */}
-      <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute inset-0 overflow-hidden z-0 pointer-events-none">
         <div className="absolute top-20 left-10 w-16 h-16 bg-orange-500/20 rounded-full animate-bounce"></div>
         <div className="absolute top-60 right-16 w-12 h-12 bg-orange-400/30 rounded-full animate-pulse"></div>
         <div className="absolute bottom-40 left-20 w-20 h-20 bg-orange-600/20 rounded-full animate-bounce"></div>
@@ -310,14 +315,16 @@ export default function EditProfilePage() {
       </div>
 
       {/* Header */}
-      <div className="flex justify-center mt-6">
+      <div className="flex justify-center mt-6 relative z-50">
         <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 shadow-md w-full max-w-md">
           <div className="flex items-center">
             <button 
-              onClick={() => router.push("/home")}
-              className="mr-3 hover:bg-black/20 p-1 rounded transition-colors"
+              onClick={handleBackClick}
+              className="mr-3 hover:bg-black/20 hover:scale-110 p-2 rounded-full transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-black/30 cursor-pointer relative z-10"
+              aria-label="Go back to home page"
+              type="button"
             >
-              <ArrowLeft className="w-6 h-6 text-black" />
+              <ArrowLeft className="w-6 h-6 text-black pointer-events-none" />
             </button>
             <h1 className="text-black text-xl font-bold flex-1 text-center mr-9">
               Edit your Profile
