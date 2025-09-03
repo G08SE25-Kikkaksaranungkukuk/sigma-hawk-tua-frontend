@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { X, Eye, EyeOff } from "lucide-react";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface ResetPasswordModalProps {
