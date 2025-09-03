@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Camera, Save, Heart, Star, Sparkles, ArrowLeft, Lock } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -58,6 +59,8 @@ const getColorClasses = (color: string, isSelected: boolean) => {
 };
 
 export default function EditProfilePage() {
+  const router = useRouter();
+  
   // Use the custom hook for user profile management
   const { userProfile, userEmail, loading, error, updateProfile } = useUserProfile();
 
@@ -66,12 +69,22 @@ export default function EditProfilePage() {
     lastName: "",
     middleName: "",
     phoneNumber: "",
-    interests: [] as string[]
+    interests: [] as string[],
+    travelStyle: [] as string[]
   });
 
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
+
+  // Validation state
+  const [validationErrors, setValidationErrors] = useState({
+    firstName: "",
+    lastName: "",
+    phoneNumber: "",
+    interests: "",
+    travelStyle: ""
+  });
 
   // Update form data when user profile is loaded
   useEffect(() => {
@@ -81,17 +94,104 @@ export default function EditProfilePage() {
         lastName: userProfile.lastName,
         middleName: userProfile.middleName || "",
         phoneNumber: userProfile.phoneNumber,
-        interests: userProfile.interests
+        interests: userProfile.interests,
+        travelStyle: userProfile.travelStyle || []
       });
       setProfileImage(userProfile.profileImage || null);
     }
   }, [userProfile]);
 
+  // Validation functions
+  const validateForm = () => {
+    const errors = {
+      firstName: "",
+      lastName: "",
+      phoneNumber: "",
+      interests: "",
+      travelStyle: ""
+    };
+
+    // First name validation
+    if (!formData.firstName || formData.firstName.trim() === "") {
+      errors.firstName = "First name is required";
+    }
+
+    // Last name validation
+    if (!formData.lastName || formData.lastName.trim() === "") {
+      errors.lastName = "Last name is required";
+    }
+
+    // Phone number validation
+    const phoneRegex = /^0\d{2}-\d{3}-\d{4}$/;
+    if (!formData.phoneNumber || formData.phoneNumber.trim() === "") {
+      errors.phoneNumber = "Phone number is required";
+    } else if (!phoneRegex.test(formData.phoneNumber)) {
+      errors.phoneNumber = "Phone number must be in format 0xx-xxx-xxxx";
+    }
+
+    // Interests validation
+    if (formData.interests.length === 0) {
+      errors.interests = "Please select at least 1 interest";
+    }
+
+    // Travel style validation
+    if (formData.travelStyle.length === 0) {
+      errors.travelStyle = "Please select at least 1 travel style";
+    }
+
+    setValidationErrors(errors);
+    
+    // Return true if no errors
+    return Object.values(errors).every(error => error === "");
+  };
+
+  // Check if form is valid
+  const isFormValid = () => {
+    return (
+      formData.firstName.trim() !== "" &&
+      formData.lastName.trim() !== "" &&
+      formData.phoneNumber.trim() !== "" &&
+      /^0\d{2}-\d{3}-\d{4}$/.test(formData.phoneNumber) &&
+      formData.interests.length > 0 &&
+      formData.travelStyle.length > 0
+    );
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    
+    // Special handling for phone number formatting
+    if (name === "phoneNumber") {
+      // Remove all non-digits
+      const digits = value.replace(/\D/g, "");
+      
+      // Format as 0xx-xxx-xxxx
+      let formattedValue = "";
+      if (digits.length > 0) {
+        if (digits.length <= 3) {
+          formattedValue = digits;
+        } else if (digits.length <= 6) {
+          formattedValue = `${digits.slice(0, 3)}-${digits.slice(3)}`;
+        } else {
+          formattedValue = `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+        }
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        [name]: formattedValue
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+    
+    // Clear validation error for this field
+    setValidationErrors(prev => ({
       ...prev,
-      [name]: value
+      [name]: ""
     }));
   };
 
@@ -102,24 +202,52 @@ export default function EditProfilePage() {
         ? prev.interests.filter(i => i !== interestId)
         : [...prev.interests, interestId]
     }));
+    
+    // Clear validation error for interests
+    setValidationErrors(prev => ({
+      ...prev,
+      interests: ""
+    }));
+  };
+
+  const handleTravelStyleToggle = (styleId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      travelStyle: prev.travelStyle.includes(styleId)
+        ? prev.travelStyle.filter(s => s !== styleId)
+        : [...prev.travelStyle, styleId]
+    }));
+    
+    // Clear validation error for travel style
+    setValidationErrors(prev => ({
+      ...prev,
+      travelStyle: ""
+    }));
   };
 
   const handleSave = async () => {
     if (loading) return;
     
+    // Validate form before saving
+    if (!validateForm()) {
+      return;
+    }
+    
     try {
       const success = await updateProfile({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        middleName: formData.middleName || undefined,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        middleName: formData.middleName.trim() || undefined,
         phoneNumber: formData.phoneNumber,
         interests: formData.interests,
+        travelStyle: formData.travelStyle,
         profileImage: profileImage || undefined
       });
       
       if (success) {
         console.log("Profile updated successfully");
-        // You can add a toast notification here
+        // Navigate to home page after successful update
+        router.push("/home");
       } else {
         console.log("Failed to update profile");
         // You can add error handling here
@@ -185,7 +313,12 @@ export default function EditProfilePage() {
       <div className="flex justify-center mt-6">
         <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 shadow-md w-full max-w-md">
           <div className="flex items-center">
-            <ArrowLeft className="w-6 h-6 text-black mr-3" />
+            <button 
+              onClick={() => router.push("/home")}
+              className="mr-3 hover:bg-black/20 p-1 rounded transition-colors"
+            >
+              <ArrowLeft className="w-6 h-6 text-black" />
+            </button>
             <h1 className="text-black text-xl font-bold flex-1 text-center mr-9">
               Edit your Profile
             </h1>
@@ -226,7 +359,7 @@ export default function EditProfilePage() {
             {/* First Name Field */}
             <div>
               <Label htmlFor="firstName" className="text-orange-500 text-sm flex items-center gap-2">
-                <span className="text-orange-500">👤</span> First Name
+                <span className="text-orange-500">👤</span> First Name <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="firstName"
@@ -234,15 +367,20 @@ export default function EditProfilePage() {
                 type="text"
                 value={formData.firstName}
                 onChange={handleInputChange}
-                className="mt-1 bg-slate-800 border-slate-700 text-white"
+                className={`mt-1 bg-slate-800 border-slate-700 text-white ${
+                  validationErrors.firstName ? 'border-red-500' : ''
+                }`}
                 placeholder="Enter your first name"
               />
+              {validationErrors.firstName && (
+                <p className="text-red-500 text-xs mt-1">{validationErrors.firstName}</p>
+              )}
             </div>
 
             {/* Last Name Field */}
             <div>
               <Label htmlFor="lastName" className="text-orange-500 text-sm flex items-center gap-2">
-                <span className="text-orange-500">👤</span> Last Name
+                <span className="text-orange-500">👤</span> Last Name <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="lastName"
@@ -250,9 +388,14 @@ export default function EditProfilePage() {
                 type="text"
                 value={formData.lastName}
                 onChange={handleInputChange}
-                className="mt-1 bg-slate-800 border-slate-700 text-white"
+                className={`mt-1 bg-slate-800 border-slate-700 text-white ${
+                  validationErrors.lastName ? 'border-red-500' : ''
+                }`}
                 placeholder="Enter your last name"
               />
+              {validationErrors.lastName && (
+                <p className="text-red-500 text-xs mt-1">{validationErrors.lastName}</p>
+              )}
             </div>
 
             {/* Middle Name Field (Optional) */}
@@ -275,7 +418,7 @@ export default function EditProfilePage() {
           {/* Interests Section */}
           <div>
             <Label className="text-orange-500 text-sm flex items-center gap-2">
-              <span className="text-orange-500">❤️</span> Interests
+              <span className="text-orange-500">❤️</span> Interests <span className="text-red-500">*</span>
             </Label>
             <div className="my-3">
               {interestOptions.map((interest) => {
@@ -292,12 +435,68 @@ export default function EditProfilePage() {
                 );
               })}
             </div>
+            {validationErrors.interests && (
+              <p className="text-red-500 text-xs mt-1">{validationErrors.interests}</p>
+            )}
+          </div>
+
+          {/* Travel Style Section */}
+          <div>
+            <Label className="text-orange-500 text-sm flex items-center gap-2">
+              <span className="text-orange-500">🧳</span> Travel Style <span className="text-red-500">*</span>
+            </Label>
+            <div className="mt-3 space-y-3">
+              {[
+                { id: "budget", label: "💰 Budget", color: "orange" },
+                { id: "comfort", label: "🛏️ Comfort", color: "blue" },
+                { id: "luxury", label: "💎 Luxury", color: "purple" },
+                { id: "backpack", label: "🎒 Backpack", color: "green" }
+              ].map((style) => {
+                const isChecked = formData.travelStyle.includes(style.id);
+                return (
+                  <div key={style.id} className="flex items-center space-x-3">
+                    <div className="relative flex items-center">
+                      <input
+                        type="checkbox"
+                        id={`travel-${style.id}`}
+                        checked={isChecked}
+                        onChange={() => handleTravelStyleToggle(style.id)}
+                        className="sr-only"
+                      />
+                      <div 
+                        onClick={() => handleTravelStyleToggle(style.id)}
+                        className={`w-5 h-5 rounded border-2 cursor-pointer transition-all duration-200 flex items-center justify-center ${
+                          isChecked 
+                            ? 'bg-orange-500 border-orange-500' 
+                            : 'bg-transparent border-orange-400/60 hover:border-orange-300'
+                        }`}
+                      >
+                        {isChecked && (
+                          <svg className="w-3 h-3 text-black" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+                    <label 
+                      htmlFor={`travel-${style.id}`}
+                      className="text-orange-300 text-sm cursor-pointer select-none hover:text-orange-200 transition-colors"
+                    >
+                      {style.label}
+                    </label>
+                  </div>
+                );
+              })}
+            </div>
+            {validationErrors.travelStyle && (
+              <p className="text-red-500 text-xs mt-1">{validationErrors.travelStyle}</p>
+            )}
           </div>
 
           {/* Phone Number Field */}
           <div>
             <Label htmlFor="phoneNumber" className="text-orange-500 text-sm flex items-center gap-2">
-              <span className="text-orange-500">📱</span> Phone Number
+              <span className="text-orange-500">📱</span> Phone Number <span className="text-red-500">*</span>
             </Label>
             <Input
               id="phoneNumber"
@@ -305,9 +504,16 @@ export default function EditProfilePage() {
               type="tel"
               value={formData.phoneNumber}
               onChange={handleInputChange}
-              className="mt-1 bg-slate-800 border-slate-700 text-white"
-              placeholder="Current Phone Number"
+              className={`mt-1 bg-slate-800 border-slate-700 text-white ${
+                validationErrors.phoneNumber ? 'border-red-500' : ''
+              }`}
+              placeholder="0xx-xxx-xxxx"
+              maxLength={12}
             />
+            {validationErrors.phoneNumber && (
+              <p className="text-red-500 text-xs mt-1">{validationErrors.phoneNumber}</p>
+            )}
+            <p className="text-gray-400 text-xs mt-1">Format: 0xx-xxx-xxxx</p>
           </div>
 
           {/* Email Field - Read Only */}
@@ -348,11 +554,32 @@ export default function EditProfilePage() {
           <div className="pt-4">
             <Button
               onClick={handleSave}
-              disabled={loading}
-              className="w-full bg-orange-500 hover:bg-orange-600 text-black font-semibold py-4 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading || !isFormValid()}
+              className={`w-full font-semibold py-4 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 ${
+                loading || !isFormValid()
+                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                  : 'bg-orange-500 hover:bg-orange-600 text-black'
+              }`}
             >
-              {loading ? "Saving..." : "Confirm Changes"}
+              {loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
+                  Saving...
+                </>
+              ) : !isFormValid() ? (
+                <>
+                  <Lock className="w-4 h-4" />
+                  Complete Required Fields
+                </>
+              ) : (
+                "Confirm Changes"
+              )}
             </Button>
+            {!isFormValid() && (
+              <p className="text-red-500 text-xs mt-2 text-center">
+                Please fill all required fields correctly to continue
+              </p>
+            )}
           </div>
         </div>
       </div>

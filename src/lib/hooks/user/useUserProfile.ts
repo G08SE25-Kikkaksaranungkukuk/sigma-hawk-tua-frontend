@@ -20,6 +20,9 @@ export function useUserProfile(userId?: string): UseUserProfileReturn {
   const [userEmail, setUserEmail] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Store the actual user ID being used (including demo fallback)
+  const actualUserId = userId || 'demo-user-id';
 
   // Fetch user profile data
   const fetchUserProfile = async (id: string) => {
@@ -41,14 +44,9 @@ export function useUserProfile(userId?: string): UseUserProfileReturn {
 
   // Update user profile (excluding email)
   const updateProfile = async (profileData: UpdateUserProfile): Promise<boolean> => {
-    if (!userId) {
-      setError('No user ID provided');
-      return false;
-    }
-
     try {
       setError(null);
-      const updatedProfile = await userService.updateUserProfile(userId, profileData);
+      const updatedProfile = await userService.updateUserProfile(actualUserId, profileData);
       setUserProfile(updatedProfile);
       return true;
     } catch (err) {
@@ -61,21 +59,13 @@ export function useUserProfile(userId?: string): UseUserProfileReturn {
 
   // Refresh profile data
   const refreshProfile = async () => {
-    if (userId) {
-      await fetchUserProfile(userId);
-    }
+    await fetchUserProfile(actualUserId);
   };
 
   // Fetch profile on component mount or userId change
   useEffect(() => {
-    if (userId) {
-      fetchUserProfile(userId);
-    } else {
-      // For demo purposes, load with a default user ID
-      // In production, this should come from authentication context
-      fetchUserProfile('demo-user-id');
-    }
-  }, [userId]);
+    fetchUserProfile(actualUserId);
+  }, [actualUserId]);
 
   return {
     userProfile,
