@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, Save, Heart, Star, Sparkles, ArrowLeft, Lock } from "lucide-react";
+import { Camera, Save, Heart, Star, Sparkles, ArrowLeft, Lock, Trash2 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import ProfilePictureModal from "../../components/editprofile/ProfilePictureModal";
 import ResetPasswordModal from "../../components/editprofile/ResetPasswordModal";
+import ConfirmationDialog from "../../components/editprofile/ConfirmationDialog";
 import { useUserProfile } from "../../lib/hooks";
 
 const interestOptions = [
@@ -76,6 +77,7 @@ export default function EditProfilePage() {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Validation state
   const [validationErrors, setValidationErrors] = useState({
@@ -265,6 +267,17 @@ export default function EditProfilePage() {
     console.log("Password reset data:", passwordData);
     // Here you would typically call an API to reset the password
     // For now, we'll just log the data
+  };
+
+  const handleDeleteProfile = async (password?: string) => {
+    try {
+      // Here you would typically call an API to delete the profile with password
+      console.log("Deleting profile with password validation...");
+      // After successful deletion, redirect to login page
+      router.push("/login");
+    } catch (error) {
+      console.error("Error deleting profile:", error);
+    }
   };
 
   // Back button navigation handler
@@ -555,6 +568,15 @@ export default function EditProfilePage() {
             >
               Reset Password
             </Button>
+            
+            {/* Delete Profile Button */}
+            <Button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="w-full mt-2 bg-red-500/20 hover:bg-red-500/30 text-red-500 border border-red-500/50 font-semibold py-3 rounded-lg flex items-center justify-center gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete Profile
+            </Button>
           </div>
 
           {/* Confirm Changes Button */}
@@ -604,6 +626,19 @@ export default function EditProfilePage() {
         isOpen={isResetPasswordModalOpen}
         onClose={() => setIsResetPasswordModalOpen(false)}
         onConfirm={handlePasswordReset}
+      />
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDeleteProfile}
+        title="Delete Profile"
+        description="Are you sure you want to delete your profile? This action cannot be undone. Please enter your password to confirm."
+        confirmText="Delete Profile"
+        cancelText="Cancel"
+        variant="danger"
+        requirePassword={true}
       />
     </div>
   );
