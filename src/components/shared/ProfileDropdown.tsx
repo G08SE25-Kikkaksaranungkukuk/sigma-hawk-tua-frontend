@@ -13,10 +13,6 @@ import {
   User,
   Settings,
   LogOut,
-  Bookmark,
-  HelpCircle,
-  Shield,
-  Bell,
 } from 'lucide-react';
 
 interface ProfileDropdownProps {
@@ -39,29 +35,9 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
     console.log('Logout clicked');
   };
 
-  const handleSettings = () => {
-    // TODO: Navigate to settings page
-    console.log('Settings clicked');
-  };
-
-  const handleNotifications = () => {
-    // TODO: Navigate to notifications page
-    console.log('Notifications clicked');
-  };
-
-  const handleBookmarks = () => {
-    // TODO: Navigate to bookmarks page
-    console.log('Bookmarks clicked');
-  };
-
-  const handleHelp = () => {
-    // TODO: Navigate to help page
-    console.log('Help clicked');
-  };
-
-  const handlePrivacySafety = () => {
-    // TODO: Navigate to privacy & safety page
-    console.log('Privacy & Safety clicked');
+  const handleProfileManagement = () => {
+    // TODO: Navigate to edit profile page
+    onProfileClick(); // This will navigate to editprofile page
   };
 
   return (
@@ -92,7 +68,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
           {/* Profile Actions */}
           <DropdownMenuItem 
-            onClick={onProfileClick}
+            onClick={() => console.log('Navigate to profile view page')} // TODO: Navigate to profile view page
             className="text-orange-300 cursor-pointer"
           >
             <User className="w-4 h-4 mr-2" />
@@ -100,46 +76,11 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
           </DropdownMenuItem>
 
           <DropdownMenuItem 
-            onClick={handleBookmarks}
-            className="text-orange-300 cursor-pointer"
-          >
-            <Bookmark className="w-4 h-4 mr-2" />
-            Your Bookmarks
-          </DropdownMenuItem>
-
-          <DropdownMenuItem 
-            onClick={handleNotifications}
-            className="text-orange-300 cursor-pointer"
-          >
-            <Bell className="w-4 h-4 mr-2" />
-            Notifications
-          </DropdownMenuItem>
-
-          <DropdownMenuSeparator className="bg-orange-500/20" />
-
-          {/* Settings & Help */}
-          <DropdownMenuItem 
-            onClick={handleSettings}
+            onClick={handleProfileManagement}
             className="text-orange-300 cursor-pointer"
           >
             <Settings className="w-4 h-4 mr-2" />
-            Settings
-          </DropdownMenuItem>
-
-          <DropdownMenuItem 
-            onClick={handlePrivacySafety}
-            className="text-orange-300 cursor-pointer"
-          >
-            <Shield className="w-4 h-4 mr-2" />
-            Privacy & Safety
-          </DropdownMenuItem>
-
-          <DropdownMenuItem 
-            onClick={handleHelp}
-            className="text-orange-300 cursor-pointer"
-          >
-            <HelpCircle className="w-4 h-4 mr-2" />
-            Help & Support
+            Profile Management
           </DropdownMenuItem>
 
           <DropdownMenuSeparator className="bg-orange-500/20" />
