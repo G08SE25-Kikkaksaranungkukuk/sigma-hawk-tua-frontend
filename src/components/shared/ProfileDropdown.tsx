@@ -87,8 +87,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
         >
           {/* User Info Section */}
           <div className="px-3 py-2 border-b border-orange-500/20">
-            <p className="text-sm font-medium text-white">{userName}</p>
-            <p className="text-xs text-orange-300/70">{userEmail}</p>
+            <p className="text-sm font-medium text-orange-300">{userEmail}</p>
           </div>
 
           {/* Profile Actions */}
