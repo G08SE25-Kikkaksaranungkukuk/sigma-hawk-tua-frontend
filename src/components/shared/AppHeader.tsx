@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '../ui/button';
-import { Plane, Bell, Settings, Menu } from 'lucide-react';
+import { Plane, Menu } from 'lucide-react';
 import { APP_CONFIG } from '../../config/shared';
 import { ProfileDropdown } from './ProfileDropdown';
 
@@ -37,20 +37,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onProfileClick }) => {
 
         {/* Right Side Icons */}
         <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-orange-400 hover:bg-orange-500/10"
-          >
-            <Bell className="w-5 h-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-orange-400 hover:bg-orange-500/10"
-          >
-            <Settings className="w-5 h-5" />
-          </Button>
           <ProfileDropdown onProfileClick={onProfileClick} />
           <Button
             variant="ghost"
