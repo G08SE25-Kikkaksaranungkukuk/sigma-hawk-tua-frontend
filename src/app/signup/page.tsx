@@ -13,6 +13,7 @@ import { privacyPolicy } from "./privacyPolicy";
 import axios from "axios";
 import { useFormValidation } from "../utils/validation";
 import { useRouter } from "next/navigation";
+import SignupSuccess from "./signupSuccess";
 
 interface SignUpScreenProps {
   onBack: () => void;
@@ -43,6 +44,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
   const [open, setOpen] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [loading, setLoading] = useState(false);
   // Form States
   const [firstName, setFirstName] = useState("");
@@ -125,7 +127,11 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
       const response = await axios.post("http://localhost:8080/auth/register", payload);
 
       console.log("Registration successful:", response.data);
+      
+      // Show success modal
+      setShowSuccessModal(true);
 
+      // Redirect after delay
       setTimeout(() => {
         router.push("/login"); 
       }, 2000);
@@ -519,6 +525,9 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
           </CardContent>
         </Card>
       </div>
+      
+      {/* Success Popup */}
+      <SignupSuccess isOpen={showSuccessModal} />
     </div>
   );
 }
