@@ -163,9 +163,9 @@ export default function LoginScreen({ onBack, onLogin, onForgotPassword }: Login
                   className="h-12 border-2 border-orange-500/30 focus:border-orange-500 rounded-xl bg-gray-800/50 text-white placeholder:text-gray-400"
                   placeholder="Enter your email address"
                 />
-                {errors.email && (
+                {getError("email") && (
                   <p className="text-sm text-red-400 flex items-center gap-1">
-                    ⚠️ {errors.email.message}
+                    ⚠️ {getError("email")}
                   </p>
                 )}
               </div>
@@ -187,9 +187,9 @@ export default function LoginScreen({ onBack, onLogin, onForgotPassword }: Login
                   className="h-12 border-2 border-orange-500/30 focus:border-orange-500 rounded-xl bg-gray-800/50 text-white placeholder:text-gray-400"
                   placeholder="Enter your password"
                 />
-                {errors.password && (
+                {getError("password") && (
                   <p className="text-sm text-red-400 flex items-center gap-1">
-                    ⚠️ {errors.password.message}
+                    ⚠️ {getError("password")}
                   </p>
                 )}
               </div>
