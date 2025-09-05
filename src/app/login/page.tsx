@@ -8,8 +8,11 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import LoginSuccess from "./loginSuccess";
 import { ArrowLeft, Loader2, Lock, Mail, Heart, Sparkles } from "lucide-react";
+import axios from "axios";
 import "aos/dist/aos.css";
+import { useFormValidation } from "../utils/validation";
 import { useEffect } from "react";
 import AOS from "aos";
 
@@ -22,7 +25,20 @@ interface LoginScreenProps {
 
 
 export default function LoginScreen({ onBack, onLogin, onForgotPassword }: LoginScreenProps) {
+  
+  // Loading States
   const [isLoading, setIsLoading] = useState(false);
+  // Error States
+  const [errorMsg, setErrorMsg] = useState("");
+  // UI States
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  // Validation Hook
+  const { validateLoginForm, clearError, getError } = useFormValidation();
+  const router = useRouter();
+  // Form State
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
   useEffect(() => {
     AOS.init(); // เริ่มต้นการทำงานของ AOS
   }, []);
@@ -42,6 +58,56 @@ export default function LoginScreen({ onBack, onLogin, onForgotPassword }: Login
     onLogin(data);
   };
 
+  // Submit Handler
+  const login = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg("");
+
+    // สร้าง form data object สำหรับ validation
+    const formData = {
+      email: email,
+      password: password,
+    };
+
+    // Validate ด้วย Zod ก่อน submit
+    if (!validateLoginForm(formData)) {
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      // เตรียม payload สำหรับ backend
+      const payload = {
+        email: email.trim(),
+        password: password,
+      };
+
+      console.log("Sending payload:", payload);
+
+      const response = await axios.post("http://localhost:8080/auth/login", payload);
+
+      console.log("Login successful:", response.data);
+      
+      // Show success popup
+      setShowSuccessModal(true);
+
+      // Redirect after delay
+      setTimeout(() => {
+        router.push("/home");
+      }, 2000);
+
+    } catch (err: any) {
+      console.error("Login error:", err);
+      if (err.response && (err.response.status === 401 || err.response.status === 404)) {
+        setErrorMsg("Invalid email or password. Please try again.");
+      } else {
+        setErrorMsg("An unexpected error occurred. Please try again later.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
 
   return (
@@ -79,7 +145,7 @@ export default function LoginScreen({ onBack, onLogin, onForgotPassword }: Login
             <p className="text-black/80 pb-4">Ready for your next adventure?</p>
           </CardHeader>
           <CardContent className="p-6">
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={login} className="space-y-6">
               {/* Email */}
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-orange-300 font-semibold flex items-center gap-2">
@@ -89,13 +155,17 @@ export default function LoginScreen({ onBack, onLogin, onForgotPassword }: Login
                 <Input
                   id="email"
                   type="email"
-                  {...register("email")}
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    clearError("email");
+                  }}
                   className="h-12 border-2 border-orange-500/30 focus:border-orange-500 rounded-xl bg-gray-800/50 text-white placeholder:text-gray-400"
                   placeholder="Enter your email address"
                 />
-                {errors.email && (
+                {getError("email") && (
                   <p className="text-sm text-red-400 flex items-center gap-1">
-                    ⚠️ {errors.email.message}
+                    ⚠️ {getError("email")}
                   </p>
                 )}
               </div>
@@ -109,13 +179,17 @@ export default function LoginScreen({ onBack, onLogin, onForgotPassword }: Login
                 <Input
                   id="password"
                   type="password"
-                  {...register("password")}
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    clearError("password");
+                  }}
                   className="h-12 border-2 border-orange-500/30 focus:border-orange-500 rounded-xl bg-gray-800/50 text-white placeholder:text-gray-400"
                   placeholder="Enter your password"
                 />
-                {errors.password && (
+                {getError("password") && (
                   <p className="text-sm text-red-400 flex items-center gap-1">
-                    ⚠️ {errors.password.message}
+                    ⚠️ {getError("password")}
                   </p>
                 )}
               </div>
@@ -131,6 +205,12 @@ export default function LoginScreen({ onBack, onLogin, onForgotPassword }: Login
                 </button>
               </div>
 
+              {/* Error Message */}
+              {errorMsg && (
+                <div className="text-red-500 text-center font-semibold mb-2">
+                  {errorMsg}
+                </div>
+              )}
               {/* Submit Button */}
               <Button
                 type="submit"
@@ -178,6 +258,9 @@ export default function LoginScreen({ onBack, onLogin, onForgotPassword }: Login
           </div>
         </div>
       </div>
+      
+      {/* Success Popup */}
+      <LoginSuccess isOpen={showSuccessModal} />
     </div>
   );
 }
