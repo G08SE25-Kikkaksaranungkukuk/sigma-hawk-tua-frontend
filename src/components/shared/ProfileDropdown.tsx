@@ -1,19 +1,15 @@
 "use client";
 
-import React, { useState } from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import React, { useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '../ui/dropdown-menu';
-import {
-  User,
-  Settings,
-  LogOut,
-} from 'lucide-react';
+} from "../ui/dropdown-menu";
+import { User, Settings, LogOut } from "lucide-react";
 
 interface ProfileDropdownProps {
   onProfileClick: () => void;
@@ -32,7 +28,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
   const handleLogout = () => {
     // TODO: Implement logout functionality
-    console.log('Logout clicked');
+    console.log("Logout clicked");
   };
 
   const handleProfileManagement = () => {
@@ -54,47 +50,45 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
           </button>
         </div>
       </DropdownMenuTrigger>
-      
-      <div>
-        <DropdownMenuContent 
-          className="w-56 bg-gray-900 border-orange-500/20 text-white" 
-          align="end"
-          sideOffset={8}
+
+      <DropdownMenuContent
+        className="w-56 bg-gray-900 border-orange-500/20 text-white"
+        align="end"
+        sideOffset={8}
+      >
+        {/* User Info Section */}
+        <div className="px-3 py-2 border-b border-orange-500/20">
+          <p className="text-sm font-medium text-orange-300">{userEmail}</p>
+        </div>
+
+        {/* Profile Actions */}
+        <DropdownMenuItem
+          onClick={() => console.log("Navigate to profile view page")} // TODO: Navigate to profile view page
+          className="text-orange-300 cursor-pointer"
         >
-          {/* User Info Section */}
-          <div className="px-3 py-2 border-b border-orange-500/20">
-            <p className="text-sm font-medium text-orange-300">{userEmail}</p>
-          </div>
+          <User className="w-4 h-4 mr-2" />
+          Your Profile
+        </DropdownMenuItem>
 
-          {/* Profile Actions */}
-          <DropdownMenuItem 
-            onClick={() => console.log('Navigate to profile view page')} // TODO: Navigate to profile view page
-            className="text-orange-300 cursor-pointer"
-          >
-            <User className="w-4 h-4 mr-2" />
-            Your Profile
-          </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={handleProfileManagement}
+          className="text-orange-300 cursor-pointer"
+        >
+          <Settings className="w-4 h-4 mr-2" />
+          Profile Management
+        </DropdownMenuItem>
 
-          <DropdownMenuItem 
-            onClick={handleProfileManagement}
-            className="text-orange-300 cursor-pointer"
-          >
-            <Settings className="w-4 h-4 mr-2" />
-            Profile Management
-          </DropdownMenuItem>
+        <DropdownMenuSeparator className="bg-orange-500/20" />
 
-          <DropdownMenuSeparator className="bg-orange-500/20" />
-
-          {/* Logout */}
-          <DropdownMenuItem 
-            onClick={handleLogout}
-            className="text-red-400 cursor-pointer"
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Sign Out
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </div>
+        {/* Logout */}
+        <DropdownMenuItem
+          onClick={handleLogout}
+          className="text-red-400 cursor-pointer"
+        >
+          <LogOut className="w-4 h-4 mr-2" />
+          Sign Out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
     </DropdownMenu>
   );
 };
