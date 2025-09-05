@@ -67,13 +67,9 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <div 
-          className="relative group"
-          onMouseEnter={() => setIsOpen(true)}
-          onMouseLeave={() => setIsOpen(false)}
-        >
-          <button className="flex items-center focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-900 rounded-full">
-            <Avatar className="w-8 h-8 border-2 border-orange-500/20 group-hover:border-orange-500/40 transition-colors">
+        <div className="relative">
+          <button className="flex items-center focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-900 rounded-full cursor-pointer">
+            <Avatar className="w-8 h-8 border-2 border-orange-500/20">
               <AvatarImage src={userImage} alt={userName} />
               <AvatarFallback className="bg-gradient-to-r from-orange-500 to-orange-600 text-black text-sm font-medium">
                 {userName.charAt(0).toUpperCase()}
@@ -83,10 +79,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
         </div>
       </DropdownMenuTrigger>
       
-      <div
-        onMouseEnter={() => setIsOpen(true)}
-        onMouseLeave={() => setIsOpen(false)}
-      >
+      <div>
         <DropdownMenuContent 
           className="w-56 bg-gray-900 border-orange-500/20 text-white" 
           align="end"
@@ -101,7 +94,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
           {/* Profile Actions */}
           <DropdownMenuItem 
             onClick={onProfileClick}
-            className="text-orange-300 hover:bg-orange-500/10 hover:text-orange-400 cursor-pointer"
+            className="text-orange-300 cursor-pointer"
           >
             <User className="w-4 h-4 mr-2" />
             Your Profile
@@ -109,7 +102,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
           <DropdownMenuItem 
             onClick={handleBookmarks}
-            className="text-orange-300 hover:bg-orange-500/10 hover:text-orange-400 cursor-pointer"
+            className="text-orange-300 cursor-pointer"
           >
             <Bookmark className="w-4 h-4 mr-2" />
             Your Bookmarks
@@ -117,7 +110,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
           <DropdownMenuItem 
             onClick={handleNotifications}
-            className="text-orange-300 hover:bg-orange-500/10 hover:text-orange-400 cursor-pointer"
+            className="text-orange-300 cursor-pointer"
           >
             <Bell className="w-4 h-4 mr-2" />
             Notifications
@@ -128,7 +121,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
           {/* Settings & Help */}
           <DropdownMenuItem 
             onClick={handleSettings}
-            className="text-orange-300 hover:bg-orange-500/10 hover:text-orange-400 cursor-pointer"
+            className="text-orange-300 cursor-pointer"
           >
             <Settings className="w-4 h-4 mr-2" />
             Settings
@@ -136,7 +129,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
           <DropdownMenuItem 
             onClick={handlePrivacySafety}
-            className="text-orange-300 hover:bg-orange-500/10 hover:text-orange-400 cursor-pointer"
+            className="text-orange-300 cursor-pointer"
           >
             <Shield className="w-4 h-4 mr-2" />
             Privacy & Safety
@@ -144,7 +137,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
           <DropdownMenuItem 
             onClick={handleHelp}
-            className="text-orange-300 hover:bg-orange-500/10 hover:text-orange-400 cursor-pointer"
+            className="text-orange-300 cursor-pointer"
           >
             <HelpCircle className="w-4 h-4 mr-2" />
             Help & Support
@@ -155,7 +148,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
           {/* Logout */}
           <DropdownMenuItem 
             onClick={handleLogout}
-            className="text-red-400 hover:bg-red-500/10 hover:text-red-300 cursor-pointer"
+            className="text-red-400 cursor-pointer"
           >
             <LogOut className="w-4 h-4 mr-2" />
             Sign Out
