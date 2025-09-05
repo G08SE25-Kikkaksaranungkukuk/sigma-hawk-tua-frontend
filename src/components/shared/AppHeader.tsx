@@ -1,7 +1,8 @@
 import React from 'react';
 import { Button } from '../ui/button';
-import { Plane, Bell, Settings, User, Menu } from 'lucide-react';
+import { Plane, Bell, Settings, Menu } from 'lucide-react';
 import { APP_CONFIG } from '../../config/shared';
+import { ProfileDropdown } from './ProfileDropdown';
 
 interface AppHeaderProps {
   onProfileClick: () => void;
@@ -50,14 +51,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onProfileClick }) => {
           >
             <Settings className="w-5 h-5" />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-orange-400 hover:bg-orange-500/10"
-            onClick={onProfileClick}
-          >
-            <User className="w-5 h-5" />
-          </Button>
+          <ProfileDropdown onProfileClick={onProfileClick} />
           <Button
             variant="ghost"
             size="icon"
