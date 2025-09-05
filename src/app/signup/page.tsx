@@ -37,14 +37,13 @@ const travelStyles = [
 
 export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
   // Validation Hook
-  const { validateForm, clearError, getError } = useFormValidation();
+  const { validateSignUpForm, clearError, getError } = useFormValidation();
   const router = useRouter();
   // UI States
   const [open, setOpen] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [loading, setLoading] = useState(false);
-
   // Form States
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -101,7 +100,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
     };
 
     // Validate ด้วย Zod ก่อน submit
-    if (!validateForm(formData)) {
+    if (!validateSignUpForm(formData)) {
       return;
     }
 
