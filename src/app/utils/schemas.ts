@@ -41,8 +41,8 @@ export const signUpSchema = z.object({
     .max(3, "Please select no more than 3 travel styles"),
   phone: z
     .string()
-    .min(1, "Phone number is required")
-    .max(10, "Phone number must be at most 10 digits")
+    .min(10, { message: "Phone number must be exactly 10 digits" })
+    .max(10, { message: "Phone number must be exactly 10 digits" })
     .regex(/^[0-9+\-\s()]+$/, "Invalid phone number format"),
   email: z
     .string()
@@ -50,7 +50,7 @@ export const signUpSchema = z.object({
     .email("Please enter a valid email address"),
   password: z
     .string()
-    .min(1, "Password is required and must be at least 8 characters")
+    .min(8, "Password is required and must be at least 8 characters")
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$%\^\&*\)\(+=._-])/, 
       "Password must contain at least one lowercase letter, one uppercase letter, one special character, and one number"),
   confirmPassword: z
@@ -71,8 +71,7 @@ export const loginSchema = z.object({
     .email("Please enter a valid email address"),
   password: z
     .string()
-    .min(1, "Password is required")
-    .min(8, "Password must be at least 8 characters")
+    .min(8, "Password is required and must be at least 8 characters")
 });
 
 export type SignUpFormData = z.infer<typeof signUpSchema>;
