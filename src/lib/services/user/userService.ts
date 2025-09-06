@@ -3,7 +3,180 @@
 import { UserProfile, UpdateUserProfile } from '../../types/user';
 
 class UserService {
-  private baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+  private baseUrl = process.env.NEXT_PUBLIC_API_URL;
+
+  /**
+   * Get current authenticated user data
+   * This fetches the currently logged-in user's basic information for nav bar display
+   */
+  async getCurrentUser(): Promise<UserProfile> {
+    try {
+      // Get token from cookies or localStorage (fallback)
+      const token = this.getAuthToken();
+      
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      // Try to call the backend /auth/me endpoint first
+      try {
+        const response = await fetch(`${this.baseUrl}/auth/me`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include', // Include cookies in request
+        });
+
+        if (response.ok) {
+          const userData = await response.json();
+          return this.transformUserData(userData);
+        }
+      } catch (endpointError) {
+        console.log('Backend /auth/me endpoint not available yet, using token data...');
+      }
+
+      // Fallback: Decode JWT token to get user data temporarily
+      const userDataFromToken = this.decodeTokenData(token);
+
+      if (userDataFromToken) {
+        return userDataFromToken;
+      }
+      
+      // If all else fails, show that user is logged in but with minimal data
+      return {
+        id: 'current-user',
+        firstName: 'User',
+        lastName: 'Logged In',
+        middleName: '',
+        email: 'user@example.com',
+        phoneNumber: '',
+        interests: [],
+        profileImage: undefined
+      };
+      
+    } catch (error) {
+      console.error('Error fetching current user:', error);
+      throw new Error('Failed to fetch current user data');
+    }
+  }
+
+  /**
+   * Decode JWT token to extract user data (temporary solution)
+   * This will be removed once backend has /auth/me endpoint
+   */
+  private decodeTokenData(token: string): UserProfile | null {
+    try {
+      // JWT tokens have 3 parts separated by dots
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        return null;
+      }
+
+      // Decode the payload (middle part)
+      const payload = JSON.parse(atob(parts[1]));
+      
+      // Extract user data from token payload
+      return {
+        id: payload.userId?.toString() || payload.id?.toString() || payload.sub || 'current-user',
+        firstName: payload.firstName || payload.first_name || 'User',
+        lastName: payload.lastName || payload.last_name || 'Logged In',
+        middleName: payload.middleName || payload.middle_name || '',
+        email: payload.email || 'user@example.com',
+        phoneNumber: payload.phone || payload.phoneNumber || '',
+        interests: payload.interests || [],
+        profileImage: payload.profileImage || payload.profile_url || undefined
+      };
+    } catch (error) {
+      console.error('Error decoding token:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get authentication token from cookies or localStorage
+   */
+  private getAuthToken(): string | null {
+    // Try to get from cookies first (primary method)
+    if (typeof document !== 'undefined') {
+      const cookies = document.cookie.split(';');
+      const tokenCookie = cookies.find(cookie => 
+        cookie.trim().startsWith('accessToken=')
+      );
+      if (tokenCookie) {
+        const token = tokenCookie.split('=')[1];
+        console.log('Found token in cookies:', token ? 'Token exists' : 'No token');
+        return token;
+      }
+    }
+
+    // Fallback to localStorage
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('accessToken') || 
+                   localStorage.getItem('token') ||
+                   localStorage.getItem('authToken');
+      console.log('Found token in localStorage:', token ? 'Token exists' : 'No token');
+      if (token) {
+        // Debug: log token payload
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          console.log('Token payload:', payload);
+        } catch (e) {
+          console.log('Token is not a valid JWT');
+        }
+      }
+      return token;
+    }
+
+    return null;
+  }
+
+  /**
+   * Refresh authentication token
+   */
+  private async refreshToken(): Promise<boolean> {
+    try {
+      const response = await fetch(`${this.baseUrl}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        return true; // New token will be set in cookies
+      }
+      return false;
+    } catch (error) {
+      console.error('Error refreshing token:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Transform backend user data to frontend UserProfile format
+   */
+  private transformUserData(backendData: any): UserProfile {
+    return {
+      id: backendData.user_id?.toString() || backendData.id?.toString(),
+      firstName: backendData.first_name || '',
+      lastName: backendData.last_name || '',
+      middleName: backendData.middle_name || '',
+      email: backendData.email || '',
+      phoneNumber: backendData.phone || '',
+      interests: backendData.interests?.map((interest: any) => 
+        interest.name || interest.interest_name || interest
+      ) || [],
+      travelStyle: backendData.travel_styles?.map((style: any) => 
+        style.name || style.style_name || style
+      ) || [],
+      profileImage: backendData.profile_url || undefined,
+      createdAt: backendData.created_at,
+      updatedAt: backendData.updated_at,
+    };
+  }
 
   /**
    * Fetch user profile data from database
