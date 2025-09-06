@@ -85,7 +85,7 @@ export default function LoginScreen({ onBack, onLogin, onForgotPassword }: Login
 
       console.log("Sending payload:", payload);
 
-      const response = await axios.post("http://localhost:8080/auth/login", payload);
+      const response = await axios.post("/api/auth/login", payload);
 
       console.log("Login successful:", response.data);
       
