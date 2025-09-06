@@ -38,38 +38,23 @@ interface SignUpScreenProps {
 }
 
 const interestsList = [
-    {
-        id: "SEA",
-        label: "🌊 Sea",
-        color: "bg-orange-500/20 border-orange-500/50 text-orange-300 hover:bg-orange-500/30",
-    },
-    {
-        id: "MOUNTAIN",
-        label: "⛰️ Mountain",
-        color: "bg-orange-600/20 border-orange-600/50 text-orange-300 hover:bg-orange-600/30",
-    },
-    {
-        id: "NATURE",
-        label: "🌿 Nature",
-        color: "bg-orange-400/20 border-orange-400/50 text-orange-300 hover:bg-orange-400/30",
-    },
-    {
-        id: "ADVENTURE",
-        label: "🏔️ Adventure",
-        color: "bg-red-500/20 border-red-500/50 text-red-300 hover:bg-red-500/30",
-    },
-    {
-        id: "BEACH",
-        label: "🏖️ Beach",
-        color: "bg-orange-300/20 border-orange-300/50 text-orange-300 hover:bg-orange-300/30",
-    },
-    {
-        id: "CITY",
-        label: "🏙️ City",
-        color: "bg-gray-500/20 border-gray-500/50 text-gray-300 hover:bg-gray-500/30",
-    },
+    { id: "nature", label: "🌿 Nature", color: "green" },
+    { id: "food", label: "🍴 Food", color: "red" },
+    { id: "culture", label: "🏛️ Culture", color: "purple" },
+    { id: "adventure", label: "🏔️ Adventure", color: "blue" },
+    { id: "beach", label: "🏖️ Beach", color: "cyan" },
+    { id: "city", label: "🏙️ City", color: "slate" },
+    { id: "cafe", label: "☕ Cafe", color: "amber" },
+    { id: "historical", label: "🏛️ Historical", color: "yellow" },
+    { id: "island", label: "🏝️ Island", color: "teal" },
+    { id: "amusement", label: "🎢 Amusement Park", color: "pink" },
+    { id: "temple", label: "🙏 Temple", color: "indigo" },
+    { id: "zoo", label: "🦁 Zoo", color: "emerald" },
+    { id: "shopping", label: "🛍️ Shopping Mall", color: "violet" },
+    { id: "waterfall", label: "💧 Waterfall", color: "sky" },
+    { id: "market", label: "🏪 Market", color: "orange" },
+    { id: "theatre", label: "🎭 Theatre", color: "rose" },
 ];
-
 const travelStyles = [
     { id: "BUDGET", label: "💰 Budget", color: "text-orange-400" },
     { id: "COMFORT", label: "🛏️ Comfort", color: "text-orange-300" },
@@ -89,6 +74,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
     const [loading, setLoading] = useState(false);
     // Form States
     const [firstName, setFirstName] = useState("");
+    const [middleName, setMiddleName] = useState("");
     const [lastName, setLastName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -136,6 +122,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
         // สร้าง form data object สำหรับ validation
         const formData = {
             first_name: firstName,
+            middle_name: middleName,
             last_name: lastName,
             email: email,
             password: password,
@@ -159,6 +146,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
             // เตรียม payload สำหรับ backend
             const payload = {
                 first_name: firstName.trim(),
+                middle_name: middleName.trim(),
                 last_name: lastName.trim(),
                 email: email.trim(),
                 password: password,
@@ -258,6 +246,35 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                                 {getError("first_name") && (
                                     <p className="text-sm text-red-400 flex items-center gap-1">
                                         ⚠️ {getError("first_name")}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Middle Name */}
+                            <div className="space-y-2">
+                                <Label
+                                    htmlFor="middleName"
+                                    className="text-orange-300 font-semibold"
+                                >
+                                    👤 Middle Name
+                                </Label>
+                                <Input
+                                    id="middleName"
+                                    value={middleName}
+                                    onChange={(e) => {
+                                        setMiddleName(e.target.value);
+                                        clearError("middle_name");
+                                    }}
+                                    className={`h-12 border-2 focus:border-orange-500 rounded-xl bg-gray-800/50 text-white placeholder:text-gray-400 ${
+                                        getError("middle_name")
+                                            ? "border-red-500"
+                                            : "border-orange-500/30"
+                                    }`}
+                                    placeholder="Enter your middle name"
+                                />
+                                {getError("middle_name") && (
+                                    <p className="text-sm text-red-400 flex items-center gap-1">
+                                        ⚠️ {getError("middle_name")}
                                     </p>
                                 )}
                             </div>
