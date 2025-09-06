@@ -14,63 +14,81 @@ import { useState } from "react";
 interface ConfirmationDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (password?: string) => void;
   title: string;
   description: string;
   confirmText?: string;
   cancelText?: string;
-  variant?: 'danger' | 'warning' | 'default';
+  variant?: "danger" | "warning" | "default";
   requirePassword?: boolean;
 }
 
 export default function ConfirmationDialog({
   isOpen,
   onClose,
-  onConfirm,
   title,
   description,
-  confirmText = 'Confirm',
-  cancelText = 'Cancel',
-  variant = 'default',
-  requirePassword = false
+  confirmText = "Confirm",
+  cancelText = "Cancel",
+  variant = "default",
+  requirePassword = false,
 }: ConfirmationDialogProps) {
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const variantStyles = {
     danger: {
-      button: 'bg-red-500 hover:bg-red-600 text-white',
-      icon: 'text-red-500'
+      button: "bg-red-500 hover:bg-red-600 text-white",
+      icon: "text-red-500",
     },
     warning: {
-      button: 'bg-yellow-500 hover:bg-yellow-600 text-black',
-      icon: 'text-yellow-500'
+      button: "bg-yellow-500 hover:bg-yellow-600 text-black",
+      icon: "text-yellow-500",
     },
     default: {
-      button: 'bg-orange-500 hover:bg-orange-600 text-black',
-      icon: 'text-orange-500'
-    }
+      button: "bg-orange-500 hover:bg-orange-600 text-black",
+      icon: "text-orange-500",
+    },
   };
 
   const styles = variantStyles[variant];
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (requirePassword && !password) {
-      setError('Please enter your password to confirm');
+      setError("Please enter your password to confirm");
       return;
     }
-    onConfirm(password);
-    onClose();
-    setPassword('');
-    setError('');
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/user/delete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`, // if using JWT
+        },
+        body: JSON.stringify({ password }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+
+      alert("✅ Account deleted");
+      onClose();
+    } catch (err: any) {
+      setError(err.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+      setPassword("");
+    }
   };
 
   return (
-    <Dialog 
-      open={isOpen} 
+    <Dialog
+      open={isOpen}
       onOpenChange={() => {
-        setPassword('');
-        setError('');
+        setPassword("");
+        setError("");
         onClose();
       }}
     >
@@ -93,13 +111,11 @@ export default function ConfirmationDialog({
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
-                setError('');
+                setError("");
               }}
               className="bg-slate-800 border-slate-700 text-white"
             />
-            {error && (
-              <p className="text-red-500 text-sm mt-2">{error}</p>
-            )}
+            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
           </div>
         )}
 
@@ -109,14 +125,16 @@ export default function ConfirmationDialog({
               variant="outline"
               onClick={onClose}
               className="flex-1 bg-transparent border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white"
+              disabled={loading}
             >
               {cancelText}
             </Button>
             <Button
               onClick={handleConfirm}
               className={`flex-1 ${styles.button}`}
+              disabled={loading}
             >
-              {confirmText}
+              {loading ? "Deleting..." : confirmText}
             </Button>
           </div>
         </DialogFooter>

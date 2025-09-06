@@ -1,13 +1,29 @@
 import React from 'react';
 import { Button } from '../ui/button';
-import { Plane, Bell, Settings, User, Menu } from 'lucide-react';
+import { Plane, Menu } from 'lucide-react';
 import { APP_CONFIG } from '../../config/shared';
+import { ProfileDropdown } from './ProfileDropdown';
 
 interface AppHeaderProps {
-  onProfileClick: () => void;
+  onEditProfileClick: () => void;
+  onLogoutClick: () => void;
+  // TODO: Replace with actual user data from database
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  userEmail?: string;
 }
 
-export const AppHeader: React.FC<AppHeaderProps> = ({ onProfileClick }) => {
+export const AppHeader: React.FC<AppHeaderProps> = ({ 
+  onEditProfileClick,
+  onLogoutClick,
+  firstName = "John",
+  middleName = "Michael", 
+  lastName = "Doe",
+  userEmail = "user@example.com"
+}) => {
+  const fullName = `${firstName} ${middleName} ${lastName}`;
+
   return (
     <nav className="relative z-20 bg-gray-900/90 backdrop-blur-sm border-b border-orange-500/20 px-6 py-4">
       <div className="max-w-6xl mx-auto flex items-center justify-between">
@@ -36,28 +52,16 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onProfileClick }) => {
 
         {/* Right Side Icons */}
         <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-orange-400 hover:bg-orange-500/10"
-          >
-            <Bell className="w-5 h-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-orange-400 hover:bg-orange-500/10"
-          >
-            <Settings className="w-5 h-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-orange-400 hover:bg-orange-500/10"
-            onClick={onProfileClick}
-          >
-            <User className="w-5 h-5" />
-          </Button>
+          {/* User Name Display */}
+          <span className="hidden md:block text-orange-300 font-medium">
+            {fullName}
+          </span>
+          <ProfileDropdown 
+            onEditProfileClick={onEditProfileClick} 
+            onLogoutClick={onLogoutClick}
+            userName={firstName}
+            userEmail={userEmail}
+          />
           <Button
             variant="ghost"
             size="icon"

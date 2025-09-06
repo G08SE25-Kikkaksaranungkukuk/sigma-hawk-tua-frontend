@@ -3,13 +3,13 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Camera, Save, Heart, Star, Sparkles, ArrowLeft, Lock, Trash2 } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import ProfilePictureModal from "../../components/editprofile/ProfilePictureModal";
-import ResetPasswordModal from "../../components/editprofile/ResetPasswordModal";
-import ConfirmationDialog from "../../components/editprofile/ConfirmationDialog";
-import { useUserProfile } from "../../lib/hooks";
+import { Button } from "../../../components/ui/button";
+import { Input } from "../../../components/ui/input";
+import { Label } from "../../../components/ui/label";
+import ProfilePictureModal from "../../../components/editprofile/ProfilePictureModal";
+import ResetPasswordModal from "../../../components/editprofile/ResetPasswordModal";
+import ConfirmationDialog from "../../../components/editprofile/ConfirmationDialog";
+import { useUserProfile } from "../../../lib/hooks";
 
 const interestOptions = [
   { id: "nature", label: "🌿 Nature", color: "green" },
@@ -632,7 +632,6 @@ export default function EditProfilePage() {
       <ConfirmationDialog
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={handleDeleteProfile}
         title="Delete Profile"
         description="Are you sure you want to delete your profile? This action cannot be undone. Please enter your password to confirm."
         confirmText="Delete Profile"
