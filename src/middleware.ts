@@ -28,7 +28,7 @@ export async function middleware(request: NextRequest) {
  
 export const config = {
   matcher: [
-    '/editprofile/:path*',
+    '/profile/:path*',
     '/group/:path*',
     '/home/:path*',
   ],
