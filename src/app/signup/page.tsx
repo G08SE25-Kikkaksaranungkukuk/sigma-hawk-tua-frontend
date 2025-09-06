@@ -331,7 +331,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                                         </Button>
                                     </PopoverTrigger>
                                     <PopoverContent
-                                        className="w-auto overflow-hidden p-0"
+                                        className="w-auto overflow-hidden p-0 bg-black"
                                         align="start"
                                     >
                                         <Calendar
