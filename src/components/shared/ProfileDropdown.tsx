@@ -24,8 +24,8 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
   onEditProfileClick,
   onLogoutClick,
   userImage,
-  userName = "User",
-  userEmail = "user@example.com",
+  userName = "",
+  userEmail = "",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();

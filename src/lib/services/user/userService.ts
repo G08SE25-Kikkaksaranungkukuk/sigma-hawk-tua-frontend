@@ -5,10 +5,10 @@ import { UserProfile, UpdateUserProfile } from '../../types/user';
 class UserService {
   private baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  /**
-   * Get current authenticated user data
-   * This fetches the currently logged-in user's basic information for nav bar display
-   */
+  /*
+    Get current authenticated user data
+    This fetches the currently logged-in user's basic information for nav bar display
+  */
   async getCurrentUser(): Promise<UserProfile> {
     try {
       // Get token from cookies or localStorage (fallback)
@@ -18,54 +18,23 @@ class UserService {
         throw new Error('No authentication token found');
       }
 
-      // Try to call the backend /auth/me endpoint first
-      try {
-        const response = await fetch(`${this.baseUrl}/auth/me`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include', // Include cookies in request
-        });
-
-        if (response.ok) {
-          const userData = await response.json();
-          return this.transformUserData(userData);
-        }
-      } catch (endpointError) {
-        console.log('Backend /auth/me endpoint not available yet, using token data...');
-      }
-
-      // Fallback: Decode JWT token to get user data temporarily
+      // Decode JWT token to get user data
       const userDataFromToken = this.decodeTokenData(token);
 
       if (userDataFromToken) {
         return userDataFromToken;
       }
       
-      // If all else fails, show that user is logged in but with minimal data
-      return {
-        id: 'current-user',
-        firstName: 'User',
-        lastName: 'Logged In',
-        middleName: '',
-        email: 'user@example.com',
-        phoneNumber: '',
-        interests: [],
-        profileImage: undefined
-      };
+      throw new Error('Unable to retrieve user data');
       
     } catch (error) {
-      console.error('Error fetching current user:', error);
       throw new Error('Failed to fetch current user data');
     }
   }
 
-  /**
-   * Decode JWT token to extract user data (temporary solution)
-   * This will be removed once backend has /auth/me endpoint
-   */
+  /*
+    Decode JWT token to extract user data (temporary solution)
+  */
   private decodeTokenData(token: string): UserProfile | null {
     try {
       // JWT tokens have 3 parts separated by dots
@@ -94,9 +63,9 @@ class UserService {
     }
   }
 
-  /**
-   * Get authentication token from cookies or localStorage
-   */
+  /*
+    Get authentication token from cookies or localStorage
+  */
   private getAuthToken(): string | null {
     // Try to get from cookies first (primary method)
     if (typeof document !== 'undefined') {
@@ -132,9 +101,9 @@ class UserService {
     return null;
   }
 
-  /**
-   * Refresh authentication token
-   */
+  /*
+    Refresh authentication token
+  */
   private async refreshToken(): Promise<boolean> {
     try {
       const response = await fetch(`${this.baseUrl}/auth/refresh`, {
@@ -145,19 +114,16 @@ class UserService {
         },
       });
 
-      if (response.ok) {
-        return true; // New token will be set in cookies
-      }
-      return false;
+      return response.ok;
     } catch (error) {
       console.error('Error refreshing token:', error);
       return false;
     }
   }
 
-  /**
-   * Transform backend user data to frontend UserProfile format
-   */
+  /*
+    Transform backend user data to frontend UserProfile format
+  */
   private transformUserData(backendData: any): UserProfile {
     return {
       id: backendData.user_id?.toString() || backendData.id?.toString(),
@@ -178,77 +144,99 @@ class UserService {
     };
   }
 
-  /**
-   * Fetch user profile data from database
-   * This will replace the hardcoded email with actual database data
-   */
+  /*
+    Fetch user profile data from database
+  */
   async getUserProfile(userId: string): Promise<UserProfile> {
     try {
-      // TODO: Replace with actual API call to backend
-      // const response = await fetch(`${this.baseUrl}/users/${userId}`);
-      // const userData = await response.json();
-      // return userData;
+      const token = this.getAuthToken();
+      
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
 
-      // For now, return mock data with the example email
-      return {
-        id: userId,
-        firstName: "",
-        lastName: "",
-        middleName: "",
-        email: "example@hotmail.com", // This will come from database
-        phoneNumber: "",
-        interests: [],
-        profileImage: undefined
-      };
+      const response = await fetch(`${this.baseUrl}/users/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch user profile: ${response.statusText}`);
+      }
+
+      const userData = await response.json();
+      return this.transformUserData(userData);
     } catch (error) {
       console.error('Error fetching user profile:', error);
       throw new Error('Failed to fetch user profile');
     }
   }
 
-  /**
-   * Update user profile (excluding email)
-   * Email updates should be handled through a separate secure process
-   */
+  /*
+    Update user profile (excluding email)
+    Email updates should be handled through a separate secure process
+  */
   async updateUserProfile(userId: string, profileData: UpdateUserProfile): Promise<UserProfile> {
     try {
-      // TODO: Replace with actual API call to backend
-      // const response = await fetch(`${this.baseUrl}/users/${userId}`, {
-      //   method: 'PUT',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify(profileData),
-      // });
-      // const updatedUser = await response.json();
-      // return updatedUser;
+      const token = this.getAuthToken();
+      
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
 
-      // For now, return mock updated data
-      console.log('Updating user profile:', profileData);
-      return {
-        id: userId,
-        email: "example@hotmail.com", // Email remains unchanged
-        ...profileData
-      };
+      const response = await fetch(`${this.baseUrl}/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(profileData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update user profile: ${response.statusText}`);
+      }
+
+      const updatedUser = await response.json();
+      return this.transformUserData(updatedUser);
     } catch (error) {
       console.error('Error updating user profile:', error);
       throw new Error('Failed to update user profile');
     }
   }
 
-  /**
-   * Get user email (read-only)
-   * Email is fetched separately as it's read-only in the edit profile context
-   */
+  /*
+    Get user email (read-only)
+    Email is fetched separately as it's read-only in the edit profile context
+  */
   async getUserEmail(userId: string): Promise<string> {
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch(`${this.baseUrl}/users/${userId}/email`);
-      // const { email } = await response.json();
-      // return email;
+      const token = this.getAuthToken();
+      
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
 
-      // For now, return the example email
-      return "example@hotmail.com";
+      const response = await fetch(`${this.baseUrl}/users/${userId}/email`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch user email: ${response.statusText}`);
+      }
+
+      const { email } = await response.json();
+      return email;
     } catch (error) {
       console.error('Error fetching user email:', error);
       throw new Error('Failed to fetch user email');

@@ -17,12 +17,12 @@ interface AppHeaderProps {
 export const AppHeader: React.FC<AppHeaderProps> = ({ 
   onEditProfileClick,
   onLogoutClick,
-  firstName = "John",
-  middleName = "Michael", 
-  lastName = "Doe",
-  userEmail = "user@example.com"
+  firstName = "",
+  middleName = "", 
+  lastName = "",
+  userEmail = ""
 }) => {
-  const fullName = `${firstName} ${middleName} ${lastName}`;
+  const fullName = firstName && lastName ? `${firstName} ${middleName} ${lastName}`.trim() : "Loading...";
 
   return (
     <nav className="relative z-20 bg-gray-900/90 backdrop-blur-sm border-b border-orange-500/20 px-6 py-4">
