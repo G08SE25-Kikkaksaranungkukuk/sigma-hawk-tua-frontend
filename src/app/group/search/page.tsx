@@ -60,7 +60,7 @@ export default function GroupSearchPage() {
         label: string;
         color: string;
     };
-    const [themeTags, setThemeTags] = useState<Interest[]>([]);
+    const [interests, setInterests] = useState<Interest[]>([]);
     // Add mapping from interest id to label
     const [interestLabelMap, setInterestLabelMap] = useState<{ [key: string]: string }>({});
 
@@ -70,7 +70,7 @@ export default function GroupSearchPage() {
             try {
                 const res = await fetch("/api/interests");
                 const data = await res.json();
-                setThemeTags(data.interests || []);
+                setInterests(data.interests || []);
                 // Build label map
                 const map: { [key: string]: string } = {};
                 (data.interests || []).forEach((interest: Interest) => {
@@ -78,7 +78,7 @@ export default function GroupSearchPage() {
                 });
                 setInterestLabelMap(map);
             } catch {
-                setThemeTags([]);
+                setInterests([]);
                 setInterestLabelMap({});
             }
         }
@@ -125,7 +125,7 @@ export default function GroupSearchPage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page, selectedTags, query]);
 
-    const toggleThemeTag = (tagId: string) => {
+    const toggleInterestTag = (tagId: string) => {
         setSelectedTags(prev => {
             const newTags = prev.includes(tagId)
                 ? prev.filter(t => t !== tagId)
@@ -172,20 +172,20 @@ export default function GroupSearchPage() {
                     </h2>
                     <div className="mb-4">
                         <span className="font-semibold text-orange-300">
-                            Filter by Theme:
+                            Filter by Interests:
                         </span>
                         <div className="flex flex-wrap gap-2 mt-2">
-                            {themeTags.map(theme => (
+                            {interests.map(interest => (
                                 <button
-                                    key={theme.id}
+                                    key={interest.id}
                                     type="button"
-                                    onClick={() => toggleThemeTag(theme.id)}
-                                    className={`px-3 py-2 rounded-full border-2 text-sm font-medium transition-all chip-bounce ${selectedTags.includes(theme.id)
-                                        ? `bg-${theme.color}-500/30 border-${theme.color}-500 text-white shadow-md scale-105 orange-glow`
+                                    onClick={() => toggleInterestTag(interest.id)}
+                                    className={`px-3 py-2 rounded-full border-2 text-sm font-medium transition-all chip-bounce ${selectedTags.includes(interest.id)
+                                        ? `bg-${interest.color}-500/30 border-${interest.color}-500 text-white shadow-md scale-105 orange-glow`
                                         : "bg-gray-800/50 text-orange-300 border-orange-500/30 hover:border-orange-500"
                                         }`}
                                 >
-                                    {theme.label}
+                                    {interest.label}
                                 </button>
                             ))}
                         </div>
