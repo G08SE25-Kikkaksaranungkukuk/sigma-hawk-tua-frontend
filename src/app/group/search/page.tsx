@@ -1,50 +1,51 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Sparkles, Users, MapPin } from "lucide-react";
 
-// backend integration will be added later
-const mockGroups = [
-    { id: 1, name: "Math Study Group", tags: ["Adventure", "Culture"] },
-    { id: 2, name: "Physics Enthusiasts", tags: ["Science", "Education"] },
-    { id: 3, name: "Software Engineering Team", tags: ["Tech", "Education"] },
-    { id: 4, name: "Literature Circle", tags: ["Culture", "Relaxation"] },
-    { id: 5, name: "Beach Lovers", tags: ["Relaxation", "Adventure"] },
-    { id: 6, name: "City Explorers", tags: ["Culture", "Tech"] },
-    { id: 7, name: "Mountain Hikers", tags: ["Adventure", "Nature"] },
-    { id: 8, name: "Foodies United", tags: ["Culture", "Education"] },
-    { id: 9, name: "Budget Backpackers", tags: ["Adventure", "Tech"] },
-    { id: 10, name: "Luxury Travelers", tags: ["Relaxation", "Culture"] },
-    { id: 11, name: "History Buffs", tags: ["Culture", "Education"] },
-    { id: 12, name: "Science Seekers", tags: ["Science", "Tech"] },
-    { id: 13, name: "Art Lovers", tags: ["Culture", "Relaxation"] },
-    { id: 14, name: "Adventure Addicts", tags: ["Adventure", "Tech"] },
-    { id: 15, name: "Nature Enthusiasts", tags: ["Nature", "Relaxation"] },
-    { id: 16, name: "Solo Travelers", tags: ["Adventure", "Culture"] },
-    { id: 17, name: "Wanderlust Wizards", tags: ["Adventure", "Tech"] },
-    { id: 18, name: "Beach Bum Brigade", tags: ["Relaxation", "Beach"] },
-    { id: 19, name: "Lost in Translation", tags: ["Culture", "Education"] },
-    { id: 20, name: "Snack Attack Squad", tags: ["Food", "Adventure"] },
-    { id: 21, name: "No GPS Needed", tags: ["Adventure", "Nature"] },
-    { id: 22, name: "Jet Lag Jokers", tags: ["Relaxation", "Tech"] },
-    { id: 23, name: "Suitcase Circus", tags: ["Adventure", "Culture"] },
-    { id: 24, name: "Map Masters", tags: ["Tech", "Education"] },
-    { id: 25, name: "Sunburn Survivors", tags: ["Beach", "Adventure"] },
-    { id: 26, name: "Caffeine Caravan", tags: ["Food", "Culture"] },
-    { id: 27, name: "Passport Pirates", tags: ["Adventure", "Tech"] },
-    { id: 28, name: "Flip Flop Fanatics", tags: ["Beach", "Relaxation"] },
-    { id: 29, name: "Globetrotter Goofs", tags: ["Adventure", "Culture"] },
-    { id: 30, name: "Selfie Seekers", tags: ["Tech", "Nature"] },
-    { id: 31, name: "Hiking Hooligans", tags: ["Nature", "Adventure"] },
-    { id: 32, name: "Culture Vultures", tags: ["Culture", "Education"] },
-    { id: 33, name: "Mystery Tourists", tags: ["Adventure", "Relaxation"] },
-    { id: 34, name: "Baggage Claimers", tags: ["Tech", "Relaxation"] },
-    { id: 35, name: "Midnight Snackers", tags: ["Food", "Adventure"] },
-    { id: 36, name: "Lost Socks Society", tags: ["Adventure", "Nature"] },
-    { id: 37, name: "WiFi Wanderers", tags: ["Tech", "Culture"] },
-    { id: 38, name: "Sunset Chasers", tags: ["Nature", "Relaxation"] },
-    { id: 39, name: "Epic Fail Expeditions", tags: ["Adventure", "Tech"] },
-    { id: 40, name: "Rolling Suitcases", tags: ["Culture", "Relaxation"] },
-];
+// Interfaces
+export interface groupFilterReq {
+    interest_fields?: string[];
+    group_name?: string;
+    page?: number;
+    page_size?: number;
+}
+
+export interface groupInfo {
+    interest_fields: string[];
+    group_name: string;
+}
+
+export interface groupFilterRes {
+    success: boolean;
+    data: {
+        group_array: groupInfo[];
+        group_count: number;
+    };
+}
+
+// Helper to build query string for backend
+function buildQueryString(req: groupFilterReq) {
+    const params = new URLSearchParams();
+    if (req.interest_fields) {
+        req.interest_fields.forEach(field => params.append("interest_fields", field));
+    }
+    if (req.group_name) params.append("group_name", req.group_name);
+    if (req.page) params.append("page", req.page.toString());
+    if (req.page_size) params.append("page_size", req.page_size.toString());
+    return params.toString();
+}
+
+// Fetch groups from local API route
+async function fetchGroups(req: groupFilterReq): Promise<groupFilterRes | null> {
+    try {
+        const query = buildQueryString(req);
+        const res = await fetch(`/api/group/search?${query}`);
+        if (!res.ok) return null;
+        return await res.json();
+    } catch {
+        return null;
+    }
+}
 
 const themeTags = [
     { id: "Adventure", label: "🏔️ Adventure", color: "bg-red-500/20 border-red-500/50 text-red-300 hover:bg-red-500/30" },
@@ -58,56 +59,93 @@ const themeTags = [
     { id: "Food", label: "🍜 Food", color: "bg-orange-600/20 border-orange-600/50 text-orange-300 hover:bg-orange-600/30" },
 ];
 
-const GROUPS_PER_PAGE = 8;
-
 export default function GroupSearchPage() {
     const [query, setQuery] = useState("");
-    const [results, setResults] = useState<typeof mockGroups>([]);
+    const [results, setResults] = useState<groupInfo[]>([]);
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [page, setPage] = useState(1);
+    const [groupCount, setGroupCount] = useState(0); // Add this line
+    const [cache, setCache] = useState<{ [key: string]: groupInfo[] }>({});
 
+    // Helper to build cache key based on filters
+    const getCacheKey = (pageNum: number, tags: string[], groupName: string) =>
+        `${pageNum}|${tags.sort().join(",")}|${groupName}`;
+
+    // Only called when search button is pressed
+    const handleSearch = async () => {
+        setPage(1); // Reset to first page on new search
+        await handleFilter(1, selectedTags, query);
+    };
+
+    // Called for page, tag, or query changes
+    const handleFilter = async (
+        pageNum = page,
+        tags = selectedTags,
+        groupName = query
+    ) => {
+        const cacheKey = getCacheKey(pageNum, tags, groupName);
+
+        // Check cache first
+        if (cache[cacheKey]) {
+            setResults(cache[cacheKey]);
+            return;
+        }
+
+        const filterReq: groupFilterReq = {
+            group_name: groupName,
+            interest_fields: tags,
+            page: pageNum,
+            page_size,
+        };
+
+        const backendRes = await fetchGroups(filterReq);
+        const group_array = backendRes?.data?.group_array ?? [];
+        const group_count = backendRes?.data?.group_count ?? 0;
+        setGroupCount(group_count);
+        setResults(group_array);
+
+        // Cache the result
+        setCache(prev => ({
+            ...prev,
+            [cacheKey]: group_array,
+        }));
+    };
+
+    // Fetch groups when page, query, or selectedTags change (not search button)
+    useEffect(() => {
+        handleFilter(page, selectedTags, query);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [page, selectedTags, query]);
+
+    // Tag toggle should update selectedTags and reset to page 1
     const toggleThemeTag = (tagId: string) => {
         setSelectedTags(prev => {
             const newTags = prev.includes(tagId)
                 ? prev.filter(t => t !== tagId)
                 : [...prev, tagId];
-            setTimeout(() => handleSearch(newTags), 0);
+            setPage(1); // Reset to first page when filter changes
             return newTags;
         });
     };
 
-    const handleSearch = (tags?: string[]) => {
-        // TODO: Integrate with backend API
-        let filtered = mockGroups;
+    useEffect(() => {
+        setCache({});
+        setPage(1); // Reset to first page when filters change
+    }, [selectedTags, query]);
 
-        if (query) {
-            filtered = filtered.filter(group =>
-                group.name.toLowerCase().includes(query.toLowerCase())
-            );
-        }
 
-        const activeTags = tags ?? selectedTags;
-        if (activeTags.length > 0) {
-            filtered = filtered.filter(group =>
-                activeTags.every(tag => group.tags.includes(tag))
-            );
-        }
+    const page_size = 8; // Fetch up to 8 results from backend for client-side pagination
 
-        setResults(filtered);
-        setPage(1);
+    // Only use API, no fallback
+    const totalPages = Math.ceil(groupCount / page_size);
+    const pagedGroups = results;
+
+
+    // Add this function inside your component:
+    const goToPage = (newPage: number) => {
+        setPage(newPage);
+        handleFilter(newPage, selectedTags, query);
     };
-
-    // Show results if search/filter is active, otherwise show all groups
-    const displayGroups =
-        (query || selectedTags.length > 0)
-            ? results
-            : mockGroups;
-
-    const totalPages = Math.ceil(displayGroups.length / GROUPS_PER_PAGE);
-    const pagedGroups = displayGroups.slice(
-        (page - 1) * GROUPS_PER_PAGE,
-        page * GROUPS_PER_PAGE
-    );
 
     return (
         <div className="min-h-screen bg-black p-4 bg-floating-shapes relative">
@@ -140,11 +178,10 @@ export default function GroupSearchPage() {
                                     key={theme.id}
                                     type="button"
                                     onClick={() => toggleThemeTag(theme.id)}
-                                    className={`px-3 py-2 rounded-full border-2 text-sm font-medium transition-all chip-bounce ${
-                                        selectedTags.includes(theme.id)
-                                            ? `${theme.color} shadow-md scale-105 orange-glow`
-                                            : "bg-gray-800/50 text-orange-300 border-orange-500/30 hover:border-orange-500"
-                                    }`}
+                                    className={`px-3 py-2 rounded-full border-2 text-sm font-medium transition-all chip-bounce ${selectedTags.includes(theme.id)
+                                        ? `${theme.color} shadow-md scale-105 orange-glow`
+                                        : "bg-gray-800/50 text-orange-300 border-orange-500/30 hover:border-orange-500"
+                                        }`}
                                 >
                                     {theme.label}
                                 </button>
@@ -170,14 +207,14 @@ export default function GroupSearchPage() {
                         {pagedGroups.length === 0 && (
                             <li className="text-orange-300 text-center py-4">No groups found.</li>
                         )}
-                        {pagedGroups.map(group => (
+                        {pagedGroups.map((group, idx) => (
                             <li
-                                key={group.id}
+                                key={group.group_name + idx}
                                 className="py-2 px-3 mb-2 rounded-lg bg-gray-800/60 border border-orange-500/10"
                             >
-                                <div className="font-semibold text-orange-200">{group.name}</div>
+                                <div className="font-semibold text-orange-200">{group.group_name}</div>
                                 <div className="text-xs mt-1 flex flex-wrap gap-1">
-                                    {group.tags.map(tag => (
+                                    {group.interest_fields.map(tag => (
                                         <span
                                             key={tag}
                                             className="bg-orange-500/10 text-orange-300 px-2 py-1 rounded-full border border-orange-500/20"
@@ -195,7 +232,7 @@ export default function GroupSearchPage() {
                             <button
                                 className="px-2 py-1 rounded bg-orange-500/20 text-orange-300 font-semibold disabled:opacity-50"
                                 disabled={page === 1}
-                                onClick={() => setPage(page - 1)}
+                                onClick={() => goToPage(page - 1)}
                             >
                                 Prev
                             </button>
@@ -205,7 +242,7 @@ export default function GroupSearchPage() {
                             <button
                                 className="px-2 py-1 rounded bg-orange-500/20 text-orange-300 font-semibold disabled:opacity-50"
                                 disabled={page === totalPages}
-                                onClick={() => setPage(page + 1)}
+                                onClick={() => goToPage(page + 1)}
                             >
                                 Next
                             </button>
@@ -216,3 +253,49 @@ export default function GroupSearchPage() {
         </div>
     );
 }
+
+/*
+SQL for testing
+
+TRUNCATE TABLE "Group" RESTART IDENTITY CASCADE;
+TRUNCATE TABLE "User" RESTART IDENTITY CASCADE;
+
+
+INSERT INTO "User" 
+  (first_name, middle_name, last_name, birth_date, sex, phone, profile_url, social_credit, password, email)
+VALUES
+  ('Alice', NULL, 'Johnson', '1990-05-14', 'F', '123-456-7890', 'https://example.com/profiles/alice.jpg', 10, 'hashed_password1', 'alice@example.com'),
+  ('Bob', 'Michael', 'Smith', '1985-09-23', 'M', '123-555-7890', 'https://example.com/profiles/bob.jpg', 20, 'hashed_password2', 'bob@example.com'),
+  ('Charlie', NULL, 'Kim', '1992-12-01', 'M', '123-777-7890', NULL, 15, 'hashed_password3', 'charlie@example.com'),
+  ('Diana', 'Rose', 'Lopez', '1995-03-19', 'F', '123-999-7890', 'https://example.com/profiles/diana.jpg', 25, 'hashed_password4', 'diana@example.com'),
+  ('Ethan', NULL, 'Brown', '1988-07-30', 'M', '123-888-7890', NULL, 5, 'hashed_password5', 'ethan@example.com');
+
+
+INSERT INTO "Group" (group_name, group_leader_id, interest_fields)
+VALUES
+  ('Mountain Hiking Friends', 1, ARRAY['Hiking', 'Mountains', 'Adventure']),
+  ('Coastal Hiking Tribe', 2, ARRAY['Hiking', 'Beaches', 'Nature']),
+  ('Hiking & Photography', 3, ARRAY['Hiking', 'Photography', 'Exploration']),
+  ('Desert Hiking Nomads', 4, ARRAY['Hiking', 'Desert', 'Camping']),
+  ('Family Hiking Club', 5, ARRAY['Hiking', 'Kids Friendly', 'Outdoors']),
+  ('Hiking for Wellness', 1, ARRAY['Hiking', 'Health', 'Mindfulness']),
+  ('Hiking Meetup Group', 2, ARRAY['Hiking', 'Community', 'Events']),
+  ('City Hiking Explorers', 3, ARRAY['Hiking', 'Urban Trails']),
+  ('Hiking & Camping Crew', 4, ARRAY['Hiking', 'Camping', 'Bonfire']),
+  ('Weekend Hiking Buddies', 5, ARRAY['Hiking', 'Adventure', 'Friendship']),
+  ('Trail Running & Hiking', 1, ARRAY['Hiking', 'Running', 'Fitness']),
+  ('Extreme Night Hiking', 2, ARRAY['Hiking', 'Nightlife', 'Adventure']),
+  ('Snow Hiking Lovers', 3, ARRAY['Hiking', 'Snow', 'Winter Sports']),
+  ('Sunset Hiking Squad', 4, ARRAY['Hiking', 'Sunset', 'Scenic Views']),
+  ('Solo Hiking Network', 5, ARRAY['Hiking', 'Solo Travel']),
+  ('Hiking & Foodies', 1, ARRAY['Hiking', 'Food', 'Culture']),
+  ('Hiking for Beginners', 2, ARRAY['Hiking', 'Learning', 'Outdoor Basics']),
+  ('Global Hiking Friends', 3, ARRAY['Hiking', 'International', 'Travel']),
+  ('Hiking & Yoga Retreats', 4, ARRAY['Hiking', 'Yoga', 'Wellness']),
+  ('Eco Hiking Group', 5, ARRAY['Hiking', 'Environment', 'Sustainability']);
+
+
+
+SELECT * FROM "Group"
+ORDER BY group_id ASC 
+*/
