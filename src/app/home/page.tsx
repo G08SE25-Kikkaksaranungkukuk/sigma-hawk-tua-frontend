@@ -26,7 +26,7 @@ export default function homePage() {
     const { searchGroups } = useGroupSearch();
 
     const handleProfileClick = () => {
-        router.push('/editprofile');
+        router.push('/profile/edit');
     };
 
     const handleCreateGroup = () => {
@@ -39,6 +39,13 @@ export default function homePage() {
         console.log('View group:', group);
     };
 
+    const handleLogout = () => {
+        // Clear auth token or session if needed
+        localStorage.removeItem("token");
+        // Redirect to login page
+        router.push("/login");
+    };
+
     const handleSearchGroups = () => {
         // TODO: Navigate to search groups page
         router.push('/groupSearch');
@@ -48,7 +55,7 @@ export default function homePage() {
     return (
         <div className="min-h-screen bg-black relative overflow-hidden">
             {/* Navigation Bar */}
-            <AppHeader onProfileClick={handleProfileClick} />
+            <AppHeader onEditProfileClick={handleProfileClick} onLogoutClick={handleLogout} />
 
             {/* Floating decorative elements */}
             <div className="absolute inset-0 overflow-hidden">

@@ -5,7 +5,8 @@ import { APP_CONFIG } from '../../config/shared';
 import { ProfileDropdown } from './ProfileDropdown';
 
 interface AppHeaderProps {
-  onProfileClick: () => void;
+  onEditProfileClick: () => void;
+  onLogoutClick: () => void;
   // TODO: Replace with actual user data from database
   firstName?: string;
   middleName?: string;
@@ -14,7 +15,8 @@ interface AppHeaderProps {
 }
 
 export const AppHeader: React.FC<AppHeaderProps> = ({ 
-  onProfileClick,
+  onEditProfileClick,
+  onLogoutClick,
   firstName = "John",
   middleName = "Michael", 
   lastName = "Doe",
@@ -55,7 +57,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             {fullName}
           </span>
           <ProfileDropdown 
-            onProfileClick={onProfileClick} 
+            onEditProfileClick={onEditProfileClick} 
+            onLogoutClick={onLogoutClick}
             userName={firstName}
             userEmail={userEmail}
           />

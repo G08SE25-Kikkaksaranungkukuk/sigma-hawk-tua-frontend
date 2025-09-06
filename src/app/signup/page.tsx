@@ -128,7 +128,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
             email: email,
             password: password,
             confirmPassword: confirmPassword,
-            phone: phone,
+            phone: phone.replace(/[-\s]/g, ""),
             birth_date: date ? date.toISOString().slice(0, 10) : "",
             sex: sex,
             interests: selectedInterests,
@@ -257,7 +257,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                                     htmlFor="middleName"
                                     className="text-orange-300 font-semibold"
                                 >
-                                    👤 Middle Name
+                                    👤 Middle Name (Optional)
                                 </Label>
                                 <Input
                                     id="middleName"
