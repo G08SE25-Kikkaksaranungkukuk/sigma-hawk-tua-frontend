@@ -1,5 +1,5 @@
 "use client";
-
+import axios from "axios";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -263,7 +263,28 @@ export default function EditProfilePage() {
             });
 
             if (success) {
-                console.log("Profile updated successfully");
+                const payload = {
+                    email: userEmail,
+                    data: {
+                        first_name: formData.firstName.trim(),
+                        last_name: formData.lastName.trim(),
+                        middle_name: formData.middleName.trim() || null,
+                        phone: formData.phoneNumber.replace(/[-\s]/g, ""),
+                        interests: formData.interests,
+                        travel_styles: formData.travelStyle,
+                        profile_url: profileImage || null,
+                    },
+                };
+                try {
+                    console.log("Payload for backend:", payload);
+                    const response = await axios.patch(
+                        "http://localhost:8080/user/",
+                        payload
+                    );
+                    console.log("Profile updated successfully");
+                } catch (error) {
+                    console.error("Error updating profile:", error);
+                }
                 // Navigate to home page after successful update
                 router.push("/home");
             } else {
@@ -511,22 +532,22 @@ export default function EditProfilePage() {
                         <div className="mt-3 space-y-3">
                             {[
                                 {
-                                    id: "budget",
+                                    id: "BUDGET",
                                     label: "💰 Budget",
                                     color: "orange",
                                 },
                                 {
-                                    id: "comfort",
+                                    id: "COMFORT",
                                     label: "🛏️ Comfort",
                                     color: "blue",
                                 },
                                 {
-                                    id: "luxury",
+                                    id: "LUXURY",
                                     label: "💎 Luxury",
                                     color: "purple",
                                 },
                                 {
-                                    id: "backpack",
+                                    id: "BACKPACK",
                                     label: "🎒 Backpack",
                                     color: "green",
                                 },
