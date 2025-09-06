@@ -47,101 +47,103 @@ async function fetchGroups(req: groupFilterReq): Promise<groupFilterRes | null> 
     }
 }
 
-const themeTags = [
-    { id: "Adventure", label: "🏔️ Adventure", color: "bg-red-500/20 border-red-500/50 text-red-300 hover:bg-red-500/30" },
-    { id: "Culture", label: "🏛️ Culture", color: "bg-orange-400/20 border-orange-400/50 text-orange-300 hover:bg-orange-400/30" },
-    { id: "Relaxation", label: "🛏️ Relaxation", color: "bg-orange-300/20 border-orange-300/50 text-orange-300 hover:bg-orange-300/30" },
-    { id: "Tech", label: "💻 Tech", color: "bg-gray-500/20 border-gray-500/50 text-gray-300 hover:bg-gray-500/30" },
-    { id: "Science", label: "🔬 Science", color: "bg-orange-600/20 border-orange-600/50 text-orange-300 hover:bg-orange-600/30" },
-    { id: "Education", label: "📚 Education", color: "bg-orange-500/20 border-orange-500/50 text-orange-300 hover:bg-orange-500/30" },
-    { id: "Nature", label: "🌿 Nature", color: "bg-orange-500/20 border-orange-500/50 text-orange-300 hover:bg-orange-500/30" },
-    { id: "Beach", label: "🏖️ Beach", color: "bg-orange-300/20 border-orange-300/50 text-orange-300 hover:bg-orange-300/30" },
-    { id: "Food", label: "🍜 Food", color: "bg-orange-600/20 border-orange-600/50 text-orange-300 hover:bg-orange-600/30" },
-];
-
 export default function GroupSearchPage() {
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<groupInfo[]>([]);
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [page, setPage] = useState(1);
-    const [groupCount, setGroupCount] = useState(0); // Add this line
+    const [groupCount, setGroupCount] = useState(0);
     const [cache, setCache] = useState<{ [key: string]: groupInfo[] }>({});
+    // New interest API type and state
+    type Interest = {
+        id: string;
+        label: string;
+        color: string;
+    };
+    const [themeTags, setThemeTags] = useState<Interest[]>([]);
+    // Add mapping from interest id to label
+    const [interestLabelMap, setInterestLabelMap] = useState<{ [key: string]: string }>({});
 
-    // Helper to build cache key based on filters
+    // Fetch interests from API on mount
+    useEffect(() => {
+        async function fetchInterests() {
+            try {
+                const res = await fetch("/api/interests");
+                const data = await res.json();
+                setThemeTags(data.interests || []);
+                // Build label map
+                const map: { [key: string]: string } = {};
+                (data.interests || []).forEach((interest: Interest) => {
+                    map[interest.id] = interest.label;
+                });
+                setInterestLabelMap(map);
+            } catch {
+                setThemeTags([]);
+                setInterestLabelMap({});
+            }
+        }
+        fetchInterests();
+    }, []);
+
     const getCacheKey = (pageNum: number, tags: string[], groupName: string) =>
         `${pageNum}|${tags.sort().join(",")}|${groupName}`;
 
-    // Only called when search button is pressed
     const handleSearch = async () => {
-        setPage(1); // Reset to first page on new search
+        setPage(1);
         await handleFilter(1, selectedTags, query);
     };
 
-    // Called for page, tag, or query changes
     const handleFilter = async (
         pageNum = page,
         tags = selectedTags,
         groupName = query
     ) => {
         const cacheKey = getCacheKey(pageNum, tags, groupName);
-
-        // Check cache first
         if (cache[cacheKey]) {
             setResults(cache[cacheKey]);
             return;
         }
-
         const filterReq: groupFilterReq = {
             group_name: groupName,
             interest_fields: tags,
             page: pageNum,
             page_size,
         };
-
         const backendRes = await fetchGroups(filterReq);
         const group_array = backendRes?.data?.group_array ?? [];
         const group_count = backendRes?.data?.group_count ?? 0;
         setGroupCount(group_count);
         setResults(group_array);
-
-        // Cache the result
         setCache(prev => ({
             ...prev,
             [cacheKey]: group_array,
         }));
     };
 
-    // Fetch groups when page, query, or selectedTags change (not search button)
     useEffect(() => {
         handleFilter(page, selectedTags, query);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page, selectedTags, query]);
 
-    // Tag toggle should update selectedTags and reset to page 1
     const toggleThemeTag = (tagId: string) => {
         setSelectedTags(prev => {
             const newTags = prev.includes(tagId)
                 ? prev.filter(t => t !== tagId)
                 : [...prev, tagId];
-            setPage(1); // Reset to first page when filter changes
+            setPage(1);
             return newTags;
         });
     };
 
     useEffect(() => {
         setCache({});
-        setPage(1); // Reset to first page when filters change
+        setPage(1);
     }, [selectedTags, query]);
 
-
-    const page_size = 8; // Fetch up to 8 results from backend for client-side pagination
-
-    // Only use API, no fallback
+    const page_size = 8;
     const totalPages = Math.ceil(groupCount / page_size);
     const pagedGroups = results;
 
-
-    // Add this function inside your component:
     const goToPage = (newPage: number) => {
         setPage(newPage);
         handleFilter(newPage, selectedTags, query);
@@ -179,7 +181,7 @@ export default function GroupSearchPage() {
                                     type="button"
                                     onClick={() => toggleThemeTag(theme.id)}
                                     className={`px-3 py-2 rounded-full border-2 text-sm font-medium transition-all chip-bounce ${selectedTags.includes(theme.id)
-                                        ? `${theme.color} shadow-md scale-105 orange-glow`
+                                        ? `bg-${theme.color}-500/30 border-${theme.color}-500 text-white shadow-md scale-105 orange-glow`
                                         : "bg-gray-800/50 text-orange-300 border-orange-500/30 hover:border-orange-500"
                                         }`}
                                 >
@@ -219,14 +221,14 @@ export default function GroupSearchPage() {
                                             key={tag}
                                             className="bg-orange-500/10 text-orange-300 px-2 py-1 rounded-full border border-orange-500/20"
                                         >
-                                            {tag}
+                                            {/* Use label from interests API if available, else fallback to tag */}
+                                            {interestLabelMap[tag] || tag}
                                         </span>
                                     ))}
                                 </div>
                             </li>
                         ))}
                     </ul>
-                    {/* Pagination controls */}
                     {totalPages > 1 && (
                         <div className="flex justify-center items-center gap-2 mt-4">
                             <button
@@ -260,7 +262,6 @@ SQL for testing
 TRUNCATE TABLE "Group" RESTART IDENTITY CASCADE;
 TRUNCATE TABLE "User" RESTART IDENTITY CASCADE;
 
-
 INSERT INTO "User" 
   (first_name, middle_name, last_name, birth_date, sex, phone, profile_url, social_credit, password, email)
 VALUES
@@ -270,32 +271,29 @@ VALUES
   ('Diana', 'Rose', 'Lopez', '1995-03-19', 'F', '123-999-7890', 'https://example.com/profiles/diana.jpg', 25, 'hashed_password4', 'diana@example.com'),
   ('Ethan', NULL, 'Brown', '1988-07-30', 'M', '123-888-7890', NULL, 5, 'hashed_password5', 'ethan@example.com');
 
-
 INSERT INTO "Group" (group_name, group_leader_id, interest_fields)
 VALUES
-  ('Mountain Hiking Friends', 1, ARRAY['Hiking', 'Mountains', 'Adventure']),
-  ('Coastal Hiking Tribe', 2, ARRAY['Hiking', 'Beaches', 'Nature']),
-  ('Hiking & Photography', 3, ARRAY['Hiking', 'Photography', 'Exploration']),
-  ('Desert Hiking Nomads', 4, ARRAY['Hiking', 'Desert', 'Camping']),
-  ('Family Hiking Club', 5, ARRAY['Hiking', 'Kids Friendly', 'Outdoors']),
-  ('Hiking for Wellness', 1, ARRAY['Hiking', 'Health', 'Mindfulness']),
-  ('Hiking Meetup Group', 2, ARRAY['Hiking', 'Community', 'Events']),
-  ('City Hiking Explorers', 3, ARRAY['Hiking', 'Urban Trails']),
-  ('Hiking & Camping Crew', 4, ARRAY['Hiking', 'Camping', 'Bonfire']),
-  ('Weekend Hiking Buddies', 5, ARRAY['Hiking', 'Adventure', 'Friendship']),
-  ('Trail Running & Hiking', 1, ARRAY['Hiking', 'Running', 'Fitness']),
-  ('Extreme Night Hiking', 2, ARRAY['Hiking', 'Nightlife', 'Adventure']),
-  ('Snow Hiking Lovers', 3, ARRAY['Hiking', 'Snow', 'Winter Sports']),
-  ('Sunset Hiking Squad', 4, ARRAY['Hiking', 'Sunset', 'Scenic Views']),
-  ('Solo Hiking Network', 5, ARRAY['Hiking', 'Solo Travel']),
-  ('Hiking & Foodies', 1, ARRAY['Hiking', 'Food', 'Culture']),
-  ('Hiking for Beginners', 2, ARRAY['Hiking', 'Learning', 'Outdoor Basics']),
-  ('Global Hiking Friends', 3, ARRAY['Hiking', 'International', 'Travel']),
-  ('Hiking & Yoga Retreats', 4, ARRAY['Hiking', 'Yoga', 'Wellness']),
-  ('Eco Hiking Group', 5, ARRAY['Hiking', 'Environment', 'Sustainability']);
-
-
+  ('Sea Lovers Club', 1, ARRAY['SEA', 'BEACH_BAR', 'FOOD_STREET']),
+  ('Mountain Hiking Friends', 2, ARRAY['MOUNTAIN', 'NATIONAL_PARK', 'CAFE']),
+  ('Waterfall Explorers', 3, ARRAY['WATERFALL', 'NATIONAL_PARK', 'ISLAND']),
+  ('Temple Tour Group', 4, ARRAY['TEMPLE', 'HISTORICAL', 'MARKET']),
+  ('Shopping Enthusiasts', 5, ARRAY['SHOPPING_MALL', 'MARKET', 'CAFE']),
+  ('Island Adventure Crew', 1, ARRAY['ISLAND', 'SEA', 'FESTIVAL']),
+  ('Cafe Hoppers', 2, ARRAY['CAFE', 'FOOD_STREET', 'MARKET']),
+  ('History Buffs', 3, ARRAY['HISTORICAL', 'MUSEUM', 'THEATRE']),
+  ('Amusement Seekers', 4, ARRAY['AMUSEMENT_PARK', 'FESTIVAL', 'ZOO']),
+  ('Zoo Friends', 5, ARRAY['ZOO', 'NATIONAL_PARK', 'ISLAND']),
+  ('Festival Goers', 1, ARRAY['FESTIVAL', 'FOOD_STREET', 'MARKET']),
+  ('Museum Lovers', 2, ARRAY['MUSEUM', 'HISTORICAL', 'THEATRE']),
+  ('Food Street Fans', 3, ARRAY['FOOD_STREET', 'CAFE', 'MARKET']),
+  ('Beach Bar Crew', 4, ARRAY['BEACH_BAR', 'SEA', 'ISLAND']),
+  ('Theatre Troupe', 5, ARRAY['THEATRE', 'MUSEUM', 'CAFE']),
+  ('National Park Explorers', 1, ARRAY['NATIONAL_PARK', 'MOUNTAIN', 'WATERFALL']),
+  ('Market Wanderers', 2, ARRAY['MARKET', 'SHOPPING_MALL', 'FOOD_STREET']),
+  ('Cafe Park Party', 3, ARRAY['AMUSEMENT_PARK', 'FESTIVAL', 'CAFE']),
+  ('Market Zoo Group', 4, ARRAY['ZOO', 'Market', 'NATIONAL_PARK']),
+  ('Sea Cafe Foodies', 5, ARRAY['FOOD_STREET', 'SEA', 'CAFE']);
 
 SELECT * FROM "Group"
-ORDER BY group_id ASC 
+ORDER BY group_id ASC;
 */
