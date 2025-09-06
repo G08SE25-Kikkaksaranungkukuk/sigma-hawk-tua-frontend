@@ -10,30 +10,35 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { User, Settings, LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface ProfileDropdownProps {
-  onProfileClick: () => void;
+  onEditProfileClick: () => void;
+  onLogoutClick: () => void;
   userImage?: string;
   userName?: string;
   userEmail?: string;
 }
 
 export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
-  onProfileClick,
+  onEditProfileClick,
+  onLogoutClick,
   userImage,
   userName = "User",
   userEmail = "user@example.com",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
 
   const handleLogout = () => {
-    // TODO: Implement logout functionality
+    onLogoutClick(); // This will navigate to profile/edit page
     console.log("Logout clicked");
   };
 
   const handleProfileManagement = () => {
     // TODO: Navigate to edit profile page
-    onProfileClick(); // This will navigate to editprofile page
+    onEditProfileClick(); // This will navigate to profile/edit page
+    console.log("Edit profile clicked");
   };
 
   return (

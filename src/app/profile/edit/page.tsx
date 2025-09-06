@@ -11,12 +11,12 @@ import {
     ArrowLeft,
     Lock,
 } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import ProfilePictureModal from "../../components/editprofile/ProfilePictureModal";
-import ResetPasswordModal from "../../components/editprofile/ResetPasswordModal";
-import { useUserProfile } from "../../lib/hooks";
+import { Button } from "../../../components/ui/button";
+import { Input } from "../../../components/ui/input";
+import { Label } from "../../../components/ui/label";
+import ProfilePictureModal from "../../../components/editprofile/ProfilePictureModal";
+import ResetPasswordModal from "../../../components/editprofile/ResetPasswordModal";
+import { useUserProfile } from "../../../lib/hooks";
 
 const interestOptions = [
     { id: "SEA", label: "🌊 Sea", color: "blue" },
