@@ -476,7 +476,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                                 )}
                             </div>
 
-                            {/* Phone */}
+                            {/* Phone Number */}
                             <div className="space-y-2">
                                 <Label
                                     htmlFor="phone"
@@ -488,7 +488,28 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                                     id="phone"
                                     value={phone}
                                     onChange={(e) => {
-                                        setPhone(e.target.value);
+                                        let value = e.target.value.replace(
+                                            /[^0-9]/g,
+                                            ""
+                                        );
+                                        if (
+                                            value.length > 3 &&
+                                            value.length <= 6
+                                        ) {
+                                            value = `${value.slice(
+                                                0,
+                                                3
+                                            )}-${value.slice(3)}`;
+                                        } else if (value.length > 6) {
+                                            value = `${value.slice(
+                                                0,
+                                                3
+                                            )}-${value.slice(
+                                                3,
+                                                6
+                                            )}-${value.slice(6, 10)}`;
+                                        }
+                                        setPhone(value);
                                         clearError("phone");
                                     }}
                                     className={`h-12 border-2 focus:border-orange-500 rounded-xl bg-gray-800/50 text-white placeholder:text-gray-400 ${
@@ -496,7 +517,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                                             ? "border-red-500"
                                             : "border-orange-500/30"
                                     }`}
-                                    placeholder="Enter your phone number"
+                                    placeholder="Enter your phone number (0xx-xxx-xxxx)"
                                 />
                                 {getError("phone") && (
                                     <p className="text-sm text-red-400 flex items-center gap-1">
