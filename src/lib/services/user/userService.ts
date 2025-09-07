@@ -1,3 +1,5 @@
+"use client";
+
 // User service for handling user-related API calls
 // This service will be used to fetch user data from the database
 import { UserProfile, UpdateUserProfile } from '../../types/user';
@@ -147,7 +149,7 @@ class UserService {
   /*
     Fetch user profile data from database
   */
-  async getUserProfile(userId: string): Promise<UserProfile> {
+  async getUserProfile(userId?: string): Promise<UserProfile> {
     try {
       const token = this.getAuthToken();
       
@@ -155,7 +157,16 @@ class UserService {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${this.baseUrl}/users/${userId}`, {
+      // If no userId provided, try to get current user data from token first
+      if (!userId) {
+        const userDataFromToken = this.decodeTokenData(token);
+        if (userDataFromToken) {
+          return userDataFromToken;
+        }
+        throw new Error('No user ID provided and unable to get from token');
+      }
+
+      const response = await fetch(`${this.baseUrl}/api/user/${userId}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -165,6 +176,13 @@ class UserService {
       });
 
       if (!response.ok) {
+        // If API call fails, try to get data from token as fallback
+        if (response.status === 404) {
+          const userDataFromToken = this.decodeTokenData(token);
+          if (userDataFromToken) {
+            return userDataFromToken;
+          }
+        }
         throw new Error(`Failed to fetch user profile: ${response.statusText}`);
       }
 
@@ -188,7 +206,7 @@ class UserService {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${this.baseUrl}/users/${userId}`, {
+      const response = await fetch(`${this.baseUrl}/api/user/${userId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -222,7 +240,7 @@ class UserService {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${this.baseUrl}/users/${userId}/email`, {
+      const response = await fetch(`${this.baseUrl}/api/user/${userId}/email`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

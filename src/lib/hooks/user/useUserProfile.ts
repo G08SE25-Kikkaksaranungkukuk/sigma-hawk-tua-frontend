@@ -21,16 +21,13 @@ export function useUserProfile(userId?: string): UseUserProfileReturn {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Store the actual user ID being used (including demo fallback)
-  const actualUserId = userId || 'demo-user-id';
-
   // Fetch user profile data
-  const fetchUserProfile = async (id: string) => {
+  const fetchUserProfile = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      const profile = await userService.getUserProfile(id);
+      const profile = await userService.getUserProfile(userId);
       setUserProfile(profile);
       setUserEmail(profile.email);
     } catch (err) {
@@ -45,8 +42,13 @@ export function useUserProfile(userId?: string): UseUserProfileReturn {
   // Update user profile (excluding email)
   const updateProfile = async (profileData: UpdateUserProfile): Promise<boolean> => {
     try {
+      if (!userId) {
+        setError('No user ID available for update');
+        return false;
+      }
+      
       setError(null);
-      const updatedProfile = await userService.updateUserProfile(actualUserId, profileData);
+      const updatedProfile = await userService.updateUserProfile(userId, profileData);
       setUserProfile(updatedProfile);
       return true;
     } catch (err) {
@@ -59,13 +61,13 @@ export function useUserProfile(userId?: string): UseUserProfileReturn {
 
   // Refresh profile data
   const refreshProfile = async () => {
-    await fetchUserProfile(actualUserId);
+    await fetchUserProfile();
   };
 
   // Fetch profile on component mount or userId change
   useEffect(() => {
-    fetchUserProfile(actualUserId);
-  }, [actualUserId]);
+    fetchUserProfile();
+  }, [userId]);
 
   return {
     userProfile,

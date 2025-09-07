@@ -16,6 +16,7 @@ import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import ProfilePictureModal from "../../../components/editprofile/ProfilePictureModal";
 import ResetPasswordModal from "../../../components/editprofile/ResetPasswordModal";
+import { useCurrentUser } from "../../../lib/hooks/user/useCurrentUser";
 import { useUserProfile } from "../../../lib/hooks";
 
 const interestOptions = [
@@ -74,8 +75,11 @@ const getColorClasses = (color: string, isSelected: boolean) => {
 export default function EditProfilePage() {
     const router = useRouter();
 
-    // Use the custom hook for user profile management
-    const { userProfile, userEmail, loading, error, updateProfile } =
+    // Use the current user hook to get real user data from database
+    const { currentUser, loading: currentUserLoading, error: currentUserError, refreshCurrentUser } = useCurrentUser();
+
+    // Use the user profile hook for profile management functionality
+    const { userProfile, loading, error, updateProfile } =
         useUserProfile();
 
     const [formData, setFormData] = useState({
@@ -103,18 +107,21 @@ export default function EditProfilePage() {
 
     // Update form data when user profile is loaded
     useEffect(() => {
-        if (userProfile) {
+        // Use currentUser data if userProfile is not available, otherwise use userProfile
+        const profileData = userProfile || currentUser;
+        
+        if (profileData) {
             setFormData({
-                firstName: userProfile.firstName,
-                lastName: userProfile.lastName,
-                middleName: userProfile.middleName || "",
-                phoneNumber: userProfile.phoneNumber,
-                interests: userProfile.interests,
-                travelStyle: userProfile.travelStyle || [],
+                firstName: profileData.firstName || "",
+                lastName: profileData.lastName || "",
+                middleName: profileData.middleName || "",
+                phoneNumber: profileData.phoneNumber || "",
+                interests: profileData.interests || [],
+                travelStyle: profileData.travelStyle || [],
             });
-            setProfileImage(userProfile.profileImage || null);
+            setProfileImage(profileData.profileImage || null);
         }
-    }, [userProfile]);
+    }, [userProfile, currentUser]);
 
     // Validation functions
     const validateForm = () => {
@@ -244,7 +251,7 @@ export default function EditProfilePage() {
     };
 
     const handleSave = async () => {
-        if (loading) return;
+        if (loading || currentUserLoading) return;
 
         // Validate form before saving
         if (!validateForm()) {
@@ -264,7 +271,7 @@ export default function EditProfilePage() {
 
             if (success) {
                 const payload = {
-                    email: userEmail,
+                    email: currentUser?.email,
                     data: {
                         first_name: formData.firstName.trim(),
                         last_name: formData.lastName.trim(),
@@ -330,7 +337,7 @@ export default function EditProfilePage() {
     return (
         <div className="min-h-screen bg-black relative overflow-hidden">
             {/* Loading overlay */}
-            {loading && (
+            {(loading || currentUserLoading) && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-slate-800 p-6 rounded-lg">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
@@ -340,9 +347,9 @@ export default function EditProfilePage() {
             )}
 
             {/* Error display */}
-            {error && (
+            {(error || currentUserError) && (
                 <div className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-red-500/90 text-white px-4 py-2 rounded-lg z-40">
-                    {error}
+                    {error || currentUserError}
                 </div>
             )}
             {/* Floating decorative elements */}
@@ -663,7 +670,7 @@ export default function EditProfilePage() {
                                 id="email"
                                 name="email"
                                 type="email"
-                                value={userEmail || "example@hotmail.com"}
+                                value={currentUser?.email || "Loading..."}
                                 readOnly
                                 className="mt-1 bg-slate-700 border-slate-600 text-gray-300"
                                 placeholder="Email from database"
