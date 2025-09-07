@@ -9,6 +9,7 @@ import axios, { AxiosError } from "axios";
 import {use} from "react";
 import { apiClient } from "@/lib/api";
 import { GroupData, Member } from "@/lib/types/home/group";
+import { baseAPIUrl } from "@/lib/config";
 
 interface GroupManagePageProps {
   params?: { groupId?: string };
@@ -21,11 +22,15 @@ export default function GroupManagementPage({params} : {params : Promise<GroupMa
   const [confirmTransferOpen, setConfirmTransferOpen] = useState(false);
   const [transferTargetId, setTransferTargetId] = useState<number | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+  const [pageUrl,setPageUrl] = React.useState<string>("");
 
   React.useEffect(()=>{
     (async () => {
       const ret =  await (await apiClient.get(`/group/${groupId}`)).data as {data : GroupData};
       const processed_members = ret.data.members?.map((val : Member)=>{return {...val,isOwner : val.user_id == ret.data.group_leader_id}}) ?? [];
+      if (window) {
+        setPageUrl(window.location.protocol + "//" + window.location.host + "/group/" + groupId + "/info");
+      }
       setGroupData({...ret.data,members : processed_members})
     })()
   },[])
@@ -129,7 +134,7 @@ export default function GroupManagementPage({params} : {params : Promise<GroupMa
           </div>
         </div>
       </div>
-      <TravelInviteModal inviteLink={window.location.protocol + "//" + window.location.host + "/group/" + groupId + "/info"} isOpen={inviteOpen} onClose={() => setInviteOpen(false)} />
+      <TravelInviteModal inviteLink={pageUrl} isOpen={inviteOpen} onClose={() => setInviteOpen(false)} />
       <AnimatePresence>
         {confirmTransferOpen && (
           <motion.div
