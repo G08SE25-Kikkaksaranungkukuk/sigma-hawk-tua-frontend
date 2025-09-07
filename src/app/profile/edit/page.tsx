@@ -17,6 +17,7 @@ import { Label } from "../../../components/ui/label";
 import ProfilePictureModal from "../../../components/editprofile/ProfilePictureModal";
 import ResetPasswordModal from "../../../components/editprofile/ResetPasswordModal";
 import { useUserProfile } from "../../../lib/hooks";
+import ConfirmationDialog from "../../../components/editprofile/ConfirmationDialog";
 
 const interestOptions = [
     { id: "SEA", label: "🌊 Sea", color: "blue" },
@@ -91,6 +92,7 @@ export default function EditProfilePage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] =
         useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     // Validation state
     const [validationErrors, setValidationErrors] = useState({
@@ -738,6 +740,19 @@ export default function EditProfilePage() {
                 isOpen={isResetPasswordModalOpen}
                 onClose={() => setIsResetPasswordModalOpen(false)}
                 onConfirm={handlePasswordReset}
+            />
+
+            {/* Confirmation Dialog */}
+            <ConfirmationDialog
+              isOpen={showDeleteConfirm}
+              onClose={() => setShowDeleteConfirm(false)}
+              onConfirm={() => router.push("/")}
+              title="Delete Profile"
+              description="Are you sure you want to delete your profile? This action cannot be undone. Please enter your password to confirm."
+              confirmText="Delete Profile"
+              cancelText="Cancel"
+              variant="danger"
+              requirePassword={true}
             />
         </div>
     );
