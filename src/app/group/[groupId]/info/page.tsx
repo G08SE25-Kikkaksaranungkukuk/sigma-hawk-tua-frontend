@@ -38,33 +38,65 @@ export default function TravelGroupPage({ params }: TravelGroupPageProps) {
   const {groupId} = React.use(params);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
-  const refetch = () => {
+  const { isRequested, isJoiningLoading, isContactLoading, requestToJoin, contactHost } = useGroupActions(groupId ?? "Nan");
+
+  const refetch = React.useCallback(() => {
     if (!groupId) return;
     setLoading(true);
+    setError(null);
+
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
     Promise.all([
       axios.get(baseAPIUrl + "/auth/whoami", { withCredentials: true }),
-      axios.get(baseAPIUrl + "/group/" + groupId)
+      axios.get(baseAPIUrl + "/group/" + groupId),
     ])
       .then(([whoamiRes, groupRes]) => {
         setUserInfo(whoamiRes.data.data);
         setGroupInfo(groupRes.data.data);
         console.log("groupInfo (refetch):", groupRes.data.data);
-        setLoading(false);
+
+        timeoutId = setTimeout(() => setLoading(false), 800);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
         setError(err.message);
         setLoading(false);
       });
-  };
+    
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [groupId]);
 
   React.useEffect(() => {
     if (typeof window !== "undefined") {
       setPageUrl(window.location.href);
-      refetch();
+      const cleanup = refetch();
+      return () => {
+        if (typeof cleanup === "function") cleanup();
+      };
     }
-  }, [groupId]);
+  }, [refetch]);
+
+  if (loading) {
+    return <GroupPageSkeleton />;
+  }
+
+  if (error) {
+    return <ErrorState title="Failed to load group" onRetry={refetch} />;
+  }
+
+  if (!groupInfo) {
+    return (
+      <ErrorState
+        title="Group not found"
+        message="The group you're looking for doesn't exist or has been removed."
+        onRetry={refetch}
+      />
+    );
+  }
+
 
   
   const group = groupInfo ? {
@@ -93,34 +125,6 @@ export default function TravelGroupPage({ params }: TravelGroupPageProps) {
       avatar: member.profile_url || ''
     }))
   } : null;
-  
-  const { isRequested, isJoiningLoading, isContactLoading, requestToJoin, contactHost } = useGroupActions(groupId ?? "Nan");
-
-  // Handle loading state
-  if (loading) {
-    return <GroupPageSkeleton />;
-  }
-
-  // Handle error state
-  if (error) {
-    return (
-      <ErrorState
-        title="Failed to load group"
-        // message={error}
-        onRetry={refetch}
-      />
-    );
-  }
-
-  // Handle missing group data
-  if (!group) {
-    return (
-      <ErrorState
-        title="Group not found"
-        message="The group you're looking for doesn't exist or has been removed."
-      />
-    );
-  }
 
 
   console.log("userInfo:", userInfo);
