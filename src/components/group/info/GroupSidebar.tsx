@@ -141,6 +141,29 @@ export function GroupSidebar({
           )}
           
           <div className="grid grid-cols-1 gap-3">
+            {(isMember || isLeader) && (
+              <a
+                href={`/group/${group.id}/info`}
+                className="rounded-xl px-4 py-2 text-sm font-semibold transition border text-center"
+                style={{ 
+                  backgroundColor: APP_CONFIG.ui.colors.secondary,
+                  color: APP_CONFIG.ui.colors.textSecondary,
+                  borderColor: brand.border 
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = APP_CONFIG.ui.colors.secondaryHover;
+                  e.currentTarget.style.color = APP_CONFIG.ui.colors.primary;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = APP_CONFIG.ui.colors.secondary;
+                  e.currentTarget.style.color = APP_CONFIG.ui.colors.textSecondary;
+                }}
+              >
+                <span className="inline-flex items-center gap-2 justify-center w-full">
+                  <Users className="h-4 w-4" /> View Group Info
+                </span>
+              </a>
+            )}
             <button
               className="rounded-xl px-4 py-2 text-sm font-semibold transition border"
               style={{ 

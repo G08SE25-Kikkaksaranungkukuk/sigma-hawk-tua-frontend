@@ -36,7 +36,7 @@ export default function TravelGroupPage({ params }: TravelGroupPageProps) {
   const {groupId} = React.use(params);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
-  const { isRequested, isJoiningLoading, isContactLoading, requestToJoin: baseRequestToJoin, contactHost } = useGroupActions(groupId ?? "Nan");
+  const { isRequested, isJoiningLoading, isContactLoading, requestToJoin: baseRequestToJoin, contactHost, resetRequest } = useGroupActions(groupId ?? "Nan");
 
   const refetch = React.useCallback(() => {
     if (!groupId) return;
@@ -153,10 +153,8 @@ export default function TravelGroupPage({ params }: TravelGroupPageProps) {
         }
       );
       refetch();
-      // setGroupInfo(prev => prev ? {
-      //   ...prev,
-      //   members: (prev.members ?? []).filter(m => m.user_id !== userInfo.user_id)
-      // } : prev);
+      // Reset the request state so the button shows "Join now!"
+      resetRequest();
 
     } catch (error) {
       console.error("Failed to leave group:", error);
