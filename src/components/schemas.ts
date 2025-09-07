@@ -51,5 +51,24 @@ export type GroupInfo = {
   members: Member[];
 };
 
+export interface UserInfo {
+  user_id: number;
+  first_name: string;
+  middle_name: string | null | "";
+  last_name: string;
+  birth_date: string;               
+  sex: "male" | "female" | string; 
+  phone: string;
+  profile_url: string | null;
+  social_credit: number;
+  interests: string[];
+  travel_styles: string[];
+  email: string;
+  role: "USER" | "ADMIN" | string;
+  iat: number;
+  exp: number;
+}
+
+
 export type SignUpFormData = z.infer<typeof signUpSchema>;
 export type LoginFormData = z.infer<typeof loginSchema>;
