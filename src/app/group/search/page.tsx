@@ -70,10 +70,12 @@ export default function GroupSearchPage() {
             try {
                 const res = await fetch("/api/interests");
                 const data = await res.json();
-                setInterests(data.interests || []);
+                // Use data.data.interests from API response
+                const interestsArr = data.data?.interests || [];
+                setInterests(interestsArr);
                 // Build label map
                 const map: { [key: string]: string } = {};
-                (data.interests || []).forEach((interest: Interest) => {
+                interestsArr.forEach((interest: Interest) => {
                     map[interest.id] = interest.label;
                 });
                 setInterestLabelMap(map);
