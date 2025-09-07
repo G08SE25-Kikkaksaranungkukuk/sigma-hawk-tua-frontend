@@ -1,6 +1,5 @@
 "use client";
 import React, { useState } from "react";
-import { use } from "react";
 import { brand } from "@/components/ui/utils";
 import TravelInviteModal from "@/components/TravelInviteModal";
 import { GroupHeader } from "@/components/group/info/GroupHeader";
@@ -9,13 +8,10 @@ import { GroupSidebar } from "@/components/group/info/GroupSidebar";
 import { GroupContact } from "@/components/group/info/GroupContact";
 import { GroupPageSkeleton, ErrorState } from "@/components/group/info/LoadingStates";
 import { useGroupActions } from "@/lib/hooks/group/useGroupActions";
-import axios from "axios";
-import { baseAPIUrl } from "@/lib/config";
 import { GroupData } from "@/lib/types/home/group";
 import type { UserInfo } from "@/components/schemas";
-import { set } from "zod";
-import { tr } from "zod/v4/locales";
 import { apiClient } from "@/lib/api";
+import { groupService } from "@/lib/services/group/group-service";
 
 interface TravelGroupPageProps {
   params: Promise<{ groupId?: string }>;
@@ -40,7 +36,7 @@ export default function TravelGroupPage({ params }: TravelGroupPageProps) {
   const {groupId} = React.use(params);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
-  const { isRequested, isJoiningLoading, isContactLoading, requestToJoin, contactHost } = useGroupActions(groupId ?? "Nan");
+  const { isRequested, isJoiningLoading, isContactLoading, requestToJoin: baseRequestToJoin, contactHost } = useGroupActions(groupId ?? "Nan");
 
   const refetch = React.useCallback(() => {
     if (!groupId) return;
@@ -50,13 +46,13 @@ export default function TravelGroupPage({ params }: TravelGroupPageProps) {
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
     Promise.all([
-      apiClient.get("/auth/whoami", { withCredentials: true }),
-      apiClient.get("/group/" + groupId),
+      groupService.getCurrentUser(),
+      groupService.getGroupDetails(groupId),
     ])
-      .then(([whoamiRes, groupRes]) => {
-        setUserInfo(whoamiRes.data.data);
-        setGroupInfo(groupRes.data.data);
-        console.log("groupInfo (refetch):", groupRes.data.data);
+      .then(([userRes, groupRes]) => {
+        setUserInfo(userRes);
+        setGroupInfo(groupRes);
+        console.log("groupInfo (refetch):", groupRes);
 
         timeoutId = setTimeout(() => setLoading(false), 800);
       })
@@ -156,15 +152,28 @@ export default function TravelGroupPage({ params }: TravelGroupPageProps) {
           withCredentials: true,
         }
       );
-      setGroupInfo(prev => prev ? {
-        ...prev,
-        members: (prev.members ?? []).filter(m => m.user_id !== userInfo.user_id)
-      } : prev);
+      refetch();
+      // setGroupInfo(prev => prev ? {
+      //   ...prev,
+      //   members: (prev.members ?? []).filter(m => m.user_id !== userInfo.user_id)
+      // } : prev);
 
     } catch (error) {
       console.error("Failed to leave group:", error);
       setError("Failed to leave group");
       setLoading(false);
+    }
+  };
+
+  const requestToJoin = async () => {
+    try {
+      await baseRequestToJoin();
+      // After successful join, refetch to update the group data
+      refetch();
+
+    } catch (error) {
+      console.error('Failed to join group:', error);
+      // You might want to show an error message here
     }
   };
 
