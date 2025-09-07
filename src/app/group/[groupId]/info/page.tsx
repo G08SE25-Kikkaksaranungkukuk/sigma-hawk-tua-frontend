@@ -7,12 +7,14 @@ import { GroupDetails } from "@/components/group/info/GroupDetails";
 import { GroupSidebar } from "@/components/group/info/GroupSidebar";
 import { GroupContact } from "@/components/group/info/GroupContact";
 import { GroupPageSkeleton, ErrorState } from "@/components/group/info/LoadingStates";
-import { useGroupData } from "@/lib/hooks/group/useGroupData";
 import { useGroupActions } from "@/lib/hooks/group/useGroupActions";
 import { SAMPLE_GROUP_DATA } from "@/lib/services/group/group-service";
+import axios from "axios";
+import { baseAPIUrl } from "@/lib/config";
+import { GroupData } from "@/lib/types/home/group";
 
 interface TravelGroupPageProps {
-  params?: { groupId?: string };
+  params: Promise<{ groupId?: string }>;
 }
 
 /**
@@ -27,18 +29,22 @@ interface TravelGroupPageProps {
  */
 export default function TravelGroupPage({ params }: TravelGroupPageProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [pageUrl,setPageUrl] = React.useState<string>("");
+  const [userInfo,setUserInfo] = React.useState<{user_id : number}>()
+  const [groupInfo , setGroupInfo] = React.useState<GroupData>();
   
   // For demo purposes, we'll use sample data. In production, use:
   // const groupId = params?.groupId || 'default';
   // const { group, loading, error, refetch } = useGroupData(groupId);
   
   // Demo implementation using sample data:
+  const {groupId} = React.use(params);
   const group = SAMPLE_GROUP_DATA;
   const loading = false;
   const error = null;
   const refetch = () => {};
   
-  const { isRequested, isJoiningLoading, isContactLoading, requestToJoin, contactHost } = useGroupActions('demo-group-id');
+  const { isRequested, isJoiningLoading, isContactLoading, requestToJoin, contactHost } = useGroupActions(groupId ?? "Nan");
 
   // Handle loading state
   if (loading) {
@@ -65,6 +71,16 @@ export default function TravelGroupPage({ params }: TravelGroupPageProps) {
       />
     );
   }
+
+  React.useEffect(()=>{
+    if(window) {
+      setPageUrl(window.location.href);
+      axios.get(baseAPIUrl + "/auth/whoami",{
+        withCredentials : true
+      }).then((val)=>setUserInfo(val.data.data))
+      axios.get(baseAPIUrl + "/group/" + groupId).then((val)=>setGroupInfo(val.data.data))
+    }
+  },[])
 
   const handleShare = () => {
     setIsModalOpen(true);
@@ -115,7 +131,8 @@ export default function TravelGroupPage({ params }: TravelGroupPageProps) {
       </div>
       
       {/* Travel Invite Modal */}
-      <TravelInviteModal 
+      <TravelInviteModal
+        inviteLink={pageUrl}
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
       />

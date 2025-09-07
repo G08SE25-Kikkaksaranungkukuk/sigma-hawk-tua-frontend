@@ -16,8 +16,14 @@ export async function middleware(request: NextRequest) {
             withCredentials : true
         })).data as AuthCredentials;
         const response = NextResponse.next()
-        response.cookies.set("accessToken",ret.data.accessToken);
-        response.cookies.set("refreshToken",ret.data.refreshToken);
+        response.cookies.set("accessToken",ret.data.accessToken,{
+            maxAge : 60 * 60 * 24,
+            sameSite : "lax"
+        });
+        response.cookies.set("refreshToken",ret.data.refreshToken,{
+            maxAge : 60 * 60 * 24 * 30,
+            sameSite : "lax"
+        });
         return response
     }   
     else if((!accessToken && !refreshToken) || (!refreshToken)) {
