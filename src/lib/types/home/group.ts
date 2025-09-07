@@ -23,3 +23,23 @@ export interface SearchGroupsParams {
   limit?: number;
   offset?: number;
 }
+
+export interface GroupData {
+  group_id?: number
+  group_name?: string
+  group_leader_id?: number
+  interest_fields?: string[]
+  members?: Member[]
+}
+
+export interface Member {
+  user_id: number
+  first_name: string
+  middle_name: any
+  last_name: string
+  sex: string
+  profile_url: any
+  interests: string[]
+  travel_styles: string[]
+  isOwner? : boolean
+}
