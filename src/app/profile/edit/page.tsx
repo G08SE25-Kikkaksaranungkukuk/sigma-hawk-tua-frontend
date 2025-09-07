@@ -105,6 +105,22 @@ export default function EditProfilePage() {
         travelStyle: "",
     });
 
+    // Format phone number to display format (0xx-xxx-xxxx)
+    const formatPhoneNumber = (phone: string) => {
+        if (!phone) return "";
+        
+        // Remove all non-digits
+        const digits = phone.replace(/\D/g, "");
+        
+        // Format as 0xx-xxx-xxxx if we have enough digits
+        if (digits.length === 10) {
+            return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+        }
+        
+        // Return as-is if not 10 digits
+        return phone;
+    };
+
     // Update form data when user profile is loaded
     useEffect(() => {
         // Use currentUser data if userProfile is not available, otherwise use userProfile
@@ -115,7 +131,7 @@ export default function EditProfilePage() {
                 firstName: profileData.firstName || "",
                 lastName: profileData.lastName || "",
                 middleName: profileData.middleName || "",
-                phoneNumber: profileData.phoneNumber || "",
+                phoneNumber: formatPhoneNumber(profileData.phoneNumber || ""),
                 interests: profileData.interests || [],
                 travelStyle: profileData.travelStyle || [],
             });
@@ -259,47 +275,44 @@ export default function EditProfilePage() {
         }
 
         try {
-            const success = await updateProfile({
-                firstName: formData.firstName.trim(),
-                lastName: formData.lastName.trim(),
-                middleName: formData.middleName.trim() || undefined,
-                phoneNumber: formData.phoneNumber,
-                interests: formData.interests,
-                travelStyle: formData.travelStyle,
-                profileImage: profileImage || undefined,
-            });
+            // Prepare payload for backend
+            const payload = {
+                email: currentUser?.email,
+                data: {
+                    first_name: formData.firstName.trim(),
+                    last_name: formData.lastName.trim(),
+                    middle_name: formData.middleName.trim() || null,
+                    phone: formData.phoneNumber.replace(/[-\s]/g, ""),
+                    interests: formData.interests,
+                    travel_styles: formData.travelStyle,
+                    profile_url: profileImage || null,
+                },
+            };
 
-            if (success) {
-                const payload = {
-                    email: currentUser?.email,
-                    data: {
-                        first_name: formData.firstName.trim(),
-                        last_name: formData.lastName.trim(),
-                        middle_name: formData.middleName.trim() || null,
-                        phone: formData.phoneNumber.replace(/[-\s]/g, ""),
-                        interests: formData.interests,
-                        travel_styles: formData.travelStyle,
-                        profile_url: profileImage || null,
-                    },
-                };
-                try {
-                    console.log("Payload for backend:", payload);
-                    const response = await axios.patch(
-                        "http://localhost:8080/user/",
-                        payload
-                    );
-                    console.log("Profile updated successfully");
-                } catch (error) {
-                    console.error("Error updating profile:", error);
-                }
-                // Navigate to home page after successful update
-                router.push("/home");
-            } else {
-                console.log("Failed to update profile");
-                // You can add error handling here
-            }
+            console.log("Payload for backend:", payload);
+            
+            // Update profile via backend API
+            const response = await axios.patch(
+                "http://localhost:8080/user/",
+                payload
+            );
+            
+            console.log("Profile updated successfully:", response.data);
+            
+            // Refresh current user data to reflect changes
+            await refreshCurrentUser();
+            
+            // Navigate to home page after successful update
+            router.push("/home");
+            
         } catch (error) {
             console.error("Error updating profile:", error);
+            
+            // Show error message to user
+            setValidationErrors(prev => ({
+                ...prev,
+                firstName: "Failed to update profile. Please try again."
+            }));
         }
     };
 
