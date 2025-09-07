@@ -4,6 +4,7 @@ import { Button } from "../../components/ui/button";
 import { AppHeader } from "../../components/shared";
 import { AppIntro, AppStats, YourGroupsSection } from "../../components/home";
 import { useUserGroups, useGroupSearch } from "../../lib/hooks/home";
+import { useCurrentUser } from "../../lib/hooks/user";
 import { Group } from "../../lib/types/home";
 import {
     Plane,
@@ -23,6 +24,7 @@ import {
 export default function homePage() {
     const router = useRouter();
     const { groups, loading, error, refreshGroups } = useUserGroups();
+    const { currentUser, loading: userLoading, error: userError } = useCurrentUser();
     const { searchGroups } = useGroupSearch();
 
     const handleProfileClick = () => {
@@ -52,10 +54,26 @@ export default function homePage() {
         console.log('Navigate to search groups page');
     };
 
+    // Show loading state while fetching user data
+    if (userLoading) {
+        return (
+            <div className="min-h-screen bg-black flex items-center justify-center">
+                <div className="text-orange-400 text-lg">Loading...</div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-black relative overflow-hidden">
             {/* Navigation Bar */}
-            <AppHeader onEditProfileClick={handleProfileClick} onLogoutClick={handleLogout} />
+            <AppHeader 
+                onEditProfileClick={handleProfileClick} 
+                onLogoutClick={handleLogout}
+                firstName={currentUser?.firstName}
+                middleName={currentUser?.middleName}
+                lastName={currentUser?.lastName}
+                userEmail={currentUser?.email}
+            />
 
             {/* Floating decorative elements */}
             <div className="absolute inset-0 overflow-hidden">
