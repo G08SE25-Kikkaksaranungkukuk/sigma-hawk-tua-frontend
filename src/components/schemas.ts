@@ -33,6 +33,7 @@ export type Member = {
 };
 
 export type GroupInfo = {
+  id: string;
   title: string;
   destination: string;
   dates: string;

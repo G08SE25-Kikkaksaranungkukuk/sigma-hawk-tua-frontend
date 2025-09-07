@@ -3,15 +3,19 @@ import { Users, Share2 } from "lucide-react";
 import { brand } from "@/components/ui/utils";
 import { UI_TEXT } from "@/config/group/ui-text";
 import { APP_CONFIG } from "@/config/group/app-config";
-import type { GroupInfo } from "@/components/schemas";
+import type { GroupInfo, UserInfo } from "@/components/schemas";
 
 interface GroupSidebarProps {
   group: GroupInfo;
+  userInfo: UserInfo;
   isRequested: boolean;
   isLoading: boolean;
   onRequestToJoin: () => void;
   onShare: () => void;
   onContactHost: () => void;
+  onLeaveGroup?: () => void;
+  isMember?: boolean;
+  isLeader?: boolean;
 }
 
 function StatRow({ left, right }: { left: React.ReactNode; right: React.ReactNode }) {
@@ -29,11 +33,15 @@ function StatRow({ left, right }: { left: React.ReactNode; right: React.ReactNod
 
 export function GroupSidebar({ 
   group, 
+  userInfo,
   isRequested, 
   isLoading, 
   onRequestToJoin, 
   onShare, 
-  onContactHost 
+  onContactHost,
+  onLeaveGroup,
+  isMember = false,
+  isLeader = false
 }: GroupSidebarProps) {
   const available = Math.max(group.maxSize - group.currentSize, 0);
 
@@ -67,28 +75,70 @@ export function GroupSidebar({
         </div>
 
         <div className="mt-5 grid gap-3">
-          <button
-            onClick={onRequestToJoin}
-            disabled={isLoading}
-            className="w-full rounded-xl px-4 py-3 text-sm font-semibold transition active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{
-              backgroundColor: APP_CONFIG.ui.colors.primary,
-              color: APP_CONFIG.ui.colors.text,
-              transform: isLoading ? 'none' : undefined
-            }}
-            onMouseEnter={(e) => {
-              if (!isLoading) {
+          {isLeader ? (
+            <a
+              href={`/group/${group.id}/manage`}
+              className="block w-full rounded-xl px-4 py-3 text-sm font-semibold text-center transition active:scale-[0.99]"
+              style={{
+                backgroundColor: APP_CONFIG.ui.colors.primary,
+                color: APP_CONFIG.ui.colors.text
+              }}
+              onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = APP_CONFIG.ui.colors.primaryHover;
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isLoading) {
+              }}
+              onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = APP_CONFIG.ui.colors.primary;
-              }
-            }}
-          >
-            {isLoading ? "Processing..." : isRequested ? UI_TEXT.buttons.requestSent : UI_TEXT.buttons.requestToJoin}
-          </button>
+              }}
+            >
+              Manage Group
+            </a>
+          ) : isMember ? (
+            <button
+              onClick={onLeaveGroup}
+              disabled={isLoading}
+              className="w-full rounded-xl px-4 py-3 text-sm font-semibold transition active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                backgroundColor: APP_CONFIG.ui.colors.danger,
+                color: APP_CONFIG.ui.colors.text,
+                transform: isLoading ? 'none' : undefined
+              }}
+              onMouseEnter={(e) => {
+                if (!isLoading) {
+                  e.currentTarget.style.backgroundColor = APP_CONFIG.ui.colors.dangerHover;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isLoading) {
+                  e.currentTarget.style.backgroundColor = APP_CONFIG.ui.colors.danger;
+                }
+              }}
+            >
+              {isLoading ? "Processing..." : "Leave Group"}
+            </button>
+          ) : (
+            <button
+              onClick={onRequestToJoin}
+              disabled={isLoading}
+              className="w-full rounded-xl px-4 py-3 text-sm font-semibold transition active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                backgroundColor: APP_CONFIG.ui.colors.primary,
+                color: APP_CONFIG.ui.colors.text,
+                transform: isLoading ? 'none' : undefined
+              }}
+              onMouseEnter={(e) => {
+                if (!isLoading) {
+                  e.currentTarget.style.backgroundColor = APP_CONFIG.ui.colors.primaryHover;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isLoading) {
+                  e.currentTarget.style.backgroundColor = APP_CONFIG.ui.colors.primary;
+                }
+              }}
+            >
+              {isLoading ? "Processing..." : isRequested ? UI_TEXT.buttons.requestSent : UI_TEXT.buttons.requestToJoin}
+            </button>
+          )}
           
           <div className="grid grid-cols-1 gap-3">
             <button

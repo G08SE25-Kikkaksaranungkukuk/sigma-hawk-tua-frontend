@@ -12,8 +12,10 @@ import { useGroupActions } from "@/lib/hooks/group/useGroupActions";
 import axios from "axios";
 import { baseAPIUrl } from "@/lib/config";
 import { GroupData } from "@/lib/types/home/group";
+import type { UserInfo } from "@/components/schemas";
 import { set } from "zod";
 import { tr } from "zod/v4/locales";
+import { apiClient } from "@/lib/api";
 
 interface TravelGroupPageProps {
   params: Promise<{ groupId?: string }>;
@@ -32,7 +34,7 @@ interface TravelGroupPageProps {
 export default function TravelGroupPage({ params }: TravelGroupPageProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [pageUrl,setPageUrl] = React.useState<string>("");
-  const [userInfo,setUserInfo] = React.useState<{user_id : number}>()
+  const [userInfo,setUserInfo] = React.useState<UserInfo>()
   const [groupInfo , setGroupInfo] = React.useState<GroupData>();
   
   const {groupId} = React.use(params);
@@ -48,8 +50,8 @@ export default function TravelGroupPage({ params }: TravelGroupPageProps) {
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
     Promise.all([
-      axios.get(baseAPIUrl + "/auth/whoami", { withCredentials: true }),
-      axios.get(baseAPIUrl + "/group/" + groupId),
+      apiClient.get("/auth/whoami", { withCredentials: true }),
+      apiClient.get("/group/" + groupId),
     ])
       .then(([whoamiRes, groupRes]) => {
         setUserInfo(whoamiRes.data.data);
@@ -86,7 +88,7 @@ export default function TravelGroupPage({ params }: TravelGroupPageProps) {
   if (error) {
     return <ErrorState title="Failed to load group" onRetry={refetch} />;
   }
-
+  console.log(userInfo)
   if (!groupInfo) {
     return (
       <ErrorState
@@ -99,9 +101,17 @@ export default function TravelGroupPage({ params }: TravelGroupPageProps) {
 
 
   
-  const group = groupInfo ? {
+  // Check if the current user is a member or leader
+  const isMember = userInfo && groupInfo?.members?.some(
+    member => member.user_id === userInfo.user_id
+  );
+
+  const isLeader = userInfo && groupInfo?.group_leader_id === userInfo.user_id;
+
+  const group = groupInfo && groupId ? {
+    id: groupId,
     title: groupInfo.group_name || '',
-    destination: '',  // Add destination to your API
+    destination: 'บ้านไอ่โจ้',  // Add destination to your API
     dates: new Date().toLocaleDateString(),  // Add dates to your API
     timezone: 'GMT+7',  // Add timezone to your API
     description: '',  // Add description to your API
@@ -121,21 +131,43 @@ export default function TravelGroupPage({ params }: TravelGroupPageProps) {
     members: (groupInfo.members || []).map(member => ({
       id: member.user_id.toString(),
       name: `${member.first_name} ${member.last_name}`,
-      role: (member.user_id === groupInfo.group_leader_id ? 'Host' : 'Member') as ('Host' | 'Co‑host' | 'Member'),
+      role: member.user_id === groupInfo.group_leader_id ? ('Host' as const) : ('Member' as const),
       avatar: member.profile_url || ''
     }))
   } : null;
-
-
-  console.log("userInfo:", userInfo);
-  console.log("pageUrl:", pageUrl);
-  console.log("groupInfo:", groupInfo);
-  console.log("group:", group);
   
 
   const handleShare = () => {
     setIsModalOpen(true);
   };
+
+  const handleLeaveGroup = async () => {
+    if (!groupId) return;
+    if (!userInfo?.user_id) {
+      setError("User not loaded");
+      return;
+    }
+
+    try {
+      await apiClient.delete(
+        `/group/${groupId}/member`,
+        {
+          data: { "user_id": userInfo.user_id }, 
+          withCredentials: true,
+        }
+      );
+      setGroupInfo(prev => prev ? {
+        ...prev,
+        members: (prev.members ?? []).filter(m => m.user_id !== userInfo.user_id)
+      } : prev);
+
+    } catch (error) {
+      console.error("Failed to leave group:", error);
+      setError("Failed to leave group");
+      setLoading(false);
+    }
+  };
+
 
   const handleContactHost = async () => {
     try {
@@ -158,21 +190,29 @@ export default function TravelGroupPage({ params }: TravelGroupPageProps) {
         {/* Left: Main Content */}
         <div className="lg:col-span-2">
           <div className="rounded-2xl shadow-xl overflow-hidden" style={{ background: brand.card, border: `1px solid ${brand.border}` }}>
-            <GroupHeader group={group} />
-            <GroupDetails group={group} onMemberClick={handleMemberClick} />
+            {group && (
+              <>
+                <GroupHeader group={group} />
+                <GroupDetails group={group} onMemberClick={handleMemberClick} />
+              </>
+            )}
           </div>
         </div>
 
         {/* Right: Sidebar */}
         <aside className="lg:col-span-1 space-y-6">
-          <GroupSidebar
+          {group && <GroupSidebar
             group={group}
+            userInfo={userInfo!}
             isRequested={isRequested}
             isLoading={isJoiningLoading}
             onRequestToJoin={requestToJoin}
             onShare={handleShare}
             onContactHost={handleContactHost}
-          />
+            onLeaveGroup={handleLeaveGroup}
+            isMember={!!isMember}
+            isLeader={!!isLeader}
+          />}
           
           <GroupContact
             onContactHost={handleContactHost}
