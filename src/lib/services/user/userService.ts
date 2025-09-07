@@ -3,9 +3,10 @@
 // User service for handling user-related API calls
 // This service will be used to fetch user data from the database
 import { UserProfile, UpdateUserProfile } from '../../types/user';
+import { baseAPIUrl } from '../../config';
 
 class UserService {
-  private baseUrl = process.env.NEXT_PUBLIC_API_URL;
+  private baseUrl = baseAPIUrl;
 
   /*
     Get current authenticated user data

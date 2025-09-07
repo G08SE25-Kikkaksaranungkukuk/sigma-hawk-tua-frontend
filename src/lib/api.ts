@@ -2,7 +2,7 @@ import axios from "axios";
 import { baseAPIUrl } from "./config";
 
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}${path}`, {
+  const res = await fetch(`${baseAPIUrl}${path}`, {
     headers: { "Content-Type": "application/json", Accept: "application/json", ...(init?.headers||{}) },
     credentials: "include", // ถ้าแบ็กเอนด์ใช้ cookie
     ...init,

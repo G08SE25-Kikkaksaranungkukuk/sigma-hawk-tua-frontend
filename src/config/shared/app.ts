@@ -1,5 +1,7 @@
+import { baseAPIUrl } from '../../lib/config';
+
 export const APP_CONFIG = {
-  API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api',
+  API_URL: baseAPIUrl,
   APP_NAME: 'TravelMatch',
   APP_DESCRIPTION: 'Find your perfect travel companion',
   FEATURES: [
