@@ -5,29 +5,54 @@ import TravelInviteModal from "@/components/TravelInviteModal";
 import { Sparkles, Users, MapPin } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { PopupCard } from "@/components/ui/popup-card";
+import axios, { AxiosError } from "axios";
+import {use} from "react";
+import { apiClient } from "@/lib/api";
+import { GroupData, Member } from "@/lib/types/home/group";
 
-const mockMembers = [
-  { id: 1, name: "Alice (Me)", isOwner: true },
-  { id: 2, name: "Bob", isOwner: false },
-  { id: 3, name: "Charlie", isOwner: false },
-];
+interface GroupManagePageProps {
+  params?: { groupId?: string };
+}
 
-export default function GroupManagementPage() {
-  const [members, setMembers] = useState(mockMembers);
+export default function GroupManagementPage({params} : {params : Promise<GroupManagePageProps>}) {  
+  const {groupId} : any = use(params);
+  const [groupData, setGroupData] = useState<GroupData>({});
   const [inviteOpen, setInviteOpen] = useState(false);
   const [confirmTransferOpen, setConfirmTransferOpen] = useState(false);
   const [transferTargetId, setTransferTargetId] = useState<number | null>(null);
-
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+
+  React.useEffect(()=>{
+    (async () => {
+      const ret =  await (await apiClient.get(`/group/${groupId}`)).data as {data : GroupData};
+      const processed_members = ret.data.members?.map((val : Member)=>{return {...val,isOwner : val.user_id == ret.data.group_leader_id}}) ?? [];
+      setGroupData({...ret.data,members : processed_members})
+    })()
+  },[])
   
   const handleDeleteRequest = (id: number) => {
     setPendingDeleteId(id);
   };
 
-  const confirmDeleteMember = () => {
-    if (pendingDeleteId !== null) {
-      setMembers(members.filter(m => m.id !== pendingDeleteId));
-      setPendingDeleteId(null);
+  const confirmDeleteMember = async () => {
+    try {
+      if (pendingDeleteId !== null) {
+        await apiClient.delete(`/group/${groupId}/member`,{
+          data : {
+            "user_id" : pendingDeleteId
+          },
+          withCredentials : true
+        })
+        const memberList = (groupData.members ?? []).filter(m => m.user_id !== pendingDeleteId)
+        setGroupData({...groupData,members : memberList});
+        setPendingDeleteId(null);
+      }
+    }
+    catch(error : unknown) {
+      if(error instanceof AxiosError) {
+        console.log(error)
+        alert("[403] Unauthorized")
+      }
     }
   };
 
@@ -36,14 +61,29 @@ export default function GroupManagementPage() {
     setConfirmTransferOpen(true);
   };
 
-  const confirmTransferOwnership = () => {
-    if (transferTargetId !== null) {
-      setMembers(members.map(m => ({
-        ...m,
-        isOwner: m.id === transferTargetId
-      })));
-      setConfirmTransferOpen(false);
-      setTransferTargetId(null);
+  const confirmTransferOwnership = async () => {
+    try {
+      if (transferTargetId !== null) {
+        await apiClient.patch(`/group/${groupId}/owner`, {
+            "user_id" : transferTargetId
+          },{
+          withCredentials : true
+        })
+        window.location.href = `/group/${groupId}/info`
+        const newMemberList = (groupData.members ?? []).map(m => ({
+          ...m,
+          isOwner: m.user_id === transferTargetId
+        }))
+        setGroupData({...groupData,members : newMemberList});
+        setConfirmTransferOpen(false);
+        setTransferTargetId(null);
+      }
+    }
+    catch(error : unknown) {
+      if(error instanceof AxiosError) {
+        console.log(error)
+        alert("[403] Unauthorized")
+      }
     }
   };
 
@@ -69,7 +109,7 @@ export default function GroupManagementPage() {
             Group Members
           </h2>
           <MemberList
-            members={members}
+            members={groupData.members ?? []}
             onDelete={handleDeleteRequest}
             onTransfer={handleTransferRequest}
           />
@@ -82,14 +122,14 @@ export default function GroupManagementPage() {
             </button>
             <button
               className="px-4 py-2 rounded-xl bg-gray-500 font-semibold btn-hover-lift"
-              onClick={() => window.location.replace("/")}
+              onClick={() => window.location.replace(`/group/${groupId}/info/`)}
             >
               Back to group
             </button>
           </div>
         </div>
       </div>
-      <TravelInviteModal isOpen={inviteOpen} onClose={() => setInviteOpen(false)} />
+      <TravelInviteModal inviteLink={window.location.protocol + "//" + window.location.host + "/group/" + groupId + "/info"} isOpen={inviteOpen} onClose={() => setInviteOpen(false)} />
       <AnimatePresence>
         {confirmTransferOpen && (
           <motion.div
@@ -104,7 +144,7 @@ export default function GroupManagementPage() {
               </h2>
               <p className="text-gray-300 mb-6 text-center">
                 Are you sure you want to transfer group ownership to <span className="text-orange-400 font-semibold">
-                  {members.find(m => m.id === transferTargetId)?.name}
+                  {(groupData.members ?? []).find(m => m.user_id === transferTargetId)?.first_name}
                 </span>?
               </p>
               <div className="flex justify-center gap-4">
@@ -139,7 +179,7 @@ export default function GroupManagementPage() {
               </h2>
               <p className="text-gray-300 mb-6 text-center">
                 Are you sure you want to remove <span className="text-rose-400 font-semibold">
-                  {members.find(m => m.id === pendingDeleteId)?.name}
+                  {(groupData.members ?? []).find(m => m.user_id === pendingDeleteId)?.first_name}
                 </span> from the group?
               </p>
               <div className="flex justify-center gap-4">

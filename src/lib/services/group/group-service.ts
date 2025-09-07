@@ -1,4 +1,6 @@
 import type { GroupInfo } from "@/components/schemas";
+import { baseAPIUrl } from "@/lib/config";
+import axios from "axios";
 
 // Sample data for development - move to API/database in production
 export const SAMPLE_GROUP_DATA: GroupInfo = {
@@ -46,12 +48,11 @@ export const groupService = {
   
   joinGroup: async (groupId: string): Promise<void> => {
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
+    // await new Promise(resolve => setTimeout(resolve, 500));
+
     // In production, this would be a real API call
-    // return fetch(`/api/groups/${groupId}/join`, { method: 'POST' });
-    
-    console.log(`Joining group ${groupId}`);
+    return axios.put(baseAPIUrl + `group/${groupId}/member`,{},{withCredentials : true}).then(val => val.data)
+
   },
   
   contactHost: async (groupId: string, message: string): Promise<void> => {

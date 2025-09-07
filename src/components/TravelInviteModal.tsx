@@ -7,14 +7,12 @@ import { AnimatePresence, motion } from "framer-motion";
 
 interface TravelInviteModalProps {
   isOpen: boolean;
+  inviteLink : string;
   onClose: () => void;
 }
 
-export default function TravelInviteModal({ isOpen, onClose }: TravelInviteModalProps) {
+export default function TravelInviteModal({ isOpen, onClose , inviteLink }: TravelInviteModalProps) {
   const [copied, setCopied] = useState(false);
-
-  // This inviteLink is currently a placeholder. Link generation is to be added.
-  const inviteLink = "https://sigmatour.com/bIAHbleHBlu";
 
   const copyToClipboard = async () => {
     try {
