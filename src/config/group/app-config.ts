@@ -14,7 +14,9 @@ export const APP_CONFIG = {
       secondary: "#171926",
       secondaryHover: "#212124",
       text: "#0b0b0c",
-      textSecondary: "#e8eaee"
+      textSecondary: "#e8eaee",
+      danger: "#dc2626",
+      dangerHover: "#b91c1c"
     },
     animation: {
       buttonScale: 0.99,

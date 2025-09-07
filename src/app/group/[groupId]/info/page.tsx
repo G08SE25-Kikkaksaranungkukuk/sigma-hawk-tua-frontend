@@ -8,10 +8,10 @@ import { GroupSidebar } from "@/components/group/info/GroupSidebar";
 import { GroupContact } from "@/components/group/info/GroupContact";
 import { GroupPageSkeleton, ErrorState } from "@/components/group/info/LoadingStates";
 import { useGroupActions } from "@/lib/hooks/group/useGroupActions";
-import { SAMPLE_GROUP_DATA } from "@/lib/services/group/group-service";
-import axios from "axios";
-import { baseAPIUrl } from "@/lib/config";
 import { GroupData } from "@/lib/types/home/group";
+import type { UserInfo } from "@/components/schemas";
+import { apiClient } from "@/lib/api";
+import { groupService } from "@/lib/services/group/group-service";
 
 interface TravelGroupPageProps {
   params: Promise<{ groupId?: string }>;
@@ -30,61 +30,151 @@ interface TravelGroupPageProps {
 export default function TravelGroupPage({ params }: TravelGroupPageProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [pageUrl,setPageUrl] = React.useState<string>("");
-  const [userInfo,setUserInfo] = React.useState<{user_id : number}>()
+  const [userInfo,setUserInfo] = React.useState<UserInfo>()
   const [groupInfo , setGroupInfo] = React.useState<GroupData>();
   
-  // For demo purposes, we'll use sample data. In production, use:
-  // const groupId = params?.groupId || 'default';
-  // const { group, loading, error, refetch } = useGroupData(groupId);
-  
-  // Demo implementation using sample data:
   const {groupId} = React.use(params);
-  const group = SAMPLE_GROUP_DATA;
-  const loading = false;
-  const error = null;
-  const refetch = () => {};
-  
-  const { isRequested, isJoiningLoading, isContactLoading, requestToJoin, contactHost } = useGroupActions(groupId ?? "Nan");
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+  const { isRequested, isJoiningLoading, isContactLoading, requestToJoin: baseRequestToJoin, contactHost, resetRequest } = useGroupActions(groupId ?? "Nan");
 
-  // Handle loading state
+  const refetch = React.useCallback(() => {
+    if (!groupId) return;
+    setLoading(true);
+    setError(null);
+
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    Promise.all([
+      groupService.getCurrentUser(),
+      groupService.getGroupDetails(groupId),
+    ])
+      .then(([userRes, groupRes]) => {
+        setUserInfo(userRes);
+        setGroupInfo(groupRes);
+        console.log("groupInfo (refetch):", groupRes);
+
+        timeoutId = setTimeout(() => setLoading(false), 800);
+      })
+      .catch((err) => {
+        console.error(err);
+        setError(err.message);
+        setLoading(false);
+      });
+    
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [groupId]);
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      setPageUrl(window.location.href);
+      const cleanup = refetch();
+      return () => {
+        if (typeof cleanup === "function") cleanup();
+      };
+    }
+  }, [refetch]);
+
   if (loading) {
     return <GroupPageSkeleton />;
   }
 
-  // Handle error state
   if (error) {
+    return <ErrorState title="Failed to load group" onRetry={refetch} />;
+  }
+  console.log(userInfo)
+  if (!groupInfo) {
     return (
       <ErrorState
-        title="Failed to load group"
-        message={error}
+        title="Group not found"
+        message="The group you're looking for doesn't exist or has been removed."
         onRetry={refetch}
       />
     );
   }
 
-  // Handle missing group data
-  if (!group) {
-    return (
-      <ErrorState
-        title="Group not found"
-        message="The group you're looking for doesn't exist or has been removed."
-      />
-    );
-  }
 
-  React.useEffect(()=>{
-    if(window) {
-      setPageUrl(window.location.href);
-      axios.get(baseAPIUrl + "/auth/whoami",{
-        withCredentials : true
-      }).then((val)=>setUserInfo(val.data.data))
-      axios.get(baseAPIUrl + "/group/" + groupId).then((val)=>setGroupInfo(val.data.data))
-    }
-  },[])
+  
+  // Check if the current user is a member or leader
+  const isMember = userInfo && groupInfo?.members?.some(
+    member => member.user_id === userInfo.user_id
+  );
+
+  const isLeader = userInfo && groupInfo?.group_leader_id === userInfo.user_id;
+
+  const group = groupInfo && groupId ? {
+    id: groupId,
+    title: groupInfo.group_name || '',
+    destination: 'บ้านไอ่โจ้',  // Add destination to your API
+    dates: new Date().toLocaleDateString(),  // Add dates to your API
+    timezone: 'GMT+7',  // Add timezone to your API
+    description: '',  // Add description to your API
+    privacy: 'Public' as const,  // Add privacy to your API
+    maxSize: 8,  // Add maxSize to your API
+    currentSize: groupInfo.members?.length || 0,
+    pace: 'Balanced' as const,  // Add pace to your API
+    languages: ['English'],  // Add languages to your API
+    interests: groupInfo.interest_fields || [],
+    requirements: [],  // Add requirements to your API
+    rules: [],  // Add rules to your API
+    itinerary: [{  // Add itinerary to your API
+      day: 'Day 1',
+      plan: 'Welcome dinner'
+    }],
+    hostNote: '',  // Add hostNote to your API if needed
+    members: (groupInfo.members || []).map(member => ({
+      id: member.user_id.toString(),
+      name: `${member.first_name} ${member.last_name}`,
+      role: member.user_id === groupInfo.group_leader_id ? ('Host' as const) : ('Member' as const),
+      avatar: member.profile_url || ''
+    }))
+  } : null;
+  
 
   const handleShare = () => {
     setIsModalOpen(true);
   };
+
+  const handleLeaveGroup = async () => {
+    if (!groupId) return;
+    if (!userInfo?.user_id) {
+      setError("User not loaded");
+      return;
+    }
+
+    try {
+      await apiClient.delete(
+        `/group/${groupId}/leave`,
+        {
+          data: { "user_id": userInfo.user_id }, 
+          withCredentials: true,
+        }
+      );
+      refetch();
+      // Reset the request state so the button shows "Join now!"
+      resetRequest();
+
+    } catch (error) {
+      console.error("Failed to leave group:", error);
+      setError("Failed to leave group");
+      setLoading(false);
+    }
+  };
+
+  const requestToJoin = async () => {
+    try {
+      await baseRequestToJoin();
+      // After successful join, refetch to update the group data
+      refetch();
+
+    } catch (error) {
+      console.error('Failed to join group:', error);
+      // You might want to show an error message here
+    }
+  };
+
 
   const handleContactHost = async () => {
     try {
@@ -107,21 +197,29 @@ export default function TravelGroupPage({ params }: TravelGroupPageProps) {
         {/* Left: Main Content */}
         <div className="lg:col-span-2">
           <div className="rounded-2xl shadow-xl overflow-hidden" style={{ background: brand.card, border: `1px solid ${brand.border}` }}>
-            <GroupHeader group={group} />
-            <GroupDetails group={group} onMemberClick={handleMemberClick} />
+            {group && (
+              <>
+                <GroupHeader group={group} />
+                <GroupDetails group={group} onMemberClick={handleMemberClick} />
+              </>
+            )}
           </div>
         </div>
 
         {/* Right: Sidebar */}
         <aside className="lg:col-span-1 space-y-6">
-          <GroupSidebar
+          {group && <GroupSidebar
             group={group}
+            userInfo={userInfo!}
             isRequested={isRequested}
             isLoading={isJoiningLoading}
             onRequestToJoin={requestToJoin}
             onShare={handleShare}
             onContactHost={handleContactHost}
-          />
+            onLeaveGroup={handleLeaveGroup}
+            isMember={!!isMember}
+            isLeader={!!isLeader}
+          />}
           
           <GroupContact
             onContactHost={handleContactHost}
