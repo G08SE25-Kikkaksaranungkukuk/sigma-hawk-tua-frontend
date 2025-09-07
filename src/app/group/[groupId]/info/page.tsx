@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { use } from "react";
 import { brand } from "@/components/ui/utils";
 import TravelInviteModal from "@/components/TravelInviteModal";
 import { GroupHeader } from "@/components/group/info/GroupHeader";
@@ -8,10 +9,11 @@ import { GroupSidebar } from "@/components/group/info/GroupSidebar";
 import { GroupContact } from "@/components/group/info/GroupContact";
 import { GroupPageSkeleton, ErrorState } from "@/components/group/info/LoadingStates";
 import { useGroupActions } from "@/lib/hooks/group/useGroupActions";
-import { SAMPLE_GROUP_DATA } from "@/lib/services/group/group-service";
 import axios from "axios";
 import { baseAPIUrl } from "@/lib/config";
 import { GroupData } from "@/lib/types/home/group";
+import { set } from "zod";
+import { tr } from "zod/v4/locales";
 
 interface TravelGroupPageProps {
   params: Promise<{ groupId?: string }>;
@@ -33,16 +35,64 @@ export default function TravelGroupPage({ params }: TravelGroupPageProps) {
   const [userInfo,setUserInfo] = React.useState<{user_id : number}>()
   const [groupInfo , setGroupInfo] = React.useState<GroupData>();
   
-  // For demo purposes, we'll use sample data. In production, use:
-  // const groupId = params?.groupId || 'default';
-  // const { group, loading, error, refetch } = useGroupData(groupId);
-  
-  // Demo implementation using sample data:
   const {groupId} = React.use(params);
-  const group = SAMPLE_GROUP_DATA;
-  const loading = false;
-  const error = null;
-  const refetch = () => {};
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+  const refetch = () => {
+    if (!groupId) return;
+    setLoading(true);
+
+    Promise.all([
+      axios.get(baseAPIUrl + "/auth/whoami", { withCredentials: true }),
+      axios.get(baseAPIUrl + "/group/" + groupId)
+    ])
+      .then(([whoamiRes, groupRes]) => {
+        setUserInfo(whoamiRes.data.data);
+        setGroupInfo(groupRes.data.data);
+        console.log("groupInfo (refetch):", groupRes.data.data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setError(err.message);
+        setLoading(false);
+      });
+  };
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      setPageUrl(window.location.href);
+      refetch();
+    }
+  }, [groupId]);
+
+  
+  const group = groupInfo ? {
+    title: groupInfo.group_name || '',
+    destination: '',  // Add destination to your API
+    dates: new Date().toLocaleDateString(),  // Add dates to your API
+    timezone: 'GMT+7',  // Add timezone to your API
+    description: '',  // Add description to your API
+    privacy: 'Public' as const,  // Add privacy to your API
+    maxSize: 8,  // Add maxSize to your API
+    currentSize: groupInfo.members?.length || 0,
+    pace: 'Balanced' as const,  // Add pace to your API
+    languages: ['English'],  // Add languages to your API
+    interests: groupInfo.interest_fields || [],
+    requirements: [],  // Add requirements to your API
+    rules: [],  // Add rules to your API
+    itinerary: [{  // Add itinerary to your API
+      day: 'Day 1',
+      plan: 'Welcome dinner'
+    }],
+    hostNote: '',  // Add hostNote to your API if needed
+    members: (groupInfo.members || []).map(member => ({
+      id: member.user_id.toString(),
+      name: `${member.first_name} ${member.last_name}`,
+      role: (member.user_id === groupInfo.group_leader_id ? 'Host' : 'Member') as ('Host' | 'Co‑host' | 'Member'),
+      avatar: member.profile_url || ''
+    }))
+  } : null;
   
   const { isRequested, isJoiningLoading, isContactLoading, requestToJoin, contactHost } = useGroupActions(groupId ?? "Nan");
 
@@ -56,7 +106,7 @@ export default function TravelGroupPage({ params }: TravelGroupPageProps) {
     return (
       <ErrorState
         title="Failed to load group"
-        message={error}
+        // message={error}
         onRetry={refetch}
       />
     );
@@ -72,15 +122,12 @@ export default function TravelGroupPage({ params }: TravelGroupPageProps) {
     );
   }
 
-  React.useEffect(()=>{
-    if(window) {
-      setPageUrl(window.location.href);
-      axios.get(baseAPIUrl + "/auth/whoami",{
-        withCredentials : true
-      }).then((val)=>setUserInfo(val.data.data))
-      axios.get(baseAPIUrl + "/group/" + groupId).then((val)=>setGroupInfo(val.data.data))
-    }
-  },[])
+
+  console.log("userInfo:", userInfo);
+  console.log("pageUrl:", pageUrl);
+  console.log("groupInfo:", groupInfo);
+  console.log("group:", group);
+  
 
   const handleShare = () => {
     setIsModalOpen(true);
