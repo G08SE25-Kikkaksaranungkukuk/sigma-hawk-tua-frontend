@@ -51,7 +51,7 @@ export const groupService = {
     // await new Promise(resolve => setTimeout(resolve, 500));
 
     // In production, this would be a real API call
-    return axios.put(baseAPIUrl + `group/${groupId}/member`,{},{withCredentials : true}).then(val => val.data)
+    return axios.put(baseAPIUrl + `/group/${groupId}/member`,{},{withCredentials : true}).then(val => val.data)
 
   },
   
