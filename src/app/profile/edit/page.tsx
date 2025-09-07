@@ -269,17 +269,6 @@ export default function EditProfilePage() {
     // For now, we'll just log the data
   };
 
-  const handleDeleteProfile = async (password?: string) => {
-    try {
-      // Here you would typically call an API to delete the profile with password
-      console.log("Deleting profile with password validation...");
-      // After successful deletion, redirect to login page
-      router.push("/login");
-    } catch (error) {
-      console.error("Error deleting profile:", error);
-    }
-  };
-
   // Back button navigation handler
   const handleBackClick = () => {
     router.push("/home");
@@ -632,12 +621,14 @@ export default function EditProfilePage() {
       <ConfirmationDialog
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={() => router.push("/")}
         title="Delete Profile"
         description="Are you sure you want to delete your profile? This action cannot be undone. Please enter your password to confirm."
         confirmText="Delete Profile"
         cancelText="Cancel"
         variant="danger"
         requirePassword={true}
+        
       />
     </div>
   );

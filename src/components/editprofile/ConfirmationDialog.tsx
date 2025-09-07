@@ -10,10 +10,12 @@ import { Button } from "../ui/button";
 import { AlertTriangle } from "lucide-react";
 import { Input } from "../ui/input";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface ConfirmationDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  onConfirm: () => void;
   title: string;
   description: string;
   confirmText?: string;
@@ -25,6 +27,7 @@ interface ConfirmationDialogProps {
 export default function ConfirmationDialog({
   isOpen,
   onClose,
+  onConfirm,
   title,
   description,
   confirmText = "Confirm",
@@ -61,19 +64,20 @@ export default function ConfirmationDialog({
 
     setLoading(true);
     try {
-      const res = await fetch("/api/user/delete", {
+      const res = await fetch("http://localhost:8080/user/delete", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`, // if using JWT
         },
         body: JSON.stringify({ password }),
+        credentials: "include",
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
 
-      alert("✅ Account deleted");
+      alert("Profile deleted");
+      onConfirm();
       onClose();
     } catch (err: any) {
       setError(err.message || "Something went wrong");
