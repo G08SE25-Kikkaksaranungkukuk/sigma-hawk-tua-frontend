@@ -150,7 +150,7 @@ export default function TravelGroupPage({ params }: TravelGroupPageProps) {
 
     try {
       await apiClient.delete(
-        `/group/${groupId}/member`,
+        `/group/${groupId}/leave`,
         {
           data: { "user_id": userInfo.user_id }, 
           withCredentials: true,
