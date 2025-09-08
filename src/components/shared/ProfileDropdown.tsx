@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Cookies from "js-cookie";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
   DropdownMenu,
@@ -31,8 +32,13 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
   const router = useRouter();
 
   const handleLogout = () => {
-    onLogoutClick(); // This will navigate to profile/edit page
-    console.log("Logout clicked");
+    // delet session or token 
+    Cookies.remove('token'); // 
+    Cookies.remove('accessToken');
+    Cookies.remove('refreshToken');
+    
+    onLogoutClick();
+    console.log("Logout clicked and cookies cleared");
   };
 
   const handleProfileManagement = () => {
