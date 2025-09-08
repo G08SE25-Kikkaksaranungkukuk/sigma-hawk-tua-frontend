@@ -58,6 +58,9 @@ class UserService {
         email: payload.email || 'user@example.com',
         phoneNumber: payload.phone || payload.phoneNumber || '',
         interests: payload.interests || [],
+        travelStyle: payload.travel_styles?.map((style: any) => 
+          style.name || style.style_name || style
+        ) || payload.travelStyle || [],
         profileImage: payload.profileImage || payload.profile_url || undefined
       };
     } catch (error) {
