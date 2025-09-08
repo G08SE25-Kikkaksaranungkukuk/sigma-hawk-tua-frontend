@@ -691,7 +691,12 @@ export default function EditProfilePage() {
                             Reset Password
                         </Button>
                     </div>
-
+                        {/* Delete Profile Button */}
+                            <Button
+                            onClick={() => setShowDeleteConfirm(true)}
+                            className="w-full mt-2 bg-red-500/20 hover:bg-red-500/30 text-red-500 border border-red-500/50 font-semibold py-3 rounded-lg flex items-center justify-center gap-2">
+                            Delete Profile
+                            </Button>
                     {/* Confirm Changes Button */}
                     <div className="pt-4">
                         <Button
