@@ -50,6 +50,16 @@ export function useUserProfile(userId?: string): UseUserProfileReturn {
       setError(null);
       const updatedProfile = await userService.updateUserProfile(userId, profileData);
       setUserProfile(updatedProfile);
+      
+      // Refresh authentication tokens to update cookies with new user data
+      try {
+        await userService.refreshAuthToken();
+        console.log('Auth tokens refreshed successfully after profile update');
+      } catch (refreshError) {
+        console.warn('Failed to refresh auth tokens after profile update:', refreshError);
+        // Don't fail the whole operation if token refresh fails
+      }
+      
       return true;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update profile';

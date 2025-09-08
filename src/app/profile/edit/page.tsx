@@ -18,6 +18,7 @@ import ProfilePictureModal from "../../../components/editprofile/ProfilePictureM
 import ResetPasswordModal from "../../../components/editprofile/ResetPasswordModal";
 import { useCurrentUser } from "../../../lib/hooks/user/useCurrentUser";
 import { useUserProfile } from "../../../lib/hooks";
+import { userService } from "../../../lib/services/user";
 
 const interestOptions = [
     { id: "SEA", label: "🌊 Sea", color: "blue" },
@@ -298,6 +299,15 @@ export default function EditProfilePage() {
             );
             
             console.log("Profile updated successfully:", response.data);
+            
+            // Refresh authentication tokens to update cookies with new user data
+            try {
+                await userService.refreshAuthToken();
+                console.log('Auth tokens refreshed successfully after profile update');
+            } catch (refreshError) {
+                console.warn('Failed to refresh auth tokens after profile update:', refreshError);
+                // Don't fail the whole operation if token refresh fails
+            }
             
             // Refresh current user data to reflect changes
             await refreshCurrentUser();

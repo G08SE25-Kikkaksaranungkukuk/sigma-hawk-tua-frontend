@@ -109,7 +109,7 @@ class UserService {
   */
   private async refreshToken(): Promise<boolean> {
     try {
-      const response = await fetch(`${this.baseUrl}/auth/refresh`, {
+      const response = await fetch('/api/auth/refresh', {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -122,6 +122,13 @@ class UserService {
       console.error('Error refreshing token:', error);
       return false;
     }
+  }
+
+  /*
+    Public method to refresh authentication token
+  */
+  async refreshAuthToken(): Promise<boolean> {
+    return this.refreshToken();
   }
 
   /*
