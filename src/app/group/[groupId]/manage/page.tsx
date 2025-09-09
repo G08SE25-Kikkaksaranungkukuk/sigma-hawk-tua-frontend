@@ -5,11 +5,11 @@ import TravelInviteModal from "@/components/TravelInviteModal";
 import { Sparkles, Users, MapPin } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { PopupCard } from "@/components/ui/popup-card";
-import axios, { AxiosError } from "axios";
+import { AxiosError } from "axios";
 import {use} from "react";
 import { apiClient } from "@/lib/api";
 import { GroupData, Member } from "@/lib/types/home/group";
-import { baseAPIUrl } from "@/lib/config";
+
 
 interface GroupManagePageProps {
   params?: { groupId?: string };

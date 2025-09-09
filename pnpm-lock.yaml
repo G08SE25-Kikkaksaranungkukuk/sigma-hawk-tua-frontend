@@ -168,6 +168,9 @@ importers:
       '@types/aos':
         specifier: ^3.0.7
         version: 3.0.7
+      '@types/axios':
+        specifier: ^0.9.36
+        version: 0.9.36
       '@types/node':
         specifier: ^20.10.0
         version: 20.19.11
@@ -1605,6 +1608,9 @@ packages:
 
   '@types/aos@3.0.7':
     resolution: {integrity: sha512-sEhyFqvKauUJZDbvAB3Pggynrq6g+2PS4XB3tmUr+mDL1gfDJnwslUC4QQ7/l8UD+LWpr3RxZVR/rHoZrLqZVg==}
+
+  '@types/axios@0.9.36':
+    resolution: {integrity: sha512-NLOpedx9o+rxo/X5ChbdiX6mS1atE4WHmEEIcR9NLenRVa5HoVjAvjafwU3FPTqnZEstpoqCaW7fagqSoTDNeg==}
 
   '@types/d3-array@3.2.1':
     resolution: {integrity: sha512-Y2Jn2idRrLzUfAKV2LyRImR+y4oa2AntrgID95SHJxuMUrkNXmanDSed71sRNZysveJVt1hLLemQZIady0FpEg==}
@@ -3576,6 +3582,8 @@ snapshots:
       tailwindcss: 4.1.12
 
   '@types/aos@3.0.7': {}
+
+  '@types/axios@0.9.36': {}
 
   '@types/d3-array@3.2.1': {}
 
