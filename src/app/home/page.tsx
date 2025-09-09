@@ -1,10 +1,12 @@
 "use client";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { Button } from "../../components/ui/button";
 import { AppHeader } from "../../components/shared";
 import { AppIntro, AppStats, YourGroupsSection } from "../../components/home";
 import { useUserGroups, useGroupSearch } from "../../lib/hooks/home";
 import { useCurrentUser } from "../../lib/hooks/user";
+import { tokenService } from "../../lib/services/user/tokenService";
 import { Group } from "../../lib/types/home";
 import {
     Plane,
@@ -31,6 +33,36 @@ export default function homePage() {
     } = useCurrentUser();
     const { searchGroups } = useGroupSearch();
 
+    // Handle token from URL params (from login redirect) and verify authentication
+    useEffect(() => {
+        const handleTokenFromLogin = async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token =
+                urlParams.get("token") || urlParams.get("accessToken");
+
+            if (token) {
+                // Store token from URL params
+                localStorage.setItem("accessToken", token);
+                // Clean up URL
+                const cleanUrl = window.location.pathname;
+                window.history.replaceState({}, document.title, cleanUrl);
+                console.log("Token received from login and stored");
+            }
+
+            // Verify we have a valid token
+            const existingToken = await tokenService.getAuthToken();
+            if (!existingToken) {
+                console.log("No valid token found, redirecting to login");
+                router.push("/login");
+                return;
+            }
+
+            console.log("Valid token found, proceeding with user data fetch");
+        };
+
+        handleTokenFromLogin();
+    }, [router]);
+
     const handleProfileClick = () => {
         router.push("/profile/edit");
     };
@@ -45,11 +77,30 @@ export default function homePage() {
         console.log("View group:", group);
     };
 
-    const handleLogout = () => {
-        // Clear auth token or session if needed
-        localStorage.removeItem("token");
-        // Redirect to login page
-        router.push("/login");
+    const handleLogout = async () => {
+        try {
+            // Clear all possible token storage locations
+            localStorage.removeItem("token");
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("authToken");
+
+            // Clear cookies if any
+            if (typeof document !== "undefined") {
+                document.cookie =
+                    "accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                document.cookie =
+                    "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            }
+
+            console.log("Logout: All tokens cleared");
+
+            // Redirect to login page
+            router.push("/login");
+        } catch (error) {
+            console.error("Error during logout:", error);
+            // Still redirect even if there's an error
+            router.push("/login");
+        }
     };
 
     const handleSearchGroups = () => {
@@ -62,9 +113,42 @@ export default function homePage() {
     if (userLoading) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center">
-                <div className="text-orange-400 text-lg">Loading...</div>
+                <div className="bg-slate-800 p-6 rounded-lg">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
+                    <div className="text-orange-400 text-lg mt-2">
+                        Authenticating...
+                    </div>
+                </div>
             </div>
         );
+    }
+
+    // Show error state if authentication fails
+    if (userError) {
+        return (
+            <div className="min-h-screen bg-black flex items-center justify-center">
+                <div className="bg-slate-800 p-6 rounded-lg text-center">
+                    <div className="text-red-400 text-lg mb-4">
+                        Authentication Failed
+                    </div>
+                    <div className="text-gray-400 text-sm mb-4">
+                        {userError}
+                    </div>
+                    <Button
+                        onClick={() => router.push("/login")}
+                        className="bg-orange-500 text-black hover:bg-orange-600"
+                    >
+                        Return to Login
+                    </Button>
+                </div>
+            </div>
+        );
+    }
+
+    // If no current user after loading, redirect to login
+    if (!currentUser) {
+        router.push("/login");
+        return null;
     }
 
     return (

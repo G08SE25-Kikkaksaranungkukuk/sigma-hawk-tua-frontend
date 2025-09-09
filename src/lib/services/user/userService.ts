@@ -50,18 +50,23 @@ class UserService {
     // Fetch user profile data from database
     async getUserProfile(email?: string): Promise<UserProfile> {
         try {
+            console.log(
+                "Fetching user profile for email in getUserProfile:",
+                email
+            );
             const token = tokenService.getAuthToken();
             if (!token) throw new Error("No authentication token found");
             if (!email) {
                 throw new Error("No email provided");
             }
+
             const response = await axios.get(`${this.baseUrl}/user`, {
+                params: {
+                    email: email,
+                },
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
-                },
-                params: {
-                    email: email,
                 },
                 withCredentials: true,
             });
