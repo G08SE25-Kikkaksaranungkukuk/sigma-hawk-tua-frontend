@@ -24,21 +24,25 @@ import {
 export default function homePage() {
     const router = useRouter();
     const { groups, loading, error, refreshGroups } = useUserGroups();
-    const { currentUser, loading: userLoading, error: userError } = useCurrentUser();
+    const {
+        currentUser,
+        loading: userLoading,
+        error: userError,
+    } = useCurrentUser();
     const { searchGroups } = useGroupSearch();
 
     const handleProfileClick = () => {
-        router.push('/profile/edit');
+        router.push("/profile/edit");
     };
 
     const handleCreateGroup = () => {
         // TODO: Implement create group modal or navigate to create group page
-        console.log('Create group clicked');
+        console.log("Create group clicked");
     };
 
     const handleViewGroup = (group: Group) => {
         // TODO: Navigate to group detail page
-        console.log('View group:', group);
+        console.log("View group:", group);
     };
 
     const handleLogout = () => {
@@ -50,8 +54,8 @@ export default function homePage() {
 
     const handleSearchGroups = () => {
         // TODO: Navigate to search groups page
-        router.push('/groupSearch');
-        console.log('Navigate to search groups page');
+        router.push("/groupSearch");
+        console.log("Navigate to search groups page");
     };
 
     // Show loading state while fetching user data
@@ -66,12 +70,12 @@ export default function homePage() {
     return (
         <div className="min-h-screen bg-black relative overflow-hidden">
             {/* Navigation Bar */}
-            <AppHeader 
-                onEditProfileClick={handleProfileClick} 
+            <AppHeader
+                onEditProfileClick={handleProfileClick}
                 onLogoutClick={handleLogout}
-                firstName={currentUser?.firstName}
-                middleName={currentUser?.middleName}
-                lastName={currentUser?.lastName}
+                firstName={currentUser?.first_name}
+                middleName={currentUser?.middle_name}
+                lastName={currentUser?.last_name}
                 userEmail={currentUser?.email}
             />
 

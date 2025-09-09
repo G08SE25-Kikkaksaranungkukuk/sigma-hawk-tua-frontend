@@ -1,43 +1,42 @@
 // User-related type definitions
 export interface UserProfile {
-  id: string;
-  firstName: string;
-  lastName: string;
-  middleName?: string;
-  email: string;
-  phoneNumber: string;
-  interests: string[];
-  travelStyle?: string[];
-  profileImage?: string;
-  createdAt?: string;
-  updatedAt?: string;
+    first_name: string;
+    last_name: string;
+    middle_name?: string;
+    email: string;
+    phone: string;
+    interests: string[];
+    travel_styles?: string[];
+    profile_url?: string;
+    createdAt?: string;
+    updatedAt?: string;
 }
 
 export interface UpdateUserProfile {
-  firstName: string;
-  lastName: string;
-  middleName?: string;
-  phoneNumber: string;
-  interests: string[];
-  travelStyle?: string[];
-  profileImage?: string;
+    first_name: string;
+    last_name: string;
+    middle_name?: string;
+    phone: string;
+    interests: string[];
+    travel_style?: string[];
+    profile_url?: string;
 }
 
 export interface UserEmailInfo {
-  email: string;
-  isVerified: boolean;
-  lastUpdated?: string;
+    email: string;
+    isVerified: boolean;
+    lastUpdated?: string;
 }
 
 export interface PasswordResetRequest {
-  oldPassword: string;
-  newPassword: string;
-  confirmPassword: string;
+    oldPassword: string;
+    newPassword: string;
+    confirmPassword: string;
 }
 
 // Interest option for the UI
 export interface InterestOption {
-  id: string;
-  label: string;
-  color: string;
+    id: string;
+    label: string;
+    color: string;
 }
