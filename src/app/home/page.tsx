@@ -20,39 +20,19 @@ import {
     User,
     Menu,
 } from "lucide-react";
+import {
+    handleProfileClick,
+    handleCreateGroup,
+    handleViewGroup,
+    handleLogout,
+    handleSearchGroups
+} from "../../components/home/homeHandlers";
 
 export default function homePage() {
     const router = useRouter();
     const { groups, loading, error, refreshGroups } = useUserGroups();
     const { currentUser, loading: userLoading, error: userError } = useCurrentUser();
     const { searchGroups } = useGroupSearch();
-
-    const handleProfileClick = () => {
-        router.push('/profile/edit');
-    };
-
-    const handleCreateGroup = () => {
-        // TODO: Implement create group modal or navigate to create group page
-        console.log('Create group clicked');
-    };
-
-    const handleViewGroup = (group: Group) => {
-        // TODO: Navigate to group detail page
-        console.log('View group:', group);
-    };
-
-    const handleLogout = () => {
-        // Clear auth token or session if needed
-        localStorage.removeItem("token");
-        // Redirect to login page
-        router.push("/login");
-    };
-
-    const handleSearchGroups = () => {
-        // TODO: Navigate to search groups page
-        router.push('/groupSearch');
-        console.log('Navigate to search groups page');
-    };
 
     // Show loading state while fetching user data
     if (userLoading) {
@@ -67,8 +47,8 @@ export default function homePage() {
         <div className="min-h-screen bg-black relative overflow-hidden">
             {/* Navigation Bar */}
             <AppHeader 
-                onEditProfileClick={handleProfileClick} 
-                onLogoutClick={handleLogout}
+                onEditProfileClick={() => handleProfileClick(router)} 
+                onLogoutClick={() => handleLogout(router)}
                 firstName={currentUser?.firstName}
                 middleName={currentUser?.middleName}
                 lastName={currentUser?.lastName}
@@ -104,8 +84,8 @@ export default function homePage() {
                         loading={loading}
                         error={error}
                         onCreateGroup={handleCreateGroup}
-                        onViewGroup={handleViewGroup}
-                        onSearchGroups={handleSearchGroups}
+                        onViewGroup={(group) => handleViewGroup(router, group)}
+                        onSearchGroups={() => handleSearchGroups(router)}
                     />
                 </div>
 
