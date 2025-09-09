@@ -38,13 +38,13 @@ export const SAMPLE_GROUP_DATA = {
 // Group service implementation
 export const groupService = {
   getGroupDetails: async (groupId: string): Promise<GroupData> => {
-    const response = await apiClient.get<GroupData, AxiosResponse<GroupData>>(`/group/${groupId}`, { withCredentials: true });
-    return response.data;
+    const response = await apiClient.get<GroupData, GroupData>(`/group/${groupId}`, { withCredentials: true });
+    return response;
   },
   
   getCurrentUser: async (): Promise<UserData> => {
-    const response = await apiClient.get<UserData, AxiosResponse<UserData>>(`/auth/whoami`, { withCredentials: true });
-    return response.data;
+    const response = await apiClient.get<UserData, UserData>(`/auth/whoami`, { withCredentials: true });
+    return response;
   },
   
   joinGroup: async (groupId: string): Promise<void> => {
