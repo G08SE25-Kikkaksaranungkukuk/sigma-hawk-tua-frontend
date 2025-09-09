@@ -52,7 +52,6 @@ export function useUserProfile(userId?: string): UseUserProfileReturn {
 
             setError(null);
             const updatedProfile = await userService.updateUserProfile(
-                userEmail,
                 profileData
             );
             setUserProfile(updatedProfile);

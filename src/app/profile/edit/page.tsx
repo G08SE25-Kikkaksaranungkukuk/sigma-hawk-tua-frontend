@@ -9,7 +9,7 @@ import { Label } from "../../../components/ui/label";
 import ProfilePictureModal from "../../../components/editprofile/ProfilePictureModal";
 import ResetPasswordModal from "../../../components/editprofile/ResetPasswordModal";
 import { useCurrentUser } from "../../../lib/hooks/user/useCurrentUser";
-import { useUserProfile } from "../../../lib/hooks";
+// Removed useUserProfile since it makes the same API call as useCurrentUser
 import {
     interestOptions,
     travelStyleOptions,
@@ -34,7 +34,7 @@ export default function EditProfilePage() {
         error: currentUserError,
         refreshCurrentUser,
     } = useCurrentUser();
-    const { userProfile, loading, error } = useUserProfile();
+    // Using currentUser data instead of separate userProfile to avoid duplicate API calls
 
     const [formData, setFormData] = useState({
         first_name: "",
@@ -74,7 +74,7 @@ export default function EditProfilePage() {
 
     // Load user profile data into form
     useEffect(() => {
-        const profileData = userProfile || currentUser;
+        const profileData = currentUser;
         if (profileData) {
             setFormData({
                 first_name: profileData.first_name || "",
@@ -86,7 +86,7 @@ export default function EditProfilePage() {
             });
             setprofile_url(profileData.profile_url || null);
         }
-    }, [userProfile, currentUser]);
+    }, [currentUser]);
 
     // Validate form fields
     const validateForm = () => {
@@ -167,7 +167,6 @@ export default function EditProfilePage() {
     };
     const handleSaveWrapper = () => {
         handleSave({
-            loading,
             currentUserLoading,
             validateForm,
             currentUser,
@@ -208,7 +207,7 @@ export default function EditProfilePage() {
     return (
         <div className="min-h-screen bg-black relative overflow-hidden">
             {/* Loading overlay */}
-            {(loading || currentUserLoading) && (
+            {currentUserLoading && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-slate-800 p-6 rounded-lg">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
@@ -218,9 +217,9 @@ export default function EditProfilePage() {
             )}
 
             {/* Error display */}
-            {(error || currentUserError) && (
+            {currentUserError && (
                 <div className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-red-500/90 text-white px-4 py-2 rounded-lg z-40">
-                    {error || currentUserError}
+                    {currentUserError}
                 </div>
             )}
 
@@ -515,14 +514,14 @@ export default function EditProfilePage() {
                     <div className="pt-4">
                         <Button
                             onClick={handleSaveWrapper}
-                            disabled={loading || !isFormValid()}
+                            disabled={currentUserLoading || !isFormValid()}
                             className={`w-full font-semibold py-4 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 ${
-                                loading || !isFormValid()
+                                currentUserLoading || !isFormValid()
                                     ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                                     : "bg-orange-500 hover:bg-orange-600 text-black"
                             }`}
                         >
-                            {loading ? (
+                            {currentUserLoading ? (
                                 <>
                                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
                                     Saving...

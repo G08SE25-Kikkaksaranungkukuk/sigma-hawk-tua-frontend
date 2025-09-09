@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { userService } from "../../services/user";
 import { UserProfile } from "../../types/user";
@@ -20,6 +20,7 @@ export function useCurrentUser(): UseCurrentUserReturn {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
+    const hasFetched = useRef(false);
 
     // Fetch current user data
     const fetchCurrentUser = async () => {
@@ -55,12 +56,16 @@ export function useCurrentUser(): UseCurrentUserReturn {
 
     // Refresh current user data
     const refreshCurrentUser = async () => {
+        hasFetched.current = false;
         await fetchCurrentUser();
     };
 
     // Fetch user data on component mount
     useEffect(() => {
-        fetchCurrentUser();
+        if (!hasFetched.current) {
+            hasFetched.current = true;
+            fetchCurrentUser();
+        }
     }, []);
 
     return {

@@ -8,7 +8,6 @@ export interface EditProfileHandlersProps {
     setFormData: Dispatch<SetStateAction<any>>;
     setValidationErrors: Dispatch<SetStateAction<any>>;
     setProfileImage: Dispatch<SetStateAction<string | null>>;
-    loading: boolean;
     currentUserLoading: boolean;
     validateForm: () => boolean;
     currentUser: any;
@@ -75,7 +74,6 @@ export const handleTravelStyleToggle = (
 
 export const handleSave = async (props: EditProfileHandlersProps) => {
     const {
-        loading,
         currentUserLoading,
         validateForm,
         currentUser,
@@ -85,24 +83,41 @@ export const handleSave = async (props: EditProfileHandlersProps) => {
         refreshCurrentUser,
         router,
     } = props;
-    if (loading || currentUserLoading) return;
-    if (!validateForm()) return;
+
+    console.log("handleSave called with:", {
+        currentUserLoading,
+        formData,
+        currentUser,
+    });
+
+    if (currentUserLoading) {
+        console.log("Saving blocked: user loading");
+        return;
+    }
+
+    if (!validateForm()) {
+        console.log("Saving blocked: form validation failed");
+        return;
+    }
+
+    console.log("Starting save process...");
+
     try {
         const payload = {
-            first_name: formData.firstName.trim(),
-            last_name: formData.lastName.trim(),
-            middle_name: formData.middleName.trim() || null,
-            phone: formData.phoneNumber.replace(/[-\s]/g, ""),
-            interests: formData.interests,
-            travel_styles: formData.travelStyle,
-            profile_url: profileImage || null,
+            email: currentUser?.email || "current",
+            data: {
+                first_name: formData.first_name.trim(),
+                last_name: formData.last_name.trim(),
+                middle_name: formData.middle_name.trim() || null,
+                phone: formData.phone.replace(/[-\s]/g, ""),
+                interests: formData.interests,
+                travel_styles: formData.travel_styles,
+                profile_url: profileImage || null,
+            },
         };
 
         // Use userService.updateProfile instead of direct axios call
-        await userService.updateUserProfile(
-            currentUser?.email || "current",
-            payload
-        );
+        await userService.updateUserProfile(payload);
 
         try {
             await userService.refreshAuthToken();

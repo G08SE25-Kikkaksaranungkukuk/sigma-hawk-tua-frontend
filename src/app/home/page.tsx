@@ -74,7 +74,7 @@ export default function homePage() {
                 onEditProfileClick={handleProfileClick}
                 onLogoutClick={handleLogout}
                 firstName={currentUser?.first_name}
-                middleName={currentUser?.middle_name}
+                middleName={currentUser?.middle_name || ""}
                 lastName={currentUser?.last_name}
                 userEmail={currentUser?.email}
             />

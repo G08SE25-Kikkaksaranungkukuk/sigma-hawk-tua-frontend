@@ -13,13 +13,16 @@ export interface UserProfile {
 }
 
 export interface UpdateUserProfile {
-    first_name: string;
-    last_name: string;
-    middle_name?: string;
-    phone: string;
-    interests: string[];
-    travel_style?: string[];
-    profile_url?: string;
+    email: string;
+    data: {
+        first_name: string;
+        last_name: string;
+        middle_name?: string;
+        phone: string;
+        interests: string[];
+        travel_style?: string[];
+        profile_url?: string;
+    };
 }
 
 export interface UserEmailInfo {

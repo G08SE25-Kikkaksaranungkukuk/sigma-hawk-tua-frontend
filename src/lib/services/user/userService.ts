@@ -102,21 +102,22 @@ class UserService {
     }
 
     // Update user profile (excluding email)
-    async updateUserProfile(
-        email: string,
-        profileData: any
-    ): Promise<UserProfile> {
+    async updateUserProfile(profileData: any): Promise<UserProfile> {
         try {
             const token = tokenService.getAuthToken();
             if (!token) throw new Error("No authentication token found");
-            const response = await axios.patch(`${this.baseUrl}/user`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                credentials: "include",
-                data: profileData,
-            });
+            console.log("Updating user profile with data:", profileData);
+            const response = await axios.patch(
+                `${this.baseUrl}/user`,
+                { profileData },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                    credentials: "include",
+                }
+            );
             if (response.status !== 200)
                 throw new Error(
                     `Failed to update user profile: ${response.statusText}`
@@ -128,34 +129,6 @@ class UserService {
             throw new Error("Failed to update user profile");
         }
     }
-
-    // Get user email (read-only)
-    async getUserEmail(userId: string): Promise<string> {
-        try {
-            const token = tokenService.getAuthToken();
-            if (!token) throw new Error("No authentication token found");
-            const response = await fetch(
-                `${this.baseUrl}/user/${userId}/email`,
-                {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                    },
-                    credentials: "include",
-                }
-            );
-            if (!response.ok)
-                throw new Error(
-                    `Failed to fetch user email: ${response.statusText}`
-                );
-            const { email } = await response.json();
-            return email;
-        } catch {
-            throw new Error("Failed to fetch user email");
-        }
-    }
-
     // Public method to refresh authentication token
     async refreshAuthToken(): Promise<boolean> {
         return await tokenService.refreshToken();
