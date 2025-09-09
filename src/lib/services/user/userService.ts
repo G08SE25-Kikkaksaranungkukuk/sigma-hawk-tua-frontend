@@ -47,29 +47,6 @@ class UserService {
         }
     }
 
-    // Transform backend user data to frontend UserProfile format
-    // private transformUserData(backendData: any): UserProfile {
-    //     return {
-    //         firstName: backendData.first_name || "",
-    //         lastName: backendData.last_name || "",
-    //         middleName: backendData.middle_name || "",
-    //         email: backendData.email || "",
-    //         phoneNumber: backendData.phone || "",
-    //         interests:
-    //             backendData.interests?.map(
-    //                 (interest: any) =>
-    //                     interest.name || interest.interest_name || interest
-    //             ) || [],
-    //         travelStyle:
-    //             backendData.travel_styles?.map(
-    //                 (style: any) => style.name || style.style_name || style
-    //             ) || [],
-    //         profileImage: backendData.profile_url || undefined,
-    //         createdAt: backendData.created_at,
-    //         updatedAt: backendData.updated_at,
-    //     };
-    // }
-
     // Fetch user profile data from database
     async getUserProfile(email?: string): Promise<UserProfile> {
         try {
