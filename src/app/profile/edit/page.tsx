@@ -17,6 +17,7 @@ import { Label } from "../../../components/ui/label";
 import ProfilePictureModal from "../../../components/editprofile/ProfilePictureModal";
 import ResetPasswordModal from "../../../components/editprofile/ResetPasswordModal";
 import { useUserProfile } from "../../../lib/hooks";
+import ConfirmationDialog from "../../../components/editprofile/ConfirmationDialog";
 
 const interestOptions = [
     { id: "SEA", label: "🌊 Sea", color: "blue" },
@@ -91,6 +92,7 @@ export default function EditProfilePage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] =
         useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     // Validation state
     const [validationErrors, setValidationErrors] = useState({
@@ -689,7 +691,12 @@ export default function EditProfilePage() {
                             Reset Password
                         </Button>
                     </div>
-
+                        {/* Delete Profile Button */}
+                            <Button
+                            onClick={() => setShowDeleteConfirm(true)}
+                            className="w-full mt-2 bg-red-500/20 hover:bg-red-500/30 text-red-500 border border-red-500/50 font-semibold py-3 rounded-lg flex items-center justify-center gap-2">
+                            Delete Profile
+                            </Button>
                     {/* Confirm Changes Button */}
                     <div className="pt-4">
                         <Button
@@ -738,6 +745,19 @@ export default function EditProfilePage() {
                 isOpen={isResetPasswordModalOpen}
                 onClose={() => setIsResetPasswordModalOpen(false)}
                 onConfirm={handlePasswordReset}
+            />
+
+            {/* Confirmation Dialog */}
+            <ConfirmationDialog
+              isOpen={showDeleteConfirm}
+              onClose={() => setShowDeleteConfirm(false)}
+              onConfirm={() => router.push("/")}
+              title="Delete Profile"
+              description="Are you sure you want to delete your profile? This action cannot be undone. Please enter your password to confirm."
+              confirmText="Delete Profile"
+              cancelText="Cancel"
+              variant="danger"
+              requirePassword={true}
             />
         </div>
     );
