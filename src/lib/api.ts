@@ -1,5 +1,5 @@
 import axios from "axios";
-import { baseAPIUrl } from "./config";  
+import { baseAPIUrl } from "../config";  
 
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}${path}`, {

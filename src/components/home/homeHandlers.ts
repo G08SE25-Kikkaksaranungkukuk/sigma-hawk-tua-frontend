@@ -1,9 +1,10 @@
 import { useRouter } from "next/navigation";
 import { Group } from "../../lib/types/home";
+import { baseAPIUrl } from "../../config";
 
 type RouterType = ReturnType<typeof useRouter>;
 
-const BASE_API_URL = process.env.BASE_API_URL || "http://localhost:8080/";
+const BASE_API_URL = baseAPIUrl;
 
 export const handleProfileClick = (router: RouterType) => {
     router.push('/profile/edit');
