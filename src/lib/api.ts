@@ -1,5 +1,4 @@
 import axios from "axios";
-import { baseAPIUrl } from "../config";  
 
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}${path}`, {
@@ -15,12 +14,15 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || baseAPIUrl,
+  baseURL: process.env.NEXT_PUBLIC_BASE_API_URL,
   headers: { "Content-Type": "application/json" }
 });
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const payload = response.data;
+    return payload;
+  },
   (error) => {
     console.error("API error:", error);
     return Promise.reject(error);
