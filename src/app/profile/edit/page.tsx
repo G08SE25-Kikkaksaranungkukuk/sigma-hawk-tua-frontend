@@ -28,7 +28,7 @@ import {
   handleBackClick,
   handleImageSelect,
 } from "../../../components/editprofile/profileHandlers";
-
+import ConfirmationDialog  from "../../../components/editprofile/ConfirmationDialog";
 export default function EditProfilePage() {
   const router = useRouter();
   const { currentUser, loading: currentUserLoading, error: currentUserError, refreshCurrentUser } = useCurrentUser();
@@ -42,6 +42,8 @@ export default function EditProfilePage() {
     interests: [] as string[],
     travelStyle: [] as string[],
   });
+
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
@@ -406,7 +408,12 @@ export default function EditProfilePage() {
               Reset Password
             </Button>
           </div>
-
+            {/* Delete Profile Button */}
+                            <Button
+                            onClick={() => setShowDeleteConfirm(true)}
+                            className="w-full mt-2 bg-red-500/20 hover:bg-red-500/30 text-red-500 border border-red-500/50 font-semibold py-3 rounded-lg flex items-center justify-center gap-2">
+                            Delete Profile
+                            </Button>
           {/* Confirm Changes Button */}
           <div className="pt-4">
             <Button
@@ -445,12 +452,25 @@ export default function EditProfilePage() {
         currentImage={profileImage || undefined}
       />
 
-      {/* Reset Password Modal */}
-      <ResetPasswordModal
-        isOpen={isResetPasswordModalOpen}
-        onClose={() => setIsResetPasswordModalOpen(false)}
-        onConfirm={handlePasswordResetWrapper}
-      />
-    </div>
-  );
+            {/* Reset Password Modal */}
+            <ResetPasswordModal
+                isOpen={isResetPasswordModalOpen}
+                onClose={() => setIsResetPasswordModalOpen(false)}
+                onConfirm={handlePasswordReset}
+            />
+
+            {/* Confirmation Dialog */}
+            <ConfirmationDialog
+              isOpen={showDeleteConfirm}
+              onClose={() => setShowDeleteConfirm(false)}
+              onConfirm={() => router.push("/")}
+              title="Delete Profile"
+              description="Are you sure you want to delete your profile? This action cannot be undone. Please enter your password to confirm."
+              confirmText="Delete Profile"
+              cancelText="Cancel"
+              variant="danger"
+              requirePassword={true}
+            />
+        </div>
+    );
 }

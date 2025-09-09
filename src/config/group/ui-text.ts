@@ -9,7 +9,7 @@ export const UI_TEXT = {
     contact: "Contact"
   },
   buttons: {
-    requestToJoin: "Request to join",
+    requestToJoin: "Join now!",
     requestSent: "Request sent ✓",
     share: "Share",
     hostContact: "Host Contact"
