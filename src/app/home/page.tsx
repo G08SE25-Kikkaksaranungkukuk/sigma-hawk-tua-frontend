@@ -83,7 +83,7 @@ export default function homePage() {
                         groups={groups}
                         loading={loading}
                         error={error}
-                        onCreateGroup={handleCreateGroup}
+                        onCreateGroup={() => handleCreateGroup(router)}
                         onViewGroup={(group) => handleViewGroup(router, group)}
                         onSearchGroups={() => handleSearchGroups(router)}
                     />

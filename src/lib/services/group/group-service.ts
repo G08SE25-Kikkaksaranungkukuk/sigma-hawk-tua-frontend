@@ -37,6 +37,13 @@ export const SAMPLE_GROUP_DATA = {
 
 // Group service implementation
 export const groupService = {
+
+  async getUserGroups(): Promise<GroupData[]> {
+    const response = await apiClient.get<GroupData[], GroupData[]>('group/my/groups', { withCredentials: true });
+    console.log("response:", response);
+    return response;
+  },
+  
   getGroupDetails: async (groupId: string): Promise<GroupData> => {
     const response = await apiClient.get<GroupData, GroupData>(`/group/${groupId}`, { withCredentials: true });
     return response;

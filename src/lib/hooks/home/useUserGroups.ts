@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Group } from '../../types/home';
-import { groupService } from '../../services/home';
+import { Group, GroupData } from '@/lib/types';
+import { groupService } from '@/lib/services/group/group-service';
 
 export const useUserGroups = () => {
-  const [groups, setGroups] = useState<Group[]>([]);
+  const [groups, setGroups] = useState<GroupData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

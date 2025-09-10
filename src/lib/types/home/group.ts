@@ -11,10 +11,8 @@ export interface Group {
 }
 
 export interface CreateGroupRequest {
-  title: string;
-  description: string;
-  destination?: string;
-  imageUrl?: string;
+  group_name: string;
+  interest_fields: string[];
 }
 
 export interface SearchGroupsParams {
@@ -25,11 +23,11 @@ export interface SearchGroupsParams {
 }
 
 export interface GroupData {
-  group_id?: number
-  group_name?: string
-  group_leader_id?: number
-  interest_fields?: string[]
-  members?: Member[]
+  group_id: number
+  group_name: string
+  group_leader_id: number
+  interest_fields: string[]
+  members: Member[]
 }
 
 export interface Member {
