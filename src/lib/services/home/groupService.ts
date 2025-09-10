@@ -2,7 +2,7 @@ import { Group, CreateGroupRequest, SearchGroupsParams } from '../../types/home'
 
 // Mock API service - replace with actual API calls
 class GroupService {
-  private apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+  private apiUrl = process.env.NEXT_PUBLIC_BASE_API_URL;
 
   async getUserGroups(): Promise<Group[]> {
     // Mock data - replace with actual API call

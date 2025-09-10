@@ -8,8 +8,7 @@ import { GroupSidebar } from "@/components/group/info/GroupSidebar";
 import { GroupContact } from "@/components/group/info/GroupContact";
 import { GroupPageSkeleton, ErrorState } from "@/components/group/info/LoadingStates";
 import { useGroupActions } from "@/lib/hooks/group/useGroupActions";
-import { GroupData } from "@/lib/types/home/group";
-import type { UserInfo } from "@/components/schemas";
+import { GroupData, UserData } from "@/lib/types";
 import { apiClient } from "@/lib/api";
 import { groupService } from "@/lib/services/group/group-service";
 
@@ -30,9 +29,9 @@ interface TravelGroupPageProps {
 export default function TravelGroupPage({ params }: TravelGroupPageProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [pageUrl,setPageUrl] = React.useState<string>("");
-  const [userInfo,setUserInfo] = React.useState<UserInfo>()
+  const [userInfo,setUserInfo] = React.useState<UserData>();
   const [groupInfo , setGroupInfo] = React.useState<GroupData>();
-  
+
   const {groupId} = React.use(params);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);

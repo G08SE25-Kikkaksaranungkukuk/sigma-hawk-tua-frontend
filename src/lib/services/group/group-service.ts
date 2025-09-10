@@ -1,8 +1,9 @@
-import type { GroupInfo } from "@/components/schemas";
+import { GroupData, UserData } from "@/lib/types";
+import {AxiosResponse} from "axios";
 import { apiClient } from "@/lib/api";
 
 // Sample data for development - move to API/database in production
-export const SAMPLE_GROUP_DATA: GroupInfo = {
+export const SAMPLE_GROUP_DATA = {
   id: "g1",
   title: "Bangkok → Chiang Mai Lantern Trip",
   destination: "Chiang Mai, Thailand",
@@ -36,23 +37,18 @@ export const SAMPLE_GROUP_DATA: GroupInfo = {
 
 // Group service implementation
 export const groupService = {
-  getGroupDetails: async (groupId: string) => {
-    const response = await apiClient.get(`/group/${groupId}`, { withCredentials: true });
-    return response.data.data;
+  getGroupDetails: async (groupId: string): Promise<GroupData> => {
+    const response = await apiClient.get<GroupData, GroupData>(`/group/${groupId}`, { withCredentials: true });
+    return response;
   },
   
-  getCurrentUser: async () => {
-    const response = await apiClient.get(`/auth/whoami`, { withCredentials: true });
-    return response.data.data;
+  getCurrentUser: async (): Promise<UserData> => {
+    const response = await apiClient.get<UserData, UserData>(`/auth/whoami`, { withCredentials: true });
+    return response;
   },
   
   joinGroup: async (groupId: string): Promise<void> => {
-    // Simulate API call
-    // await new Promise(resolve => setTimeout(resolve, 500));
-
-    // In production, this would be a real API call
-    return apiClient.put(`/group/${groupId}/member`,{},{withCredentials : true}).then(val => val.data)
-
+    await apiClient.put(`/group/${groupId}/member`, {}, { withCredentials: true });
   },
   
   contactHost: async (groupId: string, message: string): Promise<void> => {

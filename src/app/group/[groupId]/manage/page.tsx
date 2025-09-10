@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { AxiosResponse } from "axios";
 import MemberList from "@/components/group/manage/MemberList";
 import TravelInviteModal from "@/components/TravelInviteModal";
 import { Sparkles, Users, MapPin } from "lucide-react";
@@ -8,7 +9,7 @@ import { PopupCard } from "@/components/ui/popup-card";
 import { AxiosError } from "axios";
 import {use} from "react";
 import { apiClient } from "@/lib/api";
-import { GroupData, Member } from "@/lib/types/home/group";
+import { GroupData, Member } from "@/lib/types";
 
 
 interface GroupManagePageProps {
@@ -26,12 +27,12 @@ export default function GroupManagementPage({params} : {params : Promise<GroupMa
 
   React.useEffect(()=>{
     (async () => {
-      const ret =  await (await apiClient.get(`/group/${groupId}`)).data as {data : GroupData};
-      const processed_members = ret.data.members?.map((val : Member)=>{return {...val,isOwner : val.user_id == ret.data.group_leader_id}}) ?? [];
+      const ret =  await (await apiClient.get<GroupData, GroupData>(`/group/${groupId}`));
+      const processed_members = ret.members?.map((val : Member)=>{return {...val,isOwner : val.user_id == ret.group_leader_id}}) ?? [];
       if (window) {
         setPageUrl(window.location.protocol + "//" + window.location.host + "/group/" + groupId + "/info");
       }
-      setGroupData({...ret.data,members : processed_members})
+      setGroupData({...ret,members : processed_members})
     })()
   },[])
   

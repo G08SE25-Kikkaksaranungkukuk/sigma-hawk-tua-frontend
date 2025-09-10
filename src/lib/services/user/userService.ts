@@ -3,7 +3,7 @@
 import { UserProfile, UpdateUserProfile } from '../../types/user';
 
 class UserService {
-  private baseUrl = process.env.NEXT_PUBLIC_API_URL;
+  private baseUrl = process.env.NEXT_PUBLIC_BASE_API_URL;
 
   /*
     Get current authenticated user data
