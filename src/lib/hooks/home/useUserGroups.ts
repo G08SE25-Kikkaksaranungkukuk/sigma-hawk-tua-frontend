@@ -12,6 +12,7 @@ export const useUserGroups = () => {
       setLoading(true);
       setError(null);
       const userGroups = await groupService.getUserGroups();
+      console.log('Fetched user groups:', userGroups);
       setGroups(userGroups);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch groups');

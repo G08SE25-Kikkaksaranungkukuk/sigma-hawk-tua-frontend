@@ -1,40 +1,17 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { brand } from "@/components/ui/utils";
-import { CreateGroupRequest, GroupData } from "@/lib/types"
-import { apiClient } from "@/lib/api";
+import { CreateGroupRequest, Interest } from "@/lib/types";
+import { groupService } from "@/lib/services/group/group-service";
 import { PopupCard } from "@/components/ui/popup-card";
+import { InterestsPill } from "@/components/ui/interests-pill";
 import { CheckCircle2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
-const INTERESTS = [
-  "SEA",
-  "MOUNTAIN",
-  "WATERFALL",
-  "NATIONAL_PARK",
-  "ISLAND",
-  "TEMPLE",
-  "SHOPPING_MALL",
-  "MARKET",
-  "CAFE",
-  "HISTORICAL",
-  "AMUSEMENT_PARK",
-  "ZOO",
-  "FESTIVAL",
-  "MUSEUM",
-  "FOOD_STREET",
-  "BEACH_BAR",
-  "THEATRE"
-] as const;
-
-// Helper function to format interest labels
-const formatInterestLabel = (interest: string) => {
-  return interest.split('_').map(word => 
-    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-  ).join(' ');
-};
+// Derive a safe key type from Interest
+type InterestKey = Interest["key"];
 
 // Success Modal Component
 interface GroupCreateSuccessProps {
@@ -89,74 +66,123 @@ function GroupCreateSuccess({ isOpen }: GroupCreateSuccessProps) {
 export default function CreateGroupPage() {
   const router = useRouter();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  const [availableInterests, setAvailableInterests] = useState<Interest[]>([]);
+  const [loadingInterests, setLoadingInterests] = useState(true);
+
   const [form, setForm] = useState({
     group_name: "Bangkok → Chiang Mai Lantern Trip",
     description:
-      "We’re catching the Yi Peng lantern festival, cafe hopping, and a one-day trek. Looking for easy-going travelers who like food, photos, and night markets.",
+      "We're catching the Yi Peng lantern festival, cafe hopping, and a one-day trek. Looking for easy-going travelers who like food, photos, and night markets.",
     destination: "Chiang Mai, Thailand",
+    maxMembers: "8",
     startDate: "2025-11-12",
     endDate: "2025-11-16",
-    tags: ["TEMPLE", "CAFE", "FESTIVAL", "MARKET"] as string[],
+    tags: [] as InterestKey[],
     image: null as File | null,
   });
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  // Normalize interests response to Interest[]
+  const normalizeInterests = (res: unknown): Interest[] => {
+    // If it's already an array of interests
+    if (Array.isArray(res)) return res as Interest[];
+    // If it's an object that contains { interests: [...] }
+    if (res && typeof res === "object" && Array.isArray((res as any).interests)) {
+      return (res as any).interests as Interest[];
+    }
+    // Fallback
+    return [];
+  };
+
+  // Fetch interests on component mount
+  useEffect(() => {
+    const fetchInterests = async () => {
+      try {
+        setLoadingInterests(true);
+        const raw = await groupService.getInterests();
+        const list = normalizeInterests(raw);
+
+        setAvailableInterests(list);
+
+        // If there are no preselected tags, pick the first 4 as default
+        if (list.length > 0) {
+          setForm((prev) => ({
+            ...prev,
+            tags: prev.tags.length ? prev.tags : list.slice(0, 4).map((it) => it.key as InterestKey),
+          }));
+        }
+      } catch (error) {
+        console.error("Failed to fetch interests:", error);
+        setAvailableInterests([]);
+      } finally {
+        setLoadingInterests(false);
+      }
+    };
+
+    fetchInterests();
+  }, []);
+
+  // Handle text input changes
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Handle file upload
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setForm((prev) => ({ ...prev, image: e.target.files![0] }));
     }
   };
 
-  const handleTagToggle = (interest: string) => {
+  // Toggle interest key in form.tags
+  const handleTagToggle = (interestKey: InterestKey) => {
     setForm((prev) => ({
       ...prev,
-      tags: prev.tags.includes(interest)
-        ? prev.tags.filter(tag => tag !== interest)
-        : [...prev.tags, interest]
+      tags: prev.tags.includes(interestKey)
+        ? prev.tags.filter((tag) => tag !== interestKey)
+        : [...prev.tags, interestKey],
     }));
   };
 
+  // Submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
-      // Map form data to CreateGroupRequest
+      // Build CreateGroupRequest for backend
       const createGroupRequest: CreateGroupRequest = {
+        // match your backend contract
         group_name: form.group_name,
-        interest_fields: form.tags
-      };
+        description: form.description,
+        interest_fields: form.tags, // array of keys
+        max_members: parseInt(form.maxMembers, 10) || 8,
+        // you can also add destination/start/end if your API accepts them
+        // destination: form.destination,
+        // start_date: form.startDate,
+        // end_date: form.endDate,
+      } as any;
 
-      // Make API call to POST /group
-      const response = await apiClient.post<GroupData>('/group', createGroupRequest, {
-        withCredentials: true
-      });
+      const response = await groupService.createGroup(createGroupRequest);
 
-      console.log("Group created successfully:", response.data);
-      
-      // Show success popup
       setShowSuccessModal(true);
 
-      // Get the group ID from response and redirect after delay
-      const groupId = response.data?.group_id;
+      // Redirect after a short delay
+      const groupId = (response as any)?.group_id;
       setTimeout(() => {
         if (groupId) {
           router.push(`/group/${groupId}/info`);
         } else {
-          router.push('/home'); // Fallback to home if no group ID
+          router.push("/home");
         }
       }, 2000);
-
     } catch (error) {
       console.error("Failed to create group:", error);
-      // You can add error handling here (e.g., show error message)
     }
   };
+
+  // Selected interests for preview
+  const selectedInterests = availableInterests.filter((interest) => form.tags.includes(interest.key as InterestKey));
 
   return (
     <div className="min-h-screen w-full flex justify-center p-6 md:p-10" style={{ background: brand.bg }}>
@@ -183,21 +209,13 @@ export default function CreateGroupPage() {
             <p className="text-sm" style={{ color: brand.sub }}>
               {form.destination} • {form.startDate} → {form.endDate}
             </p>
+            <p className="text-xs" style={{ color: brand.sub }}>
+              Max Members: {form.maxMembers}
+            </p>
 
-            <div className="flex flex-wrap gap-2">
-              {form.tags.map((tag, i) => (
-                <span
-                  key={i}
-                  className="px-3 py-1 text-xs rounded-full"
-                  style={{
-                    backgroundColor: brand.bg,
-                    border: `1px solid ${brand.border}`,
-                    color: brand.sub,
-                  }}
-                >
-                  {formatInterestLabel(tag)}
-                </span>
-              ))}
+            <div className="my-2">
+              {/* Assumes InterestsPill expects Interest[] */}
+              <InterestsPill interests={selectedInterests} />
             </div>
 
             <p className="text-sm leading-relaxed" style={{ color: brand.fg }}>
@@ -301,12 +319,30 @@ export default function CreateGroupPage() {
                 />
               </div>
 
+              <div>
+                <label className="block mb-2 text-sm font-medium" style={{ color: brand.sub }}>
+                  Max Members
+                </label>
+                <input
+                  type="number"
+                  name="maxMembers"
+                  value={form.maxMembers}
+                  onChange={handleChange}
+                  min={2}
+                  max={50}
+                  className="w-full px-4 py-3 rounded-lg outline-none transition-colors focus:ring-2 focus:ring-opacity-50"
+                  style={{
+                    backgroundColor: brand.bg,
+                    border: `1px solid ${brand.border}`,
+                    color: brand.fg,
+                  }}
+                  placeholder="Maximum number of members..."
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label
-                    className="block mb-2 text-sm font-medium"
-                    style={{ color: brand.sub }}
-                  >
+                  <label className="block mb-2 text-sm font-medium" style={{ color: brand.sub }}>
                     Start Date
                   </label>
                   <input
@@ -323,10 +359,7 @@ export default function CreateGroupPage() {
                   />
                 </div>
                 <div>
-                  <label
-                    className="block mb-2 text-sm font-medium"
-                    style={{ color: brand.sub }}
-                  >
+                  <label className="block mb-2 text-sm font-medium" style={{ color: brand.sub }}>
                     End Date
                   </label>
                   <input
@@ -348,26 +381,45 @@ export default function CreateGroupPage() {
                 <label className="block mb-3 text-sm font-medium" style={{ color: brand.sub }}>
                   Interests
                 </label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {INTERESTS.map((interest) => {
-                    const isSelected = form.tags.includes(interest);
-                    return (
-                      <button
-                        key={interest}
-                        type="button"
-                        onClick={() => handleTagToggle(interest)}
-                        className="px-3 py-2 text-xs rounded-lg transition-all duration-200 hover:opacity-80"
-                        style={{
-                          backgroundColor: isSelected ? brand.accent : brand.bg,
-                          color: isSelected ? brand.bg : brand.sub,
-                          border: `1px solid ${isSelected ? brand.accent : brand.border}`,
-                        }}
-                      >
-                        {formatInterestLabel(interest)}
-                      </button>
-                    );
-                  })}
-                </div>
+                {loadingInterests ? (
+                  <div className="text-sm" style={{ color: brand.sub }}>
+                    Loading interests...
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+                      {availableInterests.map((interest) => {
+                        const isSelected = form.tags.includes(interest.key as InterestKey);
+                        return (
+                          <button
+                            key={interest.key}
+                            type="button"
+                            onClick={() => handleTagToggle(interest.key as InterestKey)}
+                            className="px-3 py-2 text-xs rounded-lg transition-all duration-200 hover:opacity-80 flex items-center gap-1"
+                            style={{
+                              // optional: use interest.color when selected for better feedback
+                              backgroundColor: isSelected ? interest.color ?? brand.accent : brand.bg,
+                              color: isSelected ? brand.bg : brand.sub,
+                              border: `1px solid ${isSelected ? (interest.color ?? brand.accent) : brand.border}`,
+                            }}
+                          >
+                            <span>{interest.emoji}</span>
+                            <span>{interest.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {selectedInterests.length > 0 && (
+                      <div>
+                        <div className="text-xs font-medium mb-2" style={{ color: brand.sub }}>
+                          Selected Interests:
+                        </div>
+                        <InterestsPill interests={selectedInterests} />
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
 
               <div>
@@ -389,16 +441,11 @@ export default function CreateGroupPage() {
                     className="hidden"
                     id="file-upload"
                   />
-                  <label
-                    htmlFor="file-upload"
-                    className="cursor-pointer flex flex-col items-center gap-2"
-                  >
+                  <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center gap-2">
                     <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: brand.accent }}>
                       <span className="text-white text-lg">+</span>
                     </div>
-                    <span className="text-sm">
-                      {form.image ? form.image.name : "Click to upload image"}
-                    </span>
+                    <span className="text-sm">{form.image ? form.image.name : "Click to upload image"}</span>
                   </label>
                 </div>
               </div>
@@ -417,7 +464,7 @@ export default function CreateGroupPage() {
           </div>
         </div>
       </div>
-      
+
       {/* Success Popup */}
       <GroupCreateSuccess isOpen={showSuccessModal} />
     </div>

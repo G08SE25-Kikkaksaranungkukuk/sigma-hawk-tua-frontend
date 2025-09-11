@@ -1,4 +1,4 @@
-import { GroupData, UserData } from "@/lib/types";
+import { GroupData, UserData, GroupResponse, CreateGroupRequest, Interest } from "@/lib/types";
 import {AxiosResponse} from "axios";
 import { apiClient } from "@/lib/api";
 
@@ -39,14 +39,20 @@ export const SAMPLE_GROUP_DATA = {
 export const groupService = {
 
   async getUserGroups(): Promise<GroupData[]> {
-    const response = await apiClient.get<GroupData[], GroupData[]>('group/my/groups', { withCredentials: true });
-    console.log("response:", response);
-    return response;
+    const responseGroup = await apiClient.get<GroupResponse[], GroupResponse[]>('group/my/groups', { withCredentials: true });
+    
+    // Get detailed information for each group
+    const groupDetailsPromises = responseGroup.map(group => 
+      this.getGroupDetails(group.group_id.toString())
+    );
+    
+    const groupDetails = await Promise.all(groupDetailsPromises);
+    return groupDetails;
   },
   
   getGroupDetails: async (groupId: string): Promise<GroupData> => {
-    const response = await apiClient.get<GroupData, GroupData>(`/group/${groupId}`, { withCredentials: true });
-    return response;
+    const groupResponse = await apiClient.get<GroupData, GroupData>(`/group/${groupId}`, { withCredentials: true });
+    return groupResponse;
   },
   
   getCurrentUser: async (): Promise<UserData> => {
@@ -56,6 +62,23 @@ export const groupService = {
   
   joinGroup: async (groupId: string): Promise<void> => {
     await apiClient.put(`/group/${groupId}/member`, {}, { withCredentials: true });
+  },
+
+  getInterests: async (): Promise<Interest[]> => {
+    try {
+      const response = await apiClient.get<Interest[], Interest[]>('/user/interests/all');
+      return response
+    } catch (error) {
+      console.error('Failed to fetch interests from API:', error);
+      return [];
+    }
+  },
+  
+  createGroup: async (createGroupRequest: CreateGroupRequest): Promise<GroupData> => {
+    const response = await apiClient.post<GroupData, GroupData>('/group', createGroupRequest, {
+      withCredentials: true
+    });
+    return response;
   },
   
   contactHost: async (groupId: string, message: string): Promise<void> => {

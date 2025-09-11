@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button } from '../ui/button';
+import { InterestsPill } from '../ui/interests-pill';
 import { Group, GroupData } from '../../lib/types/home';
 
 interface GroupCardProps {
@@ -15,14 +16,13 @@ export const GroupCard: React.FC<GroupCardProps> = ({
   onJoin,
   showJoinButton = false,
 }) => {
+  console.log('Rendering GroupCard for group:', group);
   return (
     <div className="bg-gray-800/60 border border-orange-500/20 rounded-xl p-4 hover:bg-gray-800/80 transition-colors">
       <h3 className="text-lg font-semibold text-orange-300 mb-2">
         {group.group_name}
       </h3>
-      <p className="text-sm text-orange-200/80 mb-3">
-        {group.interest_fields.join(', ')}
-      </p>
+      <InterestsPill interests={group.interests || []} className="mb-3" />
       <div className="flex items-center justify-between">
         <span className="text-xs text-orange-400">
           {group.members.length} member{group.members.length !== 1 ? 's' : ''}
