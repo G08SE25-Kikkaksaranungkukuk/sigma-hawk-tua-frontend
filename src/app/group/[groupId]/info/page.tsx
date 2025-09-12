@@ -105,29 +105,38 @@ export default function TravelGroupPage({ params }: TravelGroupPageProps) {
 
   const group = groupInfo && groupId ? {
     id: groupId,
+    group_id: groupInfo.group_id,
+    group_name: groupInfo.group_name,
+    group_leader_id: groupInfo.group_leader_id,
+    interests: groupInfo.interests || [],
+    description: groupInfo.description || '',
+    members: groupInfo.members || [],
+    max_members: groupInfo.max_members,
+    created_at: groupInfo.created_at,
+    updated_at: groupInfo.updated_at,
+    // Legacy fields for backward compatibility with existing components
     title: groupInfo.group_name || '',
-    destination: 'บ้านไอ่โจ้',  // Add destination to your API
-    dates: new Date().toLocaleDateString(),  // Add dates to your API
-    timezone: 'GMT+7',  // Add timezone to your API
-    description: '',  // Add description to your API
-    privacy: 'Public' as const,  // Add privacy to your API
-    maxSize: 8,  // Add maxSize to your API
+    destination: 'Thailand',  // You can add this field to API later
+    dates: new Date(groupInfo.created_at).toLocaleDateString(),
+    timezone: 'GMT+7',
+    privacy: 'Public' as const,
+    maxSize: groupInfo.max_members,
     currentSize: groupInfo.members?.length || 0,
-    pace: 'Balanced' as const,  // Add pace to your API
-    languages: ['English'],  // Add languages to your API
-    interests: groupInfo.interest_fields || [],
-    requirements: [],  // Add requirements to your API
-    rules: [],  // Add rules to your API
-    itinerary: [{  // Add itinerary to your API
+    pace: 'Balanced' as const,
+    languages: ['English'],
+    requirements: [],
+    rules: [],
+    itinerary: [{
       day: 'Day 1',
-      plan: 'Welcome dinner'
+      plan: 'Welcome to the group!'
     }],
-    hostNote: '',  // Add hostNote to your API if needed
-    members: (groupInfo.members || []).map(member => ({
+    hostNote: 'Welcome to our travel group!',
+    // Transform members to legacy format for compatibility
+    legacyMembers: (groupInfo.members || []).map(member => ({
       id: member.user_id.toString(),
       name: `${member.first_name} ${member.last_name}`,
       role: member.user_id === groupInfo.group_leader_id ? ('Host' as const) : ('Member' as const),
-      avatar: member.profile_url || ''
+      avatar: '' // Add profile_url to Member interface if needed
     }))
   } : null;
   

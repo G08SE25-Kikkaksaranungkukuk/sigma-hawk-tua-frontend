@@ -2,6 +2,7 @@ import React from "react";
 import { CalendarDays, MapPin, Clock3, Lock, Globe2 } from "lucide-react";
 import { Badge } from "@/components/ui/group-badge";
 import { Pill } from "@/components/ui/pill";
+import { InterestsPill } from "@/components/ui/interests-pill";
 import { brand } from "@/components/ui/utils";
 import type { GroupInfo } from "@/components/schemas";
 
@@ -46,10 +47,21 @@ export function GroupHeader({ group }: GroupHeaderProps) {
       </div>
 
       {/* Interests */}
-      <div className="mt-5 flex flex-wrap gap-2">
-        {group.interests.map((interest) => (
-          <Pill key={interest}>{interest}</Pill>
-        ))}
+      <div className="mt-5">
+        {Array.isArray(group.interests) && group.interests.length > 0 && (
+          typeof group.interests[0] === 'string' ? (
+            <div className="flex flex-wrap gap-2">
+              {(group.interests as string[]).map((interest) => (
+                <Pill key={interest}>{interest}</Pill>
+              ))}
+            </div>
+          ) : (
+            <InterestsPill 
+              interests={group.interests as { label: string; emoji: string; color: string }[]}
+              className=""
+            />
+          )
+        )}
       </div>
     </div>
   );
