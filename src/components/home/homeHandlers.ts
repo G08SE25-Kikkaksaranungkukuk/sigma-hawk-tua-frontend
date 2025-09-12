@@ -1,5 +1,5 @@
 import { useRouter } from "next/navigation";
-import { Group } from "../../lib/types/home";
+import { Group, GroupData } from "../../lib/types/home";
 
 type RouterType = ReturnType<typeof useRouter>;
 
@@ -9,11 +9,13 @@ export const handleProfileClick = (router: RouterType) => {
     router.push('/profile/edit');
 };
 
-export const handleCreateGroup = () => {
+export const handleCreateGroup = (router: RouterType) => {
+    router.push('/group/create');
     console.log('Create group clicked');
 };
 
-export const handleViewGroup = (router: RouterType, group: Group) => {
+export const handleViewGroup = (router: RouterType, group: GroupData) => {
+    router.push(`/group/${group.group_id}/info`);
     console.log('View group:', group);
 };
 
@@ -34,6 +36,6 @@ export const handleLogout = async (router: RouterType) => {
 
 
 export const handleSearchGroups = (router: RouterType) => {
-    router.push('/groupSearch');
+    router.push('/group/search');
     console.log('Navigate to search groups page');
 };

@@ -82,15 +82,39 @@ export function GroupDetails({ group, onMemberClick }: GroupDetailsProps) {
 
       {/* Members Section */}
       <div className="flex flex-wrap gap-2">
-        {group.members.map((member) => (
-          <MemberPill
-            key={member.id}
-            id={member.id}
-            name={member.name}
-            role={member.role}
-            onClick={onMemberClick || ((id) => console.log("Clicked member:", id))}
-          />
-        ))}
+        {group.members && group.members.length > 0 ? (
+          group.members.map((member, index) => {
+            // Check if this is the new Member interface (has user_id)
+            if ('user_id' in member) {
+              // New Member interface from GroupData
+              const newMember = member as { user_id: number; first_name: string; last_name: string; email: string };
+              const isLeader = group.group_leader_id === newMember.user_id;
+              return (
+                <MemberPill
+                  key={newMember.user_id.toString()}
+                  id={newMember.user_id.toString()}
+                  name={`${newMember.first_name} ${newMember.last_name}`}
+                  role={isLeader ? 'Host' : 'Member'}
+                  onClick={onMemberClick || ((id) => console.log("Clicked member:", id))}
+                />
+              );
+            } else {
+              // Legacy member format (has id, name, role)
+              const legacyMember = member as { id: string; name: string; role: string; avatar?: string };
+              return (
+                <MemberPill
+                  key={legacyMember.id}
+                  id={legacyMember.id}
+                  name={legacyMember.name}
+                  role={legacyMember.role}
+                  onClick={onMemberClick || ((id) => console.log("Clicked member:", id))}
+                />
+              );
+            }
+          })
+        ) : (
+          <p className="text-sm text-gray-400">No members found</p>
+        )}
       </div>
     </div>
   );
