@@ -6,7 +6,7 @@ import { tokenService } from "./tokenService";
 const axios = require("axios");
 
 class UserService {
-  private baseUrl = process.env.NEXT_PUBLIC_BASE_API_URL;
+    private baseUrl = process.env.NEXT_PUBLIC_BASE_API_URL;
 
     // Get current authenticated user data
     // New Flow: getEmailFromToken() -> tokenService.refreshToken() ->
@@ -18,16 +18,19 @@ class UserService {
             const email = (await tokenService.getEmailFromToken()).trim();
             console.log("Email extracted from token:", email);
             // 2. Use email to get user data from backend using axios
-            const response = await axios.get(`${this.baseUrl}/user/`, {
-                params: {
+            const response = await axios.post(
+                `${this.baseUrl}user/`,
+                {
                     email: email,
                 },
-                headers: {
-                    Authorization: `Bearer ${tokenService.getAuthToken()}`,
-                    "Content-Type": "application/json",
-                },
-                withCredentials: true,
-            });
+                {
+                    headers: {
+                        Authorization: `Bearer ${tokenService.getAuthToken()}`,
+                        "Content-Type": "application/json",
+                    },
+                    withCredentials: true,
+                }
+            );
 
             if (response.status !== 200) {
                 throw new Error(
