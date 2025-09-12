@@ -4,6 +4,7 @@ import { email } from "zod";
 import { UserProfile, UpdateUserProfile } from "../../types/user";
 import { tokenService } from "./tokenService";
 import axios from "axios";
+import { apiClient } from "@/lib/api";
 class UserService {
     private baseUrl = process.env.NEXT_PUBLIC_BASE_API_URL;
 
@@ -74,7 +75,7 @@ class UserService {
                 throw new Error("Unable to get user email from token");
             }
 
-            const response = await axios.post(
+            const response = await apiClient.post<UserProfile, UserProfile>(
                 `${this.baseUrl}user/`,
                 { email: user.email },
                 {
@@ -86,13 +87,8 @@ class UserService {
                 }
             );
 
-            if (response.status !== 200) {
-                throw new Error(
-                    `Failed to fetch user profile: ${response.statusText}`
-                );
-            }
-            console.log("User profile response data:", response.data.data);
-            const userData = response.data.data.user;
+            console.log("User profile response data:", response);
+            const userData = response;
             return this.transformUserData(userData);
         } catch (error) {
             console.error("Error fetching user profile:", error);
@@ -115,65 +111,40 @@ class UserService {
                 throw new Error("No authentication token found");
             }
 
-            const response = await fetch(`${this.baseUrl}/users/${userId}`, {
-                method: "PUT",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
+            const user = await tokenService.decodeTokenData(token);
+
+            if (!user || !user.email) {
+                throw new Error("Unable to get user email from token");
+            }
+
+            const payload = {
+                email: user.email,
+                data: {
+                    first_name: profileData.firstName,
+                    last_name: profileData.lastName,
+                    middle_name: profileData.middleName,
+                    phone: profileData.phoneNumber.replace(/[-\s]/g, ""),
+                    interests: profileData.interests,
+                    travel_styles: profileData.travelStyle,
                 },
-                credentials: "include",
-                body: JSON.stringify(profileData),
-            });
+            };
 
-            if (!response.ok) {
-                throw new Error(
-                    `Failed to update user profile: ${response.statusText}`
-                );
-            }
-
-            const updatedUser = await response.json();
-            return this.transformUserData(updatedUser);
-        } catch (error) {
-            console.error("Error updating user profile:", error);
-            throw new Error("Failed to update user profile");
-        }
-    }
-
-    /*
-    Get user email (read-only)
-    Email is fetched separately as it's read-only in the edit profile context
-  */
-    async getUserEmail(userId: string): Promise<string> {
-        try {
-            const token = await tokenService.getAuthToken();
-
-            if (!token) {
-                throw new Error("No authentication token found");
-            }
-
-            const response = await fetch(
-                `${this.baseUrl}/users/${userId}/email`,
+            const response = await apiClient.patch(
+                `${this.baseUrl}user/`,
+                payload,
                 {
-                    method: "GET",
                     headers: {
                         Authorization: `Bearer ${token}`,
                         "Content-Type": "application/json",
                     },
-                    credentials: "include",
+                    withCredentials: true,
                 }
             );
-
-            if (!response.ok) {
-                throw new Error(
-                    `Failed to fetch user email: ${response.statusText}`
-                );
-            }
-
-            const { email } = await response.json();
-            return email;
+            console.log("Update profile response data:", response);
+            return this.transformUserData(response);
         } catch (error) {
-            console.error("Error fetching user email:", error);
-            throw new Error("Failed to fetch user email");
+            console.error("Error updating user profile:", error);
+            throw new Error("Failed to update user profile");
         }
     }
 }

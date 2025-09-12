@@ -273,24 +273,9 @@ export default function EditProfilePage() {
             });
 
             if (success) {
-                const payload = {
-                    email: userEmail,
-                    data: {
-                        first_name: formData.firstName.trim(),
-                        last_name: formData.lastName.trim(),
-                        middle_name: formData.middleName.trim() || null,
-                        phone: formData.phoneNumber.replace(/[-\s]/g, ""),
-                        interests: formData.interests,
-                        travel_styles: formData.travelStyle,
-                        profile_url: profileImage || null,
-                    },
-                };
                 try {
-                    console.log("Payload for backend:", payload);
-                    // const response = await axios.patch(
-                    //     "http://localhost:8080/user/",
-                    //     payload
-                    // );
+                    console.log("Payload for backend:", formData);
+                    await updateProfile(formData);
                     console.log("Profile updated successfully");
                 } catch (error) {
                     console.error("Error updating profile:", error);
