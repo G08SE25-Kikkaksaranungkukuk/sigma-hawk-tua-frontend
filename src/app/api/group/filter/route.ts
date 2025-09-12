@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import axios from "axios";
 
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
@@ -10,16 +11,12 @@ export async function GET(req: NextRequest) {
     if (searchParams.get("page")) params.append("page", searchParams.get("page")!);
     if (searchParams.get("page_size")) params.append("page_size", searchParams.get("page_size")!);
 
-    const backendUrl = `http://localhost:8080/group/?${params.toString()}`;
-
+    const backendUrl = `http://localhost:8080/group/filter?${params.toString()}`;   
     try {
-        const res = await fetch(backendUrl);
-        if (!res.ok) {
-            return NextResponse.json({ group_array: [], group_count: 0 }, { status: res.status });
-        }
-        const data = await res.json();
-        return NextResponse.json(data);
-    } catch {
-        return NextResponse.json({ group_array: [], group_count: 0 }, { status: 500 });
+        const res = await axios.get(backendUrl);
+        return NextResponse.json(res.data);
+    } catch (err: any) {
+        const status = err.response?.status || 500;
+        return NextResponse.json({ group_array: [], group_count: 0 }, { status });
     }
 }
