@@ -44,7 +44,7 @@ class UserService {
       }
 
       // Decode the payload (middle part)
-      const payload = JSON.parse(atob(parts[1]));
+  const payload = JSON.parse(b64DecodeUnicode(parts[1]));
       
       // Extract user data from token payload
       return {
@@ -89,7 +89,7 @@ class UserService {
       if (token) {
         // Debug: log token payload
         try {
-          const payload = JSON.parse(atob(token.split('.')[1]));
+          const payload = JSON.parse(b64DecodeUnicode(token.split('.')[1]));
           console.log('Token payload:', payload);
         } catch (e) {
           console.log('Token is not a valid JWT');
@@ -242,6 +242,18 @@ class UserService {
       throw new Error('Failed to fetch user email');
     }
   }
+}
+
+// Helper for base64url decoding (for JWT)
+function b64DecodeUnicode(str: string) {
+  // Add padding if needed
+  str = str.replace(/-/g, "+").replace(/_/g, "/");
+  while (str.length % 4) str += "=";
+  return decodeURIComponent(
+    Array.prototype.map.call(atob(str), (c: string) =>
+      "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2)
+    ).join("")
+  );
 }
 
 export const userService = new UserService();
