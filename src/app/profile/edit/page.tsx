@@ -695,7 +695,7 @@ export default function EditProfilePage() {
                             <Button
                             onClick={() => setShowDeleteConfirm(true)}
                             className="w-full mt-2 bg-red-500/20 hover:bg-red-500/30 text-red-500 border border-red-500/50 font-semibold py-3 rounded-lg flex items-center justify-center gap-2">
-                            Delete Profile
+                            Delete Account
                             </Button>
                     {/* Confirm Changes Button */}
                     <div className="pt-4">
@@ -752,9 +752,9 @@ export default function EditProfilePage() {
               isOpen={showDeleteConfirm}
               onClose={() => setShowDeleteConfirm(false)}
               onConfirm={() => router.push("/")}
-              title="Delete Profile"
-              description="Are you sure you want to delete your profile? This action cannot be undone. Please enter your password to confirm."
-              confirmText="Delete Profile"
+              title="Delete Account"
+              description="Are you sure you want to delete your Account? This action cannot be undone. All of your data will be permanently removed. Please enter your password to confirm."
+              confirmText="Delete Account"
               cancelText="Cancel"
               variant="danger"
               requirePassword={true}
