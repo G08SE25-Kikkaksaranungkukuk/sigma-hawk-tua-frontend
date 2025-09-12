@@ -141,6 +141,7 @@ class UserService {
                 }
             );
             console.log("Update profile response data:", response);
+            tokenService.refreshToken();
             return this.transformUserData(response);
         } catch (error) {
             console.error("Error updating user profile:", error);

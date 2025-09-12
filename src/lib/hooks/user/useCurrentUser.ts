@@ -28,7 +28,8 @@ export function useCurrentUser(): UseCurrentUserReturn {
       setLoading(true);
       setError(null);
       
-      const userData = await userService.getCurrentUser();
+      // Get user profile from database instead of token for up-to-date data
+      const userData = await userService.getUserProfile('demo-user-id');
       setCurrentUser(userData);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch current user';

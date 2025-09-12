@@ -25,13 +25,17 @@ import {
     handleCreateGroup,
     handleViewGroup,
     handleLogout,
-    handleSearchGroups
+    handleSearchGroups,
 } from "../../components/home/homeHandlers";
 
 export default function homePage() {
     const router = useRouter();
     const { groups, loading, error, refreshGroups } = useUserGroups();
-    const { currentUser, loading: userLoading, error: userError } = useCurrentUser();
+    const {
+        currentUser,
+        loading: userLoading,
+        error: userError,
+    } = useCurrentUser();
     const { searchGroups } = useGroupSearch();
 
     // Show loading state while fetching user data
@@ -46,11 +50,11 @@ export default function homePage() {
     return (
         <div className="min-h-screen bg-black relative overflow-hidden">
             {/* Navigation Bar */}
-            <AppHeader 
-                onEditProfileClick={() => handleProfileClick(router)} 
+            <AppHeader
+                onEditProfileClick={() => handleProfileClick(router)}
                 onLogoutClick={() => handleLogout(router)}
                 firstName={currentUser?.firstName}
-                middleName={currentUser?.middleName}
+                middleName={currentUser?.middleName || ""}
                 lastName={currentUser?.lastName}
                 userEmail={currentUser?.email}
             />

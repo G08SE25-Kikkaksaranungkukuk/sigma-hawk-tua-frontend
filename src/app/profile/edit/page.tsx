@@ -16,7 +16,7 @@ import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import ProfilePictureModal from "../../../components/editprofile/ProfilePictureModal";
 import ResetPasswordModal from "../../../components/editprofile/ResetPasswordModal";
-import { useUserProfile } from "../../../lib/hooks";
+import { useUserProfile, useCurrentUser } from "../../../lib/hooks";
 import ConfirmationDialog from "../../../components/editprofile/ConfirmationDialog";
 
 const interestOptions = [
@@ -78,6 +78,9 @@ export default function EditProfilePage() {
     // Use the custom hook for user profile management
     const { userProfile, userEmail, loading, error, updateProfile } =
         useUserProfile();
+    
+    // Use current user hook to refresh home page data after profile updates
+    const { refreshCurrentUser } = useCurrentUser();
 
     const [formData, setFormData] = useState({
         firstName: "",
@@ -277,6 +280,10 @@ export default function EditProfilePage() {
                     console.log("Payload for backend:", formData);
                     await updateProfile(formData);
                     console.log("Profile updated successfully");
+                    
+                    // Refresh current user data for home page
+                    await refreshCurrentUser();
+                    console.log("Home page user data refreshed");
                 } catch (error) {
                     console.error("Error updating profile:", error);
                 }
