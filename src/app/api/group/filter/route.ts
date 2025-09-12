@@ -6,7 +6,7 @@ export async function GET(req: NextRequest) {
 
     // Build backend query string
     const params = new URLSearchParams();
-    searchParams.getAll("interest_fields").forEach(field => params.append("interest_fields", field));
+    searchParams.getAll("interest_id").forEach(field => params.append("interest_id", field));
     if (searchParams.get("group_name")) params.append("group_name", searchParams.get("group_name")!);
     if (searchParams.get("page")) params.append("page", searchParams.get("page")!);
     if (searchParams.get("page_size")) params.append("page_size", searchParams.get("page_size")!);
