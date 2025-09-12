@@ -1,6 +1,10 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Sparkles, Users, MapPin } from "lucide-react";
+import { Sparkles, Users, MapPin, Grab } from "lucide-react";
+import { Interest } from "@/lib/types/home";
+import { InterestsPill } from "@/components/ui/interests-pill";
+import { useRouter } from "next/navigation";
+import { group } from "console";
 
 // Interfaces
 export interface groupFilterReq {
@@ -11,6 +15,7 @@ export interface groupFilterReq {
 }
 
 export interface groupInfo {
+    group_id: number;
     interest_fields: string[];
     group_name: string;
 }
@@ -21,6 +26,16 @@ export interface groupFilterRes {
         group_array: groupInfo[];
         group_count: number;
     };
+}
+
+// Helper to get interest key from the Interest object
+function getInterestKey(interest: Interest): string {
+    return interest.key;
+}
+
+// Helper to find interest by key from interests array
+function findInterestByKey(interests: Interest[], key: string): Interest | null {
+    return interests.find(interest => interest.key === key) || null;
 }
 
 // Helper to build query string for backend
@@ -48,21 +63,15 @@ async function fetchGroups(req: groupFilterReq): Promise<groupFilterRes | null> 
 }
 
 export default function GroupSearchPage() {
+    const router = useRouter();
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<groupInfo[]>([]);
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [page, setPage] = useState(1);
     const [groupCount, setGroupCount] = useState(0);
     const [cache, setCache] = useState<{ [key: string]: groupInfo[] }>({});
-    // New interest API type and state
-    type Interest = {
-        id: string;
-        label: string;
-        color: string;
-    };
+    // Interests from API
     const [interests, setInterests] = useState<Interest[]>([]);
-    // Add mapping from interest id to label
-    const [interestLabelMap, setInterestLabelMap] = useState<{ [key: string]: string }>({});
 
     // Fetch interests from API on mount
     useEffect(() => {
@@ -73,15 +82,8 @@ export default function GroupSearchPage() {
                 // Use data.data.interests from API response
                 const interestsArr = data.data?.interests || [];
                 setInterests(interestsArr);
-                // Build label map
-                const map: { [key: string]: string } = {};
-                interestsArr.forEach((interest: Interest) => {
-                    map[interest.id] = interest.label;
-                });
-                setInterestLabelMap(map);
             } catch {
                 setInterests([]);
-                setInterestLabelMap({});
             }
         }
         fetchInterests();
@@ -127,11 +129,14 @@ export default function GroupSearchPage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page, selectedTags, query]);
 
-    const toggleInterestTag = (tagId: string) => {
+    const toggleInterestTag = (interest: Interest) => {
+        // Use the key field from the Interest object
+        const interestKey = getInterestKey(interest);
+        
         setSelectedTags(prev => {
-            const newTags = prev.includes(tagId)
-                ? prev.filter(t => t !== tagId)
-                : [...prev, tagId];
+            const newTags = prev.includes(interestKey)
+                ? prev.filter(t => t !== interestKey)
+                : [...prev, interestKey];
             setPage(1);
             return newTags;
         });
@@ -151,6 +156,10 @@ export default function GroupSearchPage() {
         handleFilter(newPage, selectedTags, query);
     };
 
+    const handleGroupCardClick = (groupId: number) => {
+        router.push(`/group/${groupId}/info`);
+    };
+    console.log(pagedGroups)
     return (
         <div className="min-h-screen bg-black p-4 bg-floating-shapes relative">
             {/* Floating decorative elements */}
@@ -177,19 +186,25 @@ export default function GroupSearchPage() {
                             Filter by Interests:
                         </span>
                         <div className="flex flex-wrap gap-2 mt-2">
-                            {interests.map(interest => (
-                                <button
-                                    key={interest.id}
-                                    type="button"
-                                    onClick={() => toggleInterestTag(interest.id)}
-                                    className={`px-3 py-2 rounded-full border-2 text-sm font-medium transition-all chip-bounce ${selectedTags.includes(interest.id)
-                                        ? `bg-${interest.color}-500/30 border-${interest.color}-500 text-white shadow-md scale-105 orange-glow`
-                                        : "bg-gray-800/50 text-orange-300 border-orange-500/30 hover:border-orange-500"
-                                        }`}
-                                >
-                                    {interest.label}
-                                </button>
-                            ))}
+                            {interests.map(interest => {
+                                const interestKey = getInterestKey(interest);
+                                return (
+                                    <button
+                                        key={interest.label}
+                                        type="button"
+                                        onClick={() => toggleInterestTag(interest)}
+                                        className={`px-3 py-2 rounded-full border-2 text-sm font-medium transition-all chip-bounce ${selectedTags.includes(interestKey)
+                                            ? `bg-current/30 border-current text-white shadow-md scale-105 orange-glow`
+                                            : "bg-gray-800/50 text-orange-300 border-orange-500/30 hover:border-orange-500"
+                                            }`}
+                                        {...(selectedTags.includes(interestKey) && { 
+                                            style: { color: interest.color } 
+                                        })}
+                                    >
+                                        {interest.emoji} {interest.label}
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
                     <div className="flex gap-2 mb-4">
@@ -214,19 +229,17 @@ export default function GroupSearchPage() {
                         {pagedGroups.map((group, idx) => (
                             <li
                                 key={group.group_name + idx}
-                                className="py-2 px-3 mb-2 rounded-lg bg-gray-800/60 border border-orange-500/10"
+                                className="py-2 px-3 mb-2 rounded-lg bg-gray-800/60 border border-orange-500/10 hover:bg-gray-800/80 hover:border-orange-500/30 cursor-pointer transition-all duration-200"
+                                onClick={() => handleGroupCardClick(group.group_id)}
                             >
                                 <div className="font-semibold text-orange-200">{group.group_name}</div>
-                                <div className="text-xs mt-1 flex flex-wrap gap-1">
-                                    {group.interest_fields.map(tag => (
-                                        <span
-                                            key={tag}
-                                            className="bg-orange-500/10 text-orange-300 px-2 py-1 rounded-full border border-orange-500/20"
-                                        >
-                                            {/* Use label from interests API if available, else fallback to tag */}
-                                            {interestLabelMap[tag] || tag}
-                                        </span>
-                                    ))}
+                                <div className="mt-2">
+                                    <InterestsPill 
+                                        interests={group.interest_fields.map(tag => 
+                                            findInterestByKey(interests, tag) || { key: tag, label: tag, emoji: '🏷️', color: '#f97316' }
+                                        )} 
+                                        className="text-xs"
+                                    />
                                 </div>
                             </li>
                         ))}

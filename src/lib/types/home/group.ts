@@ -1,3 +1,5 @@
+// Backend validation enum values
+
 export interface Group {
   id: string;
   title: string;
@@ -11,10 +13,10 @@ export interface Group {
 }
 
 export interface CreateGroupRequest {
-  title: string;
-  description: string;
-  destination?: string;
-  imageUrl?: string;
+  group_name: string;
+  description?: string;
+  max_members?: number;
+  interest_fields?: string[];  // Use the specific enum type
 }
 
 export interface SearchGroupsParams {
@@ -24,22 +26,38 @@ export interface SearchGroupsParams {
   offset?: number;
 }
 
+export interface GroupResponse {
+  group_id: number
+  group_name: string
+  group_leader_id: number
+  description: string
+  max_members: number
+  created_at: string
+  updated_at: string
+}
+
 export interface GroupData {
-  group_id?: number
-  group_name?: string
-  group_leader_id?: number
-  interest_fields?: string[]
-  members?: Member[]
+  group_id: number
+  group_name: string
+  group_leader_id: number
+  interests: Interest[]
+  description: string
+  members: Member[]
+  max_members: number
+  created_at: string
+  updated_at: string
+}
+
+export interface Interest {
+  key: string  
+  label: string
+  emoji: string
+  color: string
 }
 
 export interface Member {
   user_id: number
   first_name: string
-  middle_name: any
   last_name: string
-  sex: string
-  profile_url: any
-  interests: string[]
-  travel_styles: string[]
-  isOwner? : boolean
+  email: string
 }

@@ -2,12 +2,11 @@
 
 // User service for handling user-related API calls
 import { UserProfile, UpdateUserProfile } from "../../types/user";
-import { baseAPIUrl } from "../../config";
 import { tokenService } from "./tokenService";
 const axios = require("axios");
 
 class UserService {
-    private baseUrl = baseAPIUrl;
+  private baseUrl = process.env.NEXT_PUBLIC_BASE_API_URL;
 
     // Get current authenticated user data
     // New Flow: getEmailFromToken() -> tokenService.refreshToken() ->

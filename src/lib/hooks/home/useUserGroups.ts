@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Group } from '../../types/home';
-import { groupService } from '../../services/home';
+import { Group, GroupData } from '@/lib/types';
+import { groupService } from '@/lib/services/group/group-service';
 
 export const useUserGroups = () => {
-  const [groups, setGroups] = useState<Group[]>([]);
+  const [groups, setGroups] = useState<GroupData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -12,6 +12,7 @@ export const useUserGroups = () => {
       setLoading(true);
       setError(null);
       const userGroups = await groupService.getUserGroups();
+      console.log('Fetched user groups:', userGroups);
       setGroups(userGroups);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch groups');

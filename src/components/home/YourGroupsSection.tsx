@@ -2,14 +2,14 @@ import React from 'react';
 import { Button } from '../ui/button';
 import { Search, Plus } from 'lucide-react';
 import { GroupCard } from './GroupCard';
-import { Group } from '../../lib/types/home';
+import { Group, GroupData } from '../../lib/types/home';
 
 interface YourGroupsSectionProps {
-  groups: Group[];
+  groups: GroupData[];
   loading: boolean;
   error: string | null;
   onCreateGroup: () => void;
-  onViewGroup: (group: Group) => void;
+  onViewGroup: (group: GroupData) => void;
   onSearchGroups: () => void;
 }
 
@@ -94,7 +94,7 @@ export const YourGroupsSection: React.FC<YourGroupsSectionProps> = ({
         ) : (
           groups.map((group) => (
             <GroupCard
-              key={group.id}
+              key={group.group_id}
               group={group}
               onView={onViewGroup}
               showJoinButton={false}

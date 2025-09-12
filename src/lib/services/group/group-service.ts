@@ -1,8 +1,9 @@
-import type { GroupInfo } from "@/components/schemas";
+import { GroupData, UserData, GroupResponse, CreateGroupRequest, Interest } from "@/lib/types";
+import {AxiosResponse} from "axios";
 import { apiClient } from "@/lib/api";
 
 // Sample data for development - move to API/database in production
-export const SAMPLE_GROUP_DATA: GroupInfo = {
+export const SAMPLE_GROUP_DATA = {
   id: "g1",
   title: "Bangkok → Chiang Mai Lantern Trip",
   destination: "Chiang Mai, Thailand",
@@ -36,23 +37,48 @@ export const SAMPLE_GROUP_DATA: GroupInfo = {
 
 // Group service implementation
 export const groupService = {
-  getGroupDetails: async (groupId: string) => {
-    const response = await apiClient.get(`/group/${groupId}`, { withCredentials: true });
-    return response.data.data;
+
+  async getUserGroups(): Promise<GroupData[]> {
+    const responseGroup = await apiClient.get<GroupResponse[], GroupResponse[]>('group/my/groups', { withCredentials: true });
+    
+    // Get detailed information for each group
+    const groupDetailsPromises = responseGroup.map(group => 
+      this.getGroupDetails(group.group_id.toString())
+    );
+    
+    const groupDetails = await Promise.all(groupDetailsPromises);
+    return groupDetails;
   },
   
-  getCurrentUser: async () => {
-    const response = await apiClient.get(`/auth/whoami`, { withCredentials: true });
-    return response.data.data;
+  getGroupDetails: async (groupId: string): Promise<GroupData> => {
+    const groupResponse = await apiClient.get<GroupData, GroupData>(`/group/${groupId}`, { withCredentials: true });
+    return groupResponse;
+  },
+  
+  getCurrentUser: async (): Promise<UserData> => {
+    const response = await apiClient.get<UserData, UserData>(`/auth/whoami`, { withCredentials: true });
+    return response;
   },
   
   joinGroup: async (groupId: string): Promise<void> => {
-    // Simulate API call
-    // await new Promise(resolve => setTimeout(resolve, 500));
+    await apiClient.put(`/group/${groupId}/member`, {}, { withCredentials: true });
+  },
 
-    // In production, this would be a real API call
-    return apiClient.put(`/group/${groupId}/member`,{},{withCredentials : true}).then(val => val.data)
-
+  getInterests: async (): Promise<Interest[]> => {
+    try {
+      const response = await apiClient.get<Interest[], Interest[]>('/user/interests/all');
+      return response
+    } catch (error) {
+      console.error('Failed to fetch interests from API:', error);
+      return [];
+    }
+  },
+  
+  createGroup: async (createGroupRequest: CreateGroupRequest): Promise<GroupData> => {
+    const response = await apiClient.post<GroupData, GroupData>('/group', createGroupRequest, {
+      withCredentials: true
+    });
+    return response;
   },
   
   contactHost: async (groupId: string, message: string): Promise<void> => {

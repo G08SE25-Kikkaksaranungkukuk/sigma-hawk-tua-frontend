@@ -1,13 +1,10 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 import { Button } from "../../components/ui/button";
 import { AppHeader } from "../../components/shared";
 import { AppIntro, AppStats, YourGroupsSection } from "../../components/home";
 import { useUserGroups, useGroupSearch } from "../../lib/hooks/home";
 import { useCurrentUser } from "../../lib/hooks/user";
-import { tokenService } from "../../lib/services/user/tokenService";
-import { Group } from "../../lib/types/home";
 import {
     Plane,
     Heart,
@@ -22,143 +19,37 @@ import {
     User,
     Menu,
 } from "lucide-react";
+import {
+    handleProfileClick,
+    handleCreateGroup,
+    handleViewGroup,
+    handleLogout,
+    handleSearchGroups
+} from "../../components/home/homeHandlers";
 
 export default function homePage() {
     const router = useRouter();
     const { groups, loading, error, refreshGroups } = useUserGroups();
-    const {
-        currentUser,
-        loading: userLoading,
-        error: userError,
-    } = useCurrentUser();
+    const { currentUser, loading: userLoading, error: userError } = useCurrentUser();
     const { searchGroups } = useGroupSearch();
-
-    // Handle token from URL params (from login redirect) and verify authentication
-    useEffect(() => {
-        const handleTokenFromLogin = async () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const token =
-                urlParams.get("token") || urlParams.get("accessToken");
-
-            if (token) {
-                // Store token from URL params
-                localStorage.setItem("accessToken", token);
-                // Clean up URL
-                const cleanUrl = window.location.pathname;
-                window.history.replaceState({}, document.title, cleanUrl);
-                console.log("Token received from login and stored");
-            }
-
-            // Verify we have a valid token
-            const existingToken = await tokenService.getAuthToken();
-            if (!existingToken) {
-                console.log("No valid token found, redirecting to login");
-                router.push("/login");
-                return;
-            }
-
-            console.log("Valid token found, proceeding with user data fetch");
-        };
-
-        handleTokenFromLogin();
-    }, [router]);
-
-    const handleProfileClick = () => {
-        router.push("/profile/edit");
-    };
-
-    const handleCreateGroup = () => {
-        // TODO: Implement create group modal or navigate to create group page
-        console.log("Create group clicked");
-    };
-
-    const handleViewGroup = (group: Group) => {
-        // TODO: Navigate to group detail page
-        console.log("View group:", group);
-    };
-
-    const handleLogout = async () => {
-        try {
-            // Clear all possible token storage locations
-            localStorage.removeItem("token");
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("authToken");
-
-            // Clear cookies if any
-            if (typeof document !== "undefined") {
-                document.cookie =
-                    "accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-                document.cookie =
-                    "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-            }
-
-            console.log("Logout: All tokens cleared");
-
-            // Redirect to login page
-            router.push("/login");
-        } catch (error) {
-            console.error("Error during logout:", error);
-            // Still redirect even if there's an error
-            router.push("/login");
-        }
-    };
-
-    const handleSearchGroups = () => {
-        // TODO: Navigate to search groups page
-        router.push("/groupSearch");
-        console.log("Navigate to search groups page");
-    };
 
     // Show loading state while fetching user data
     if (userLoading) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center">
-                <div className="bg-slate-800 p-6 rounded-lg">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
-                    <div className="text-orange-400 text-lg mt-2">
-                        Authenticating...
-                    </div>
-                </div>
+                <div className="text-orange-400 text-lg">Loading...</div>
             </div>
         );
-    }
-
-    // Show error state if authentication fails
-    if (userError) {
-        return (
-            <div className="min-h-screen bg-black flex items-center justify-center">
-                <div className="bg-slate-800 p-6 rounded-lg text-center">
-                    <div className="text-red-400 text-lg mb-4">
-                        Authentication Failed
-                    </div>
-                    <div className="text-gray-400 text-sm mb-4">
-                        {userError}
-                    </div>
-                    <Button
-                        onClick={() => router.push("/login")}
-                        className="bg-orange-500 text-black hover:bg-orange-600"
-                    >
-                        Return to Login
-                    </Button>
-                </div>
-            </div>
-        );
-    }
-
-    // If no current user after loading, redirect to login
-    if (!currentUser) {
-        router.push("/login");
-        return null;
     }
 
     return (
         <div className="min-h-screen bg-black relative overflow-hidden">
             {/* Navigation Bar */}
-            <AppHeader
-                onEditProfileClick={handleProfileClick}
-                onLogoutClick={handleLogout}
+            <AppHeader 
+                onEditProfileClick={() => handleProfileClick(router)} 
+                onLogoutClick={() => handleLogout(router)}
                 firstName={currentUser?.first_name}
-                middleName={currentUser?.middle_name || ""}
+                middleName={currentUser?.middle_name}
                 lastName={currentUser?.last_name}
                 userEmail={currentUser?.email}
             />
@@ -191,9 +82,9 @@ export default function homePage() {
                         groups={groups}
                         loading={loading}
                         error={error}
-                        onCreateGroup={handleCreateGroup}
-                        onViewGroup={handleViewGroup}
-                        onSearchGroups={handleSearchGroups}
+                        onCreateGroup={() => handleCreateGroup(router)}
+                        onViewGroup={(group) => handleViewGroup(router, group)}
+                        onSearchGroups={() => handleSearchGroups(router)}
                     />
                 </div>
 
