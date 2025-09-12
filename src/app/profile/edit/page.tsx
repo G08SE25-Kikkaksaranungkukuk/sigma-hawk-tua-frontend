@@ -103,6 +103,30 @@ export default function EditProfilePage() {
         travelStyle: "",
     });
 
+    // Utility function to format phone number
+    const formatPhoneNumber = (phoneNumber: string) => {
+        if (!phoneNumber) return "";
+
+        // Remove all non-digits
+        const digits = phoneNumber.replace(/\D/g, "");
+
+        // Format as 0xx-xxx-xxxx
+        let formattedValue = "";
+        if (digits.length > 0) {
+            if (digits.length <= 3) {
+                formattedValue = digits;
+            } else if (digits.length <= 6) {
+                formattedValue = `${digits.slice(0, 3)}-${digits.slice(3)}`;
+            } else {
+                formattedValue = `${digits.slice(0, 3)}-${digits.slice(
+                    3,
+                    6
+                )}-${digits.slice(6, 10)}`;
+            }
+        }
+        return formattedValue;
+    };
+
     // Update form data when user profile is loaded
     useEffect(() => {
         if (userProfile) {
@@ -110,7 +134,7 @@ export default function EditProfilePage() {
                 firstName: userProfile.firstName,
                 lastName: userProfile.lastName,
                 middleName: userProfile.middleName || "",
-                phoneNumber: userProfile.phoneNumber,
+                phoneNumber: formatPhoneNumber(userProfile.phoneNumber), // Format phone number from backend
                 interests: userProfile.interests,
                 travelStyle: userProfile.travelStyle || [],
             });
@@ -179,23 +203,7 @@ export default function EditProfilePage() {
 
         // Special handling for phone number formatting
         if (name === "phoneNumber") {
-            // Remove all non-digits
-            const digits = value.replace(/\D/g, "");
-
-            // Format as 0xx-xxx-xxxx
-            let formattedValue = "";
-            if (digits.length > 0) {
-                if (digits.length <= 3) {
-                    formattedValue = digits;
-                } else if (digits.length <= 6) {
-                    formattedValue = `${digits.slice(0, 3)}-${digits.slice(3)}`;
-                } else {
-                    formattedValue = `${digits.slice(0, 3)}-${digits.slice(
-                        3,
-                        6
-                    )}-${digits.slice(6, 10)}`;
-                }
-            }
+            const formattedValue = formatPhoneNumber(value);
 
             setFormData((prev) => ({
                 ...prev,
@@ -279,10 +287,10 @@ export default function EditProfilePage() {
                 };
                 try {
                     console.log("Payload for backend:", payload);
-                    const response = await axios.patch(
-                        "http://localhost:8080/user/",
-                        payload
-                    );
+                    // const response = await axios.patch(
+                    //     "http://localhost:8080/user/",
+                    //     payload
+                    // );
                     console.log("Profile updated successfully");
                 } catch (error) {
                     console.error("Error updating profile:", error);
@@ -330,7 +338,10 @@ export default function EditProfilePage() {
     };
 
     return (
-        <div className="min-h-screen bg-black relative overflow-hidden">
+        <div
+            className="min-h-screen bg-black relative overflow-hidden"
+            suppressHydrationWarning={true}
+        >
             {/* Loading overlay */}
             {loading && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -691,12 +702,13 @@ export default function EditProfilePage() {
                             Reset Password
                         </Button>
                     </div>
-                        {/* Delete Profile Button */}
-                            <Button
-                            onClick={() => setShowDeleteConfirm(true)}
-                            className="w-full mt-2 bg-red-500/20 hover:bg-red-500/30 text-red-500 border border-red-500/50 font-semibold py-3 rounded-lg flex items-center justify-center gap-2">
-                            Delete Account
-                            </Button>
+                    {/* Delete Profile Button */}
+                    <Button
+                        onClick={() => setShowDeleteConfirm(true)}
+                        className="w-full mt-2 bg-red-500/20 hover:bg-red-500/30 text-red-500 border border-red-500/50 font-semibold py-3 rounded-lg flex items-center justify-center gap-2"
+                    >
+                        Delete Account
+                    </Button>
                     {/* Confirm Changes Button */}
                     <div className="pt-4">
                         <Button
@@ -749,15 +761,15 @@ export default function EditProfilePage() {
 
             {/* Confirmation Dialog */}
             <ConfirmationDialog
-              isOpen={showDeleteConfirm}
-              onClose={() => setShowDeleteConfirm(false)}
-              onConfirm={() => router.push("/")}
-              title="Delete Account"
-              description="Are you sure you want to delete your Account? This action cannot be undone. All of your data will be permanently removed. Please enter your password to confirm."
-              confirmText="Delete Account"
-              cancelText="Cancel"
-              variant="danger"
-              requirePassword={true}
+                isOpen={showDeleteConfirm}
+                onClose={() => setShowDeleteConfirm(false)}
+                onConfirm={() => router.push("/")}
+                title="Delete Account"
+                description="Are you sure you want to delete your Account? This action cannot be undone. All of your data will be permanently removed. Please enter your password to confirm."
+                confirmText="Delete Account"
+                cancelText="Cancel"
+                variant="danger"
+                requirePassword={true}
             />
         </div>
     );

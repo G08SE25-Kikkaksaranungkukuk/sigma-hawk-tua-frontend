@@ -38,20 +38,18 @@ class UserService {
   */
     private transformUserData(backendData: any): UserProfile {
         return {
-            id: backendData.user_id?.toString() || backendData.id?.toString(),
             firstName: backendData.first_name || "",
             lastName: backendData.last_name || "",
             middleName: backendData.middle_name || "",
             email: backendData.email || "",
             phoneNumber: backendData.phone || "",
             interests:
-                backendData.interests?.map(
-                    (interest: any) =>
-                        interest.name || interest.interest_name || interest
+                backendData.userInterests?.map(
+                    (userInterest: any) => userInterest.interest.key
                 ) || [],
             travelStyle:
-                backendData.travel_styles?.map(
-                    (style: any) => style.name || style.style_name || style
+                backendData.userTravelStyles?.map(
+                    (userTravelStyle: any) => userTravelStyle.travel_style.key
                 ) || [],
             profileImage: backendData.profile_url || undefined,
             createdAt: backendData.created_at,
@@ -93,8 +91,8 @@ class UserService {
                     `Failed to fetch user profile: ${response.statusText}`
                 );
             }
-
-            const userData = response.data.user;
+            console.log("User profile response data:", response.data.data);
+            const userData = response.data.data.user;
             return this.transformUserData(userData);
         } catch (error) {
             console.error("Error fetching user profile:", error);

@@ -19,11 +19,6 @@ class TokenService {
 
             // Extract user data from token payload
             return {
-                id:
-                    payload.userId?.toString() ||
-                    payload.id?.toString() ||
-                    payload.sub ||
-                    "current-user",
                 firstName: payload.firstName || payload.first_name || "User",
                 lastName: payload.lastName || payload.last_name || "Logged In",
                 middleName: payload.middleName || payload.middle_name || "",
