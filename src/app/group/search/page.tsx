@@ -75,7 +75,7 @@ export default function GroupSearchPage() {
       try {
         const res = await fetch("/api/interest");
         const data = await res.json();
-        const interestsArr: Interest[] = data.data || [];
+        const interestsArr: Interest[] = data.data.interests || [];
         setInterests(interestsArr);
         // Build label map
         const map: { [key: string]: string } = {};
@@ -90,9 +90,6 @@ export default function GroupSearchPage() {
     }
     fetchInterests();
   }, []);
-
-  const getCacheKey = (pageNum: number, tags: string[], groupName: string) =>
-    `${pageNum}|${tags.sort().join(",")}|${groupName}`;
 
   const handleSearch = async () => {
     setPage(1);
