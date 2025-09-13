@@ -73,9 +73,14 @@ export function InterestSelector({ selectedInterestKeys, onInterestKeysChange }:
               onClick={() => toggleInterest(interest.key)}
               className={`px-3 py-2 text-xs rounded-lg transition-all duration-200 hover:opacity-80 flex items-center gap-1 border ${
                 isSelected
-                  ? 'bg-[#ff6600] text-white border-[#ff6600]'
+                  ? `text-white border-current`
                   : 'bg-[#1a1b23] text-[#9aa3b2] border-gray-700 hover:border-[#ff6600]/50'
               }`}
+              style={isSelected ? { 
+                '--tw-bg-opacity': '1',
+                backgroundColor: interest.color, 
+                borderColor: interest.color 
+              } as React.CSSProperties : {}}
             >
               <span>{interest.emoji}</span>
               <span>{interest.label}</span>
