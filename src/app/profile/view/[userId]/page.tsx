@@ -1,45 +1,85 @@
 "use client";
-import React from "react";
+
+import React, { useEffect, useState } from "react";
+import { apiClient } from "@/lib/api";
+import { userService } from "@/lib/services/user";
 
 // Example interests and travel styles for display mapping
 const interestsList = [
-  { id: "SEA", label: "🌊 Sea", color: "bg-blue-500/20 text-blue-300" },
-  { id: "MOUNTAIN", label: "⛰️ Mountain", color: "bg-green-500/20 text-green-300" },
-  { id: "FOOD_STREET", label: "🍴 Food Street", color: "bg-rose-500/20 text-rose-300" },
-  { id: "FESTIVAL", label: "🎉 Festival", color: "bg-red-500/20 text-red-300" },
-  // ...add more as needed
+    { id: "SEA", label: "🌊 Sea", color: "blue" },
+    { id: "MOUNTAIN", label: "⛰️ Mountain", color: "green" },
+    { id: "WATERFALL", label: "💧 Waterfall", color: "sky" },
+    { id: "NATIONAL_PARK", label: "🏞️ National Park", color: "teal" },
+    { id: "ISLAND", label: "🏝️ Island", color: "cyan" },
+    { id: "TEMPLE", label: "🙏 Temple", color: "indigo" },
+    { id: "SHOPPING_MALL", label: "🛍️ Shopping Mall", color: "violet" },
+    { id: "MARKET", label: "🏪 Market", color: "orange" },
+    { id: "CAFE", label: "☕ Cafe", color: "amber" },
+    { id: "HISTORICAL", label: "🏛️ Historical", color: "yellow" },
+    { id: "AMUSEMENT_PARK", label: "🎢 Amusement Park", color: "pink" },
+    { id: "ZOO", label: "🦁 Zoo", color: "emerald" },
+    { id: "FESTIVAL", label: "🎉 Festival", color: "red" },
+    { id: "MUSEUM", label: "🏛️ Museum", color: "purple" },
+    { id: "FOOD_STREET", label: "🍴 Food Street", color: "rose" },
+    { id: "BEACH_BAR", label: "🍹 Beach Bar", color: "cyan" },
+    { id: "THEATRE", label: "🎭 Theatre", color: "slate" },
 ];
 const travelStylesList = [
-  { id: "BUDGET", label: "💰 Budget", color: "text-orange-400" },
-  { id: "BACKPACK", label: "🎒 Backpack", color: "text-orange-400" },
-  // ...add more as needed
+    { id: "BUDGET", label: "💰 Budget", color: "text-orange-400" },
+    { id: "COMFORT", label: "🛏️ Comfort", color: "text-orange-300" },
+    { id: "LUXURY", label: "💎 Luxury", color: "text-orange-500" },
+    { id: "BACKPACK", label: "🎒 Backpack", color: "text-orange-400" },
 ];
 
-// Example formData (replace with actual state/props in real usage)
-const formData = {
-  firstName: "Jane",
-  lastName: "Doe",
-  middleName: "A.",
-  phoneNumber: "+66 1234 5678",
-  email: "jane.doe@email.com",
-  interests: ["SEA", "FESTIVAL"],
-  travelStyle: ["BUDGET", "BACKPACK"],
-  scoreRating: 4.7,
-  reviews: [
-    {
-      reviewer: "John Smith",
-      comment: "Jane is a wonderful travel companion! Very friendly and organized.",
-      rating: 5,
-    },
-    {
-      reviewer: "Alice Lee",
-      comment: "Had a great time exploring with Jane. Highly recommended!",
-      rating: 4.5,
-    },
-  ],
-};
 
 export default function UserProfileView() {
+  const [formData, setFormData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUserAndProfile = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        console.log("Fetching current user...");
+        const user = await userService.getCurrentUser();
+        console.log("Current user fetched:", user);
+        const email = user.email;
+        console.log("Fetching profile for email:", email);
+        const response = await apiClient.post("/user", { email });
+        console.log("Profile response:", response);
+        const profile = response;
+        setFormData({
+          firstName: profile.first_name,
+          lastName: profile.last_name,
+          middleName: profile.middle_name || "",
+          phoneNumber: profile.phone,
+          email: email,
+          profileImage: profile.profile_url,
+          interests: profile.userInterests?.map((i: any) => i.interest.key) || [],
+          travelStyle: profile.userTravelStyles?.map((t: any) => t.travel_style.key) || [],
+          scoreRating: profile.social_credit || 0,
+          reviews: [], // Add mapping if reviews are available in backend
+        });
+      } catch (err: any) {
+        console.error("Error fetching user or profile:", err);
+        setError("Failed to load user profile");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUserAndProfile();
+  }, []);
+
+  if (loading) {
+    return <div className="text-orange-400 text-center mt-10">Loading profile...</div>;
+  }
+  if (error || !formData) {
+    return <div className="text-red-500 text-center mt-10">{error || "No profile data found."}</div>;
+  }
+
+
   const fullName = [formData.firstName, formData.middleName, formData.lastName]
     .filter(Boolean)
     .join(" ");
@@ -49,7 +89,7 @@ export default function UserProfileView() {
       <div className="max-w-md w-full bg-gray-900/80 border border-orange-500/20 rounded-xl shadow-2xl p-6 relative">
         <div className="flex flex-col items-center">
           <img
-            src="https://i.pravatar.cc/150?img=12"
+            src={formData.profileImage || "https://i.pravatar.cc/150?img=12"}
             alt={fullName}
             className="w-24 h-24 rounded-full border-4 border-orange-400 shadow-lg mb-3"
           />
@@ -68,12 +108,13 @@ export default function UserProfileView() {
             <div>
               <span className="text-orange-300 font-semibold">🎯 Interests</span>
               <div className="flex flex-wrap gap-2 mt-2">
-                {formData.interests.map((id) => {
+                {formData.interests?.map((id: string) => {
                   const interest = interestsList.find((i) => i.id === id);
                   return (
                     <span
                       key={id}
-                      className={`px-3 py-2 rounded-full border-2 text-sm font-medium ${interest?.color ?? ""} border-orange-500/30`}
+                      className={"px-3 py-2 rounded-full border-2 text-sm font-medium border-orange-500/30"}
+                      style={interest?.color ? { color: interest.color } : {}}
                     >
                       {interest?.label ?? id}
                     </span>
@@ -84,12 +125,13 @@ export default function UserProfileView() {
             <div>
               <span className="text-orange-300 font-semibold">🧳 Travel Styles</span>
               <div className="flex flex-wrap gap-2 mt-2">
-                {formData.travelStyle.map((id) => {
+                {formData.travelStyle?.map((id: string) => {
                   const style = travelStylesList.find((s) => s.id === id);
                   return (
                     <span
                       key={id}
-                      className={`px-3 py-2 rounded-full border-2 text-sm font-medium bg-gray-800/50 border-orange-500/30 ${style?.color ?? ""}`}
+                      className={"px-3 py-2 rounded-full border-2 text-sm font-medium bg-gray-800/50 border-orange-500/30"}
+                      style={style?.color ? { color: style.color } : {}}
                     >
                       {style?.label ?? id}
                     </span>
@@ -101,13 +143,13 @@ export default function UserProfileView() {
               <span className="text-orange-300 font-semibold">⭐ Score Rating</span>
               <div className="flex items-center gap-2 mt-2">
                 <span className="text-orange-400 font-bold text-lg">{formData.scoreRating}</span>
-                <span className="text-yellow-400">{"★".repeat(Math.round(formData.scoreRating))}</span>
+                <span className="text-yellow-400">{"★".repeat(Math.round(formData.scoreRating || 0))}</span>
               </div>
             </div>
             <div>
               <span className="text-orange-300 font-semibold">📝 User Reviews</span>
               <div className="space-y-2 mt-2">
-                {formData.reviews.map((review, idx) => (
+                {formData.reviews?.map((review: any, idx: number) => (
                   <div key={idx} className="bg-gray-800/60 rounded-lg p-3 border border-orange-500/10">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-orange-200 font-semibold">{review.reviewer}</span>
