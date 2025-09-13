@@ -23,8 +23,6 @@ interface Props {
 
 // Helper to calculate age from birthdate string or Date
 function getAge(birthDate: Date | string): number | null {
-  
-  console.log(birthDate);
   if (!birthDate) return null;
   const date = typeof birthDate === 'string' ? new Date(birthDate) : birthDate;
   if (isNaN(date.getTime())) return null;
@@ -38,7 +36,6 @@ function getAge(birthDate: Date | string): number | null {
 }
 
 export default function MemberList({ members, onDelete, onTransfer }: Props) {
-  console.log(members);
   return (
     <ul className="space-y-8">
       {members.sort((x,y)=>x.isOwner ? -1 : 1).map((m) => (
