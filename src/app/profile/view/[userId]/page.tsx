@@ -4,32 +4,6 @@ import React, { useEffect, useState } from "react";
 import { apiClient } from "@/lib/api";
 import { userService } from "@/lib/services/user";
 
-// Example interests and travel styles for display mapping
-const interestsList = [
-    { id: "SEA", label: "🌊 Sea", color: "blue" },
-    { id: "MOUNTAIN", label: "⛰️ Mountain", color: "green" },
-    { id: "WATERFALL", label: "💧 Waterfall", color: "sky" },
-    { id: "NATIONAL_PARK", label: "🏞️ National Park", color: "teal" },
-    { id: "ISLAND", label: "🏝️ Island", color: "cyan" },
-    { id: "TEMPLE", label: "🙏 Temple", color: "indigo" },
-    { id: "SHOPPING_MALL", label: "🛍️ Shopping Mall", color: "violet" },
-    { id: "MARKET", label: "🏪 Market", color: "orange" },
-    { id: "CAFE", label: "☕ Cafe", color: "amber" },
-    { id: "HISTORICAL", label: "🏛️ Historical", color: "yellow" },
-    { id: "AMUSEMENT_PARK", label: "🎢 Amusement Park", color: "pink" },
-    { id: "ZOO", label: "🦁 Zoo", color: "emerald" },
-    { id: "FESTIVAL", label: "🎉 Festival", color: "red" },
-    { id: "MUSEUM", label: "🏛️ Museum", color: "purple" },
-    { id: "FOOD_STREET", label: "🍴 Food Street", color: "rose" },
-    { id: "BEACH_BAR", label: "🍹 Beach Bar", color: "cyan" },
-    { id: "THEATRE", label: "🎭 Theatre", color: "slate" },
-];
-const travelStylesList = [
-    { id: "BUDGET", label: "💰 Budget", color: "text-orange-400" },
-    { id: "COMFORT", label: "🛏️ Comfort", color: "text-orange-300" },
-    { id: "LUXURY", label: "💎 Luxury", color: "text-orange-500" },
-    { id: "BACKPACK", label: "🎒 Backpack", color: "text-orange-400" },
-];
 
 
 export default function UserProfileView() {
@@ -49,7 +23,8 @@ export default function UserProfileView() {
         console.log("Fetching profile for email:", email);
         const response = await apiClient.post("/user", { email });
         console.log("Profile response:", response);
-        const profile = response;
+        // If your apiClient unwraps the data, response is the user object. If not, use response.data or response.data.user
+        const profile = response.data?.user ||response;
         setFormData({
           firstName: profile.first_name,
           lastName: profile.last_name,
@@ -57,8 +32,16 @@ export default function UserProfileView() {
           phoneNumber: profile.phone,
           email: email,
           profileImage: profile.profile_url,
-          interests: profile.userInterests?.map((i: any) => i.interest.key) || [],
-          travelStyle: profile.userTravelStyles?.map((t: any) => t.travel_style.key) || [],
+          interests: profile.userInterests?.map((i: any) => ({
+            label: i.interest.label,
+            color: i.interest.color,
+            emoji: i.interest.emoji,
+          })) || [],
+          travelStyle: profile.userTravelStyles?.map((t: any) => ({
+            label: t.travel_style.label,
+            color: t.travel_style.color,
+            emoji: t.travel_style.emoji,
+          })) || [],
           scoreRating: profile.social_credit || 0,
           reviews: [], // Add mapping if reviews are available in backend
         });
@@ -108,35 +91,29 @@ export default function UserProfileView() {
             <div>
               <span className="text-orange-300 font-semibold">🎯 Interests</span>
               <div className="flex flex-wrap gap-2 mt-2">
-                {formData.interests?.map((id: string) => {
-                  const interest = interestsList.find((i) => i.id === id);
-                  return (
-                    <span
-                      key={id}
-                      className={"px-3 py-2 rounded-full border-2 text-sm font-medium border-orange-500/30"}
-                      style={interest?.color ? { color: interest.color } : {}}
-                    >
-                      {interest?.label ?? id}
-                    </span>
-                  );
-                })}
+                {formData.interests?.map((interest: any, idx: number) => (
+                  <span
+                    key={idx}
+                    className="px-3 py-2 rounded-full border-2 text-sm font-medium border-orange-500/30"
+                    style={interest.color ? { color: interest.color } : {}}
+                  >
+                    {interest.emoji ? `${interest.emoji} ` : ""}{interest.label}
+                  </span>
+                ))}
               </div>
             </div>
             <div>
               <span className="text-orange-300 font-semibold">🧳 Travel Styles</span>
               <div className="flex flex-wrap gap-2 mt-2">
-                {formData.travelStyle?.map((id: string) => {
-                  const style = travelStylesList.find((s) => s.id === id);
-                  return (
-                    <span
-                      key={id}
-                      className={"px-3 py-2 rounded-full border-2 text-sm font-medium bg-gray-800/50 border-orange-500/30"}
-                      style={style?.color ? { color: style.color } : {}}
-                    >
-                      {style?.label ?? id}
-                    </span>
-                  );
-                })}
+                {formData.travelStyle?.map((style: any, idx: number) => (
+                  <span
+                    key={idx}
+                    className="px-3 py-2 rounded-full border-2 text-sm font-medium bg-gray-800/50 border-orange-500/30"
+                    style={style.color ? { color: style.color } : {}}
+                  >
+                    {style.emoji ? `${style.emoji} ` : ""}{style.label}
+                  </span>
+                ))}
               </div>
             </div>
             <div>
