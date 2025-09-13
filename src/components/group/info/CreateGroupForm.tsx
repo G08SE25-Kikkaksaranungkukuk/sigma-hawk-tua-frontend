@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { ImageUpload } from '@/components/imageUpload';
 import { InterestSelector } from './InterestSelector';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft, Plus, Calendar } from 'lucide-react';
 
 
 interface CreateGroupFormProps {
@@ -101,21 +101,27 @@ export function CreateGroupForm({ groupData, updateGroupData, onSubmit, onCancel
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label className="text-orange-300">Start Date</Label>
-            <Input
-              type="date"
-              value={groupData.start_date instanceof Date ? groupData.start_date.toISOString().split('T')[0] : (groupData.start_date || '')}
-              onChange={(e) => updateGroupData({ start_date: e.target.value ? new Date(e.target.value) : undefined })}
-              className="bg-[#1a1b23] border-gray-700 text-[#e8eaee] focus:border-[#ff6600] focus:ring-[#ff6600]/20"
-            />
+            <div className="relative">
+              <Input
+                type="date"
+                value={groupData.start_date instanceof Date ? groupData.start_date.toISOString().split('T')[0] : (groupData.start_date || '')}
+                onChange={(e) => updateGroupData({ start_date: e.target.value ? new Date(e.target.value) : undefined })}
+                className="bg-[#1a1b23] border-gray-700 text-white focus:border-[#ff6600] focus:ring-[#ff6600]/20 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:brightness-0 [&::-webkit-calendar-picker-indicator]:contrast-200"
+                style={{ colorScheme: 'dark' }}
+              />
+            </div>
           </div>
           <div className="space-y-2">
             <Label className="text-orange-300">End Date</Label>
-            <Input
-              type="date"
-              value={groupData.end_date instanceof Date ? groupData.end_date.toISOString().split('T')[0] : (groupData.end_date || '')}
-              onChange={(e) => updateGroupData({ end_date: e.target.value ? new Date(e.target.value) : undefined })}
-              className="bg-[#1a1b23] border-gray-700 text-[#e8eaee] focus:border-[#ff6600] focus:ring-[#ff6600]/20"
-            />
+            <div className="relative">
+              <Input
+                type="date"
+                value={groupData.end_date instanceof Date ? groupData.end_date.toISOString().split('T')[0] : (groupData.end_date || '')}
+                onChange={(e) => updateGroupData({ end_date: e.target.value ? new Date(e.target.value) : undefined })}
+                className="bg-[#1a1b23] border-gray-700 text-white focus:border-[#ff6600] focus:ring-[#ff6600]/20 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:brightness-0 [&::-webkit-calendar-picker-indicator]:contrast-200"
+                style={{ colorScheme: 'dark' }}
+              />
+            </div>
           </div>
         </div>
 
