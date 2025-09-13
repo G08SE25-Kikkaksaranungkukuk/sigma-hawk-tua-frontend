@@ -11,12 +11,28 @@ interface Member {
     interests: string[]
     travel_styles: string[]
     isOwner? : boolean
+    birth_date? : Date
 }
 
 interface Props {
   members: Member[];
   onDelete: (id: number) => void;
   onTransfer: (id: number) => void;
+}
+
+
+// Helper to calculate age from birthdate string or Date
+function getAge(birthDate: Date | string): number | null {
+  if (!birthDate) return null;
+  const date = typeof birthDate === 'string' ? new Date(birthDate) : birthDate;
+  if (isNaN(date.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - date.getFullYear();
+  const m = today.getMonth() - date.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < date.getDate())) {
+    age--;
+  }
+  return age;
 }
 
 export default function MemberList({ members, onDelete, onTransfer }: Props) {
@@ -36,23 +52,23 @@ export default function MemberList({ members, onDelete, onTransfer }: Props) {
                     </div>
                     <div className="flex h-full flex-col">
                         <div className="flex flex-row items-center justify-start gap-2">
-                            <p className="text-lg font-semibold">{m.first_name} {Array.from(m.last_name).splice(0,2)}.</p>
+                            <p className="text-lg font-semibold text-gray-300">{m.first_name} {Array.from(m.last_name).splice(0,2)}.</p>
                             {(m.isOwner)? (
                                 <Crown color="orange" size={18}></Crown>
                             ) : (
                                 <span></span>
                             )}
                         </div>
-                        <p className="text-sm">41Y Bangkok , Thailand</p>
+                        <p className="text-sm text-gray-300">{getAge(m.birth_date) ? `${getAge(m.birth_date)}Y` : '-'} Bangkok, Thailand</p>
                     </div>
                 </div>
                 <div className="flex flex-col h-[50px] justify-end items-end">
                   {(!m.isOwner) && (
                     <div className="flex flex-row h-[30px] gap-2">
                         <button className="bg-amber-500/80 rounded-md p-1 w-auto font-semibold" onClick={()=>onTransfer(m.user_id)}>
-                            <p className="text-sm">Promote</p>
+                            <p className="text-sm text-black">Promote</p>
                         </button>
-                        <button className="bg-rose-400 rounded-md p-1 h-auto flex items-center justify-center" onClick={()=>{onDelete(m.user_id)}}><Trash2 size={18}></Trash2></button>
+                        <button className="bg-rose-400 rounded-md p-1 h-auto flex items-center justify-center text-black" onClick={()=>{onDelete(m.user_id)}}><Trash2 size={18}></Trash2></button>
                     </div>
                   )}
                 </div>
