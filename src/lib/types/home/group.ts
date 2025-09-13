@@ -15,8 +15,12 @@ export interface Group {
 export interface CreateGroupRequest {
   group_name: string;
   description?: string;
+  destination?: string;
   max_members?: number;
+  start_date?: Date; 
+  end_date?: Date;    
   interest_fields?: string[];  // Use the specific enum type
+  image_url?: string;
 }
 
 export interface SearchGroupsParams {

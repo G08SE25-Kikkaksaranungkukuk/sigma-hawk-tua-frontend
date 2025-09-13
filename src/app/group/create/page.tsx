@@ -1,17 +1,14 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { brand } from "@/components/ui/utils";
-import { CreateGroupRequest, Interest } from "@/lib/types";
-import { groupService } from "@/lib/services/group/group-service";
-import { PopupCard } from "@/components/ui/popup-card";
-import { InterestsPill } from "@/components/ui/interests-pill";
-import { CheckCircle2 } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
-
-// Derive a safe key type from Interest
-type InterestKey = Interest["key"];
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { CreateGroupRequest, Interest } from '@/lib/types';
+import { GroupPreviewCard } from '@/components/group/info/GroupPreviewCard';
+import { CreateGroupForm } from '@/components/group/info/CreateGroupForm';
+import { groupService } from '@/lib/services/group/group-service';
+import { PopupCard } from '@/components/ui/popup-card';
+import { CheckCircle2 } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 
 // Success Modal Component
 interface GroupCreateSuccessProps {
@@ -63,108 +60,42 @@ function GroupCreateSuccess({ isOpen }: GroupCreateSuccessProps) {
   );
 }
 
-export default function CreateGroupPage() {
+export default function App() {
   const router = useRouter();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-
-  const [availableInterests, setAvailableInterests] = useState<Interest[]>([]);
-  const [loadingInterests, setLoadingInterests] = useState(true);
-
-  const [form, setForm] = useState({
-    group_name: "Bangkok → Chiang Mai Lantern Trip",
-    description:
-      "We're catching the Yi Peng lantern festival, cafe hopping, and a one-day trek. Looking for easy-going travelers who like food, photos, and night markets.",
-    destination: "Chiang Mai, Thailand",
-    maxMembers: "8",
-    startDate: "2025-11-12",
-    endDate: "2025-11-16",
-    tags: [] as InterestKey[],
-    image: null as File | null,
+  
+  const [groupData, setGroupData] = useState<CreateGroupRequest>({
+    group_name: 'Bangkok → Chiang Mai Adventure',
+    description: 'Join us for an amazing cultural journey through Thailand. We\'ll explore ancient temples, taste incredible street food, and experience the famous Yi Peng lantern festival. Perfect for travelers who love food, culture, and making new friends!',
+    destination: 'Chiang Mai, Thailand',
+    max_members: 8,
+    start_date: new Date('2025-11-12'),
+    end_date: new Date('2025-11-16'),
+    interest_fields: [],
+    image_url: 'https://images.unsplash.com/photo-1710608646861-cb7f10c8bc4c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0cmF2ZWwlMjBkZXN0aW5hdGlvbiUyMHRyb3BpY2FsJTIwYmVhY2h8ZW58MXx8fHwxNzU3NzM5NTc4fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
   });
 
-  // Normalize interests response to Interest[]
-  const normalizeInterests = (res: unknown): Interest[] => {
-    // If it's already an array of interests
-    if (Array.isArray(res)) return res as Interest[];
-    // If it's an object that contains { interests: [...] }
-    if (res && typeof res === "object" && Array.isArray((res as any).interests)) {
-      return (res as any).interests as Interest[];
-    }
-    // Fallback
-    return [];
+  const updateGroupData = (updates: Partial<CreateGroupRequest>) => {
+    setGroupData(prev => ({ ...prev, ...updates }));
   };
 
-  // Fetch interests on component mount
-  useEffect(() => {
-    const fetchInterests = async () => {
-      try {
-        setLoadingInterests(true);
-        const raw = await groupService.getInterests();
-        const list = normalizeInterests(raw);
-
-        setAvailableInterests(list);
-
-        // If there are no preselected tags, pick the first 4 as default
-        if (list.length > 0) {
-          setForm((prev) => ({
-            ...prev,
-            tags: prev.tags.length ? prev.tags : list.slice(0, 4).map((it) => it.key as InterestKey),
-          }));
-        }
-      } catch (error) {
-        console.error("Failed to fetch interests:", error);
-        setAvailableInterests([]);
-      } finally {
-        setLoadingInterests(false);
-      }
-    };
-
-    fetchInterests();
-  }, []);
-
-  // Handle text input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // Handle file upload
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setForm((prev) => ({ ...prev, image: e.target.files![0] }));
-    }
-  };
-
-  // Toggle interest key in form.tags
-  const handleTagToggle = (interestKey: InterestKey) => {
-    setForm((prev) => ({
-      ...prev,
-      tags: prev.tags.includes(interestKey)
-        ? prev.tags.filter((tag) => tag !== interestKey)
-        : [...prev.tags, interestKey],
-    }));
-  };
-
-  // Submit
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  // Handle group creation
+  const handleCreateGroup = async (formData: CreateGroupRequest) => {
     try {
-      // Build CreateGroupRequest for backend
-      const createGroupRequest: CreateGroupRequest = {
-        // match your backend contract
-        group_name: form.group_name,
-        description: form.description,
-        interest_fields: form.tags, // array of keys
-        max_members: parseInt(form.maxMembers, 10) || 8,
-        // you can also add destination/start/end if your API accepts them
-        // destination: form.destination,
-        // start_date: form.startDate,
-        // end_date: form.endDate,
-      } as any;
+      console.log('Creating group with data:', formData);
+      
+      // Build CreateGroupRequest for backend - only send fields that backend validates
+      const createGroupRequest = {
+        group_name: formData.group_name,
+        description: formData.description,
+        interest_fields: formData.interest_fields,
+        max_members: formData.max_members,
+      };
+      
+      console.log('Sending to backend:', createGroupRequest);
 
       const response = await groupService.createGroup(createGroupRequest);
-
+      
       setShowSuccessModal(true);
 
       // Redirect after a short delay
@@ -178,289 +109,39 @@ export default function CreateGroupPage() {
       }, 2000);
     } catch (error) {
       console.error("Failed to create group:", error);
+      throw error; // Re-throw to let CreateGroupForm handle the error display
     }
   };
 
-  // Selected interests for preview
-  const selectedInterests = availableInterests.filter((interest) => form.tags.includes(interest.key as InterestKey));
+  // Handle cancel
+  const handleCancel = () => {
+    router.push('/home');
+  };
 
   return (
-    <div className="min-h-screen w-full flex justify-center p-6 md:p-10" style={{ background: brand.bg }}>
-      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Preview section */}
-        <div className="lg:col-span-1">
-          <div
-            className="rounded-2xl shadow-xl overflow-hidden p-6 flex flex-col gap-4"
-            style={{
-              background: brand.card,
-              border: `1px solid ${brand.border}`,
-            }}
-          >
-            <span
-              className="text-sm font-semibold px-3 py-1 rounded-full w-fit"
-              style={{ backgroundColor: brand.accent, color: brand.bg }}
-            >
-              Preview
-            </span>
-
-            <h2 className="text-xl font-bold" style={{ color: brand.fg }}>
-              {form.group_name || "Group Title"}
-            </h2>
-            <p className="text-sm" style={{ color: brand.sub }}>
-              {form.destination} • {form.startDate} → {form.endDate}
-            </p>
-            <p className="text-xs" style={{ color: brand.sub }}>
-              Max Members: {form.maxMembers}
-            </p>
-
-            <div className="my-2">
-              {/* Assumes InterestsPill expects Interest[] */}
-              <InterestsPill interests={selectedInterests} />
-            </div>
-
-            <p className="text-sm leading-relaxed" style={{ color: brand.fg }}>
-              {form.description}
-            </p>
-
-            <div className="mt-4">
-              <h3 className="font-semibold mb-2" style={{ color: brand.fg }}>
-                Itinerary
-              </h3>
-              <ul className="text-sm space-y-2" style={{ color: brand.sub }}>
-                <li className="flex items-start gap-2">
-                  <span className="w-2 h-2 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: brand.accent }}></span>
-                  Day 1: Fly BKK → CNX, Nimman dinner
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-2 h-2 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: brand.accent }}></span>
-                  Day 2: Old City temples + cafe crawl
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-2 h-2 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: brand.accent }}></span>
-                  Day 3: Doi Suthep + Hmong village
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-2 h-2 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: brand.accent }}></span>
-                  Day 4: Yi Peng Lantern Festival
-                </li>
-              </ul>
-            </div>
-          </div>
+    <div className="min-h-screen bg-[#0b0b0c] text-white p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl text-orange-400 mb-2">Create New Group</h1>
+          <p className="text-orange-200/80">Set up your travel group and find perfect companions</p>
         </div>
 
-        {/* Form section */}
-        <div className="lg:col-span-1">
-          <div
-            className="rounded-2xl shadow-xl overflow-hidden p-8"
-            style={{
-              background: brand.card,
-              border: `1px solid ${brand.border}`,
-            }}
-          >
-            <h1 className="text-2xl font-bold mb-6" style={{ color: brand.accent }}>
-              Create New Group
-            </h1>
+        {/* Two Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Left Column - Preview Card */}
+          <div className="space-y-6">
+            <GroupPreviewCard groupData={groupData} />
+          </div>
 
-            <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
-              <div>
-                <label className="block mb-2 text-sm font-medium" style={{ color: brand.sub }}>
-                  Group Title
-                </label>
-                <input
-                  type="text"
-                  name="group_name"
-                  value={form.group_name}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-lg outline-none transition-colors focus:ring-2 focus:ring-opacity-50"
-                  style={{
-                    backgroundColor: brand.bg,
-                    border: `1px solid ${brand.border}`,
-                    color: brand.fg,
-                  }}
-                  placeholder="Enter group title..."
-                />
-              </div>
-
-              <div>
-                <label className="block mb-2 text-sm font-medium" style={{ color: brand.sub }}>
-                  Description
-                </label>
-                <textarea
-                  name="description"
-                  rows={4}
-                  value={form.description}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-lg outline-none resize-none transition-colors focus:ring-2 focus:ring-opacity-50"
-                  style={{
-                    backgroundColor: brand.bg,
-                    border: `1px solid ${brand.border}`,
-                    color: brand.fg,
-                  }}
-                  placeholder="Describe your trip..."
-                />
-              </div>
-
-              <div>
-                <label className="block mb-2 text-sm font-medium" style={{ color: brand.sub }}>
-                  Destination
-                </label>
-                <input
-                  type="text"
-                  name="destination"
-                  value={form.destination}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-lg outline-none transition-colors focus:ring-2 focus:ring-opacity-50"
-                  style={{
-                    backgroundColor: brand.bg,
-                    border: `1px solid ${brand.border}`,
-                    color: brand.fg,
-                  }}
-                  placeholder="Where are you going?"
-                />
-              </div>
-
-              <div>
-                <label className="block mb-2 text-sm font-medium" style={{ color: brand.sub }}>
-                  Max Members
-                </label>
-                <input
-                  type="number"
-                  name="maxMembers"
-                  value={form.maxMembers}
-                  onChange={handleChange}
-                  min={2}
-                  max={50}
-                  className="w-full px-4 py-3 rounded-lg outline-none transition-colors focus:ring-2 focus:ring-opacity-50"
-                  style={{
-                    backgroundColor: brand.bg,
-                    border: `1px solid ${brand.border}`,
-                    color: brand.fg,
-                  }}
-                  placeholder="Maximum number of members..."
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block mb-2 text-sm font-medium" style={{ color: brand.sub }}>
-                    Start Date
-                  </label>
-                  <input
-                    type="date"
-                    name="startDate"
-                    value={form.startDate}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-lg outline-none transition-colors focus:ring-2 focus:ring-opacity-50"
-                    style={{
-                      backgroundColor: brand.bg,
-                      border: `1px solid ${brand.border}`,
-                      color: brand.fg,
-                    }}
-                  />
-                </div>
-                <div>
-                  <label className="block mb-2 text-sm font-medium" style={{ color: brand.sub }}>
-                    End Date
-                  </label>
-                  <input
-                    type="date"
-                    name="endDate"
-                    value={form.endDate}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-lg outline-none transition-colors focus:ring-2 focus:ring-opacity-50"
-                    style={{
-                      backgroundColor: brand.bg,
-                      border: `1px solid ${brand.border}`,
-                      color: brand.fg,
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block mb-3 text-sm font-medium" style={{ color: brand.sub }}>
-                  Interests
-                </label>
-                {loadingInterests ? (
-                  <div className="text-sm" style={{ color: brand.sub }}>
-                    Loading interests...
-                  </div>
-                ) : (
-                  <>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
-                      {availableInterests.map((interest) => {
-                        const isSelected = form.tags.includes(interest.key as InterestKey);
-                        return (
-                          <button
-                            key={interest.key}
-                            type="button"
-                            onClick={() => handleTagToggle(interest.key as InterestKey)}
-                            className="px-3 py-2 text-xs rounded-lg transition-all duration-200 hover:opacity-80 flex items-center gap-1"
-                            style={{
-                              // optional: use interest.color when selected for better feedback
-                              backgroundColor: isSelected ? interest.color ?? brand.accent : brand.bg,
-                              color: isSelected ? brand.bg : brand.sub,
-                              border: `1px solid ${isSelected ? (interest.color ?? brand.accent) : brand.border}`,
-                            }}
-                          >
-                            <span>{interest.emoji}</span>
-                            <span>{interest.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {selectedInterests.length > 0 && (
-                      <div>
-                        <div className="text-xs font-medium mb-2" style={{ color: brand.sub }}>
-                          Selected Interests:
-                        </div>
-                        <InterestsPill interests={selectedInterests} />
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-
-              <div>
-                <label className="block mb-2 text-sm font-medium" style={{ color: brand.sub }}>
-                  Upload Image
-                </label>
-                <div
-                  className="w-full px-4 py-6 rounded-lg border-2 border-dashed text-center transition-colors hover:border-opacity-60"
-                  style={{
-                    backgroundColor: brand.bg,
-                    borderColor: brand.border,
-                    color: brand.sub,
-                  }}
-                >
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                    id="file-upload"
-                  />
-                  <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center gap-2">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: brand.accent }}>
-                      <span className="text-white text-lg">+</span>
-                    </div>
-                    <span className="text-sm">{form.image ? form.image.name : "Click to upload image"}</span>
-                  </label>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="mt-4 font-semibold py-3 px-6 rounded-lg transition-all duration-200 hover:opacity-90 focus:ring-2 focus:ring-opacity-50"
-                style={{
-                  backgroundColor: brand.accent,
-                  color: brand.bg,
-                }}
-              >
-                Create Group
-              </button>
-            </form>
+          {/* Right Column - Form */}
+          <div className="space-y-6">
+            <CreateGroupForm 
+              groupData={groupData} 
+              updateGroupData={updateGroupData}
+              onSubmit={handleCreateGroup}
+              onCancel={handleCancel}
+            />
           </div>
         </div>
       </div>
