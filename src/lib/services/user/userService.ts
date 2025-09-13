@@ -36,6 +36,11 @@ class UserService {
     Transform backend user data to frontend UserProfile format
   */
     private transformUserData(backendData: any): UserProfile {
+        // Construct full profile image URL if profile_url exists
+        const profileImageUrl = backendData.profile_url
+            ? `http://localhost:6969/${backendData.profile_url}`
+            : undefined;
+
         return {
             firstName: backendData.first_name || "",
             lastName: backendData.last_name || "",
@@ -50,7 +55,7 @@ class UserService {
                 backendData.userTravelStyles?.map(
                     (userTravelStyle: any) => userTravelStyle.travel_style.key
                 ) || [],
-            profileImage: backendData.profile_url || undefined,
+            profileImage: profileImageUrl,
             createdAt: backendData.created_at,
             updatedAt: backendData.updated_at,
         };
