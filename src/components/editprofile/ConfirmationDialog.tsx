@@ -76,7 +76,7 @@ export default function ConfirmationDialog({
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
 
-      alert("Profile deleted");
+      alert("Account deleted");
       onConfirm();
       onClose();
     } catch (err: any) {
