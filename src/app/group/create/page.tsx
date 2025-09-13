@@ -81,9 +81,7 @@ export default function App() {
 
   // Handle group creation
   const handleCreateGroup = async (formData: CreateGroupRequest) => {
-    try {
-      console.log('Creating group with data:', formData);
-      
+    try {      
       // Build CreateGroupRequest for backend - only send fields that backend validates
       const createGroupRequest = {
         group_name: formData.group_name,
@@ -92,8 +90,6 @@ export default function App() {
         max_members: formData.max_members,
       };
       
-      console.log('Sending to backend:', createGroupRequest);
-
       const response = await groupService.createGroup(createGroupRequest);
       
       setShowSuccessModal(true);
