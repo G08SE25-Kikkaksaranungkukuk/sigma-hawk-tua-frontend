@@ -18,9 +18,12 @@ import { Label } from "../../../components/ui/label";
 import ProfilePictureModal from "../../../components/editprofile/ProfilePictureModal";
 import ResetPasswordModal from "../../../components/editprofile/ResetPasswordModal";
 import ConfirmationDialog from "../../../components/editprofile/ConfirmationDialog";
-import { useUserProfile, useCurrentUser } from "../../../lib/hooks";
+import { useUserProfile } from "../../../lib/hooks";
 import { interestOptions } from "@/components/editprofile/constants";
-import { getColorClasses, formatPhoneNumber } from "@/components/editprofile/helpers";
+import {
+    getColorClasses,
+    formatPhoneNumber,
+} from "@/components/editprofile/helpers";
 import { validateForm, isFormValid } from "@/components/editprofile/validation";
 
 // Component definition
@@ -28,8 +31,14 @@ export default function EditProfilePage() {
     const router = useRouter();
 
     // State declarations
-    const { userProfile, userEmail, loading, error, updateProfile } = useUserProfile();
-    const { refreshCurrentUser } = useCurrentUser();
+    const {
+        userProfile,
+        userEmail,
+        loading,
+        error,
+        updateProfile,
+        refreshProfile,
+    } = useUserProfile();
 
     const [formData, setFormData] = useState({
         firstName: "",
@@ -42,7 +51,8 @@ export default function EditProfilePage() {
 
     const [profileImage, setProfileImage] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
+    const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] =
+        useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     const [validationErrors, setValidationErrors] = useState({
@@ -160,9 +170,9 @@ export default function EditProfilePage() {
                     console.log("Payload for backend:", formData);
                     await updateProfile(formData);
                     console.log("Profile updated successfully");
-                    
+
                     // Refresh current user data for home page
-                    await refreshCurrentUser();
+                    await refreshProfile();
                     console.log("Home page user data refreshed");
                 } catch (error) {
                     console.error("Error updating profile:", error);
