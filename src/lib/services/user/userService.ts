@@ -1,9 +1,7 @@
 // User service for handling user-related API calls
 // This service will be used to fetch user data from the database
-import { email } from "zod";
 import { UserProfile, UpdateUserProfile } from "../../types/user";
 import { tokenService } from "./tokenService";
-import axios from "axios";
 import { apiClient } from "@/lib/api";
 class UserService {
     private baseUrl = process.env.NEXT_PUBLIC_BASE_API_URL;
@@ -141,7 +139,6 @@ class UserService {
                 }
             );
             console.log("Update profile response data:", response);
-            tokenService.refreshToken();
             return this.transformUserData(response);
         } catch (error) {
             console.error("Error updating user profile:", error);
