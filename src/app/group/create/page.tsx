@@ -72,7 +72,8 @@ export default function App() {
     start_date: new Date('2025-11-12'),
     end_date: new Date('2025-11-16'),
     interest_fields: [],
-    image_url: 'https://images.unsplash.com/photo-1710608646861-cb7f10c8bc4c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0cmF2ZWwlMjBkZXN0aW5hdGlvbiUyMHRyb3BpY2FsJTIwYmVhY2h8ZW58MXx8fHwxNzU3NzM5NTc4fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
+    profile: undefined,
+    profile_url: undefined
   });
 
   const updateGroupData = (updates: Partial<CreateGroupRequest>) => {
@@ -82,13 +83,16 @@ export default function App() {
   // Handle group creation
   const handleCreateGroup = async (formData: CreateGroupRequest) => {
     try {      
-      // Build CreateGroupRequest for backend - only send fields that backend validates
+      // The formData already contains the File object in the profile field
+      // Build CreateGroupRequest for backend
       const createGroupRequest = {
         group_name: formData.group_name,
         description: formData.description,
         interest_fields: formData.interest_fields,
+        profile: formData.profile, // This is now a File object
         max_members: formData.max_members,
       };
+      console.log("Creating group with data:", createGroupRequest);
       
       const response = await groupService.createGroup(createGroupRequest);
       

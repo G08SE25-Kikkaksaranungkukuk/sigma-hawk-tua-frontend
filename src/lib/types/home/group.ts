@@ -17,10 +17,11 @@ export interface CreateGroupRequest {
   description?: string;
   destination?: string;
   max_members?: number;
+  profile?: File;
+  profile_url?: string;  // For preview purposes
   start_date?: Date; 
   end_date?: Date;    
   interest_fields?: string[];  // Use the specific enum type
-  image_url?: string;
 }
 
 export interface SearchGroupsParams {

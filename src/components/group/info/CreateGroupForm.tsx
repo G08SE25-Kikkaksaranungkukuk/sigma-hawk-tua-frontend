@@ -17,11 +17,18 @@ interface CreateGroupFormProps {
 }
 
 export function CreateGroupForm({ groupData, updateGroupData, onSubmit, onCancel }: CreateGroupFormProps) {
+  const [profileImageFile, setProfileImageFile] = React.useState<File | null>(null);
+
   const handleCreateGroup = async () => {
     if (onSubmit) {
       try {
-        console.log('Submitting group data:', groupData);
-        await onSubmit(groupData);
+        // Include the file in the group data
+        const groupDataWithFile = {
+          ...groupData,
+          profile: profileImageFile || undefined
+        };
+        console.log('Submitting group data:', groupDataWithFile);
+        await onSubmit(groupDataWithFile);
       } catch (error) {
         console.error('Failed to create group:', error);
         alert('Failed to create group. Please try again.');
@@ -106,7 +113,7 @@ export function CreateGroupForm({ groupData, updateGroupData, onSubmit, onCancel
                 type="date"
                 value={groupData.start_date instanceof Date ? groupData.start_date.toISOString().split('T')[0] : (groupData.start_date || '')}
                 onChange={(e) => updateGroupData({ start_date: e.target.value ? new Date(e.target.value) : undefined })}
-                className="bg-[#1a1b23] border-gray-700 text-white focus:border-[#ff6600] focus:ring-[#ff6600]/20 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:brightness-0 [&::-webkit-calendar-picker-indicator]:contrast-200"
+                className="bg-[#1a1b23] border-gray-700 text-white focus:border-[#ff6600] focus:ring-[#ff6600]/20 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:brightness-0 [&::-webkit-calendar-picker-indicator]:contrast-200 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                 style={{ colorScheme: 'dark' }}
               />
             </div>
@@ -118,7 +125,7 @@ export function CreateGroupForm({ groupData, updateGroupData, onSubmit, onCancel
                 type="date"
                 value={groupData.end_date instanceof Date ? groupData.end_date.toISOString().split('T')[0] : (groupData.end_date || '')}
                 onChange={(e) => updateGroupData({ end_date: e.target.value ? new Date(e.target.value) : undefined })}
-                className="bg-[#1a1b23] border-gray-700 text-white focus:border-[#ff6600] focus:ring-[#ff6600]/20 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:brightness-0 [&::-webkit-calendar-picker-indicator]:contrast-200"
+                className="bg-[#1a1b23] border-gray-700 text-white focus:border-[#ff6600] focus:ring-[#ff6600]/20 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:brightness-0 [&::-webkit-calendar-picker-indicator]:contrast-200 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                 style={{ colorScheme: 'dark' }}
               />
             </div>
@@ -138,8 +145,9 @@ export function CreateGroupForm({ groupData, updateGroupData, onSubmit, onCancel
         <div className="space-y-2">
           <Label className="text-orange-300">Cover Image</Label>
           <ImageUpload 
-            currentImage={groupData.image_url || ''}
-            onImageChange={(image_url) => updateGroupData({ image_url })}
+            currentImage={groupData.profile_url || ''}
+            onImageChange={(profile_url) => updateGroupData({ profile_url })}
+            onFileChange={(file) => setProfileImageFile(file)}
           />
         </div>
 

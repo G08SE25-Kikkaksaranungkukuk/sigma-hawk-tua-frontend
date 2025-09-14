@@ -1,21 +1,27 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Upload, Image, X } from 'lucide-react';
+import { ImageCropModal } from './ImageCropModal';
 
 interface ImageUploadProps {
   currentImage: string;
   onImageChange: (imageUrl: string) => void;
+  onFileChange?: (file: File | null) => void;
 }
 
-export function ImageUpload({ currentImage, onImageChange }: ImageUploadProps) {
+export function ImageUpload({ currentImage, onImageChange, onFileChange }: ImageUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [originalImageUrl, setOriginalImageUrl] = useState<string>('');
+  const [originalFile, setOriginalFile] = useState<File | null>(null);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // In a real app, you would upload this to a server
-      // For demo purposes, we'll create a local URL
+      // Store the original file and create URL for cropping
       const imageUrl = URL.createObjectURL(file);
-      onImageChange(imageUrl);
+      setOriginalFile(file);
+      setOriginalImageUrl(imageUrl);
+      setShowCropModal(true);
     }
   };
 
@@ -23,12 +29,53 @@ export function ImageUpload({ currentImage, onImageChange }: ImageUploadProps) {
     fileInputRef.current?.click();
   };
 
-  const handleRemoveImage = () => {
-    // Reset to default image
-    onImageChange('https://images.unsplash.com/photo-1710608646861-cb7f10c8bc4c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0cmF2ZWwlMjBkZXN0aW5hdGlvbiUyMHRyb3BpY2FsJTIwYmVhY2h8ZW58MXx8fHwxNzU3NzM5NTc4fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral');
+  const handleCropComplete = (croppedImageUrl: string, croppedFile: File) => {
+    onImageChange(croppedImageUrl);
+    if (onFileChange) {
+      onFileChange(croppedFile);
+    }
+    setShowCropModal(false);
+    
+    // Keep the original URL for re-cropping - don't clean it up
+    // This allows users to re-crop the same image multiple times
   };
 
-  const isDefaultImage = currentImage.includes('unsplash.com');
+  const handleCropCancel = () => {
+    setShowCropModal(false);
+    
+    // Clean up the original URL
+    if (originalImageUrl) {
+      URL.revokeObjectURL(originalImageUrl);
+      setOriginalImageUrl('');
+    }
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveImage = () => {
+    // Clear the current image
+    onImageChange('');
+    // Clear the file
+    if (onFileChange) {
+      onFileChange(null);
+    }
+    // Clean up original URL when actually removing the image
+    if (originalImageUrl) {
+      URL.revokeObjectURL(originalImageUrl);
+      setOriginalImageUrl('');
+    }
+    setOriginalFile(null);
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const isDefaultImage = !currentImage || currentImage === '';
 
   return (
     <div className="space-y-3">
@@ -45,12 +92,16 @@ export function ImageUpload({ currentImage, onImageChange }: ImageUploadProps) {
                 className="w-full h-full object-cover"
               />
               {!isDefaultImage && (
-                <button
-                  onClick={handleRemoveImage}
-                  className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 transition-colors duration-200"
-                >
-                  <X className="w-3 h-3" />
-                </button>
+                <div className="absolute top-2 right-2 flex gap-2">
+                  <button
+                    onClick={handleRemoveImage}
+                    className="bg-red-500 hover:bg-red-600 text-white rounded-full p-1 transition-colors duration-200"
+                    title="Remove image"
+                    aria-label="Remove image"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
               )}
             </div>
           ) : (
@@ -78,7 +129,20 @@ export function ImageUpload({ currentImage, onImageChange }: ImageUploadProps) {
         accept="image/*"
         onChange={handleFileSelect}
         className="hidden"
+        aria-label="Upload image file"
+        title="Upload image file"
       />
+
+      {/* Crop Modal */}
+      {(originalImageUrl || currentImage) && (
+        <ImageCropModal
+          isOpen={showCropModal}
+          onClose={handleCropCancel}
+          imageUrl={originalImageUrl || currentImage}
+          onCropComplete={handleCropComplete}
+          fileName={originalFile?.name || 'cropped-image.jpg'}
+        />
+      )}
 
       <p className="text-[#9aa3b2] text-xs">
         Recommended: 1200x600px, JPG or PNG, max 5MB

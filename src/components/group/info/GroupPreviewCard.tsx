@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { CreateGroupRequest, Interest } from "@/lib/types";
-import { Calendar, Users, MapPin } from "lucide-react";
+import { Calendar, Users, MapPin, Image } from "lucide-react";
 import { groupService } from "@/lib/services/group/group-service";
 import { InterestsPill } from "@/components/ui/interests-pill";
 
@@ -66,11 +66,18 @@ export function GroupPreviewCard({
     <div className="bg-[#12131a] rounded-3xl overflow-hidden shadow-2xl border border-gray-800/50">
       {/* Cover Image */}
       <div className="relative h-64 overflow-hidden">
-        <img
-          src={groupData.image_url || 'https://images.unsplash.com/photo-1710608646861-cb7f10c8bc4c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0cmF2ZWwlMjBkZXN0aW5hdGlvbiUyMHRyb3BpY2FsJTIwYmVhY2h8ZW58MXx8fHwxNzU3NzM5NTc4fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'}
-          alt="Group cover"
-          className="w-full h-full object-cover"
-        />
+        {groupData.profile_url ? (
+          <img
+            src={groupData.profile_url}
+            alt="Group cover"
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-[#1a1b23] border-2 border-dashed border-gray-700 flex flex-col items-center justify-center text-[#9aa3b2]">
+            <Image className="w-12 h-12 mb-3" />
+            <span className="text-lg">No image selected</span>
+          </div>
+        )}
         <div className="absolute top-4 left-4">
           <span className="bg-[#ff6600] text-white px-3 py-1 rounded-full text-sm">
             TravelMatch
