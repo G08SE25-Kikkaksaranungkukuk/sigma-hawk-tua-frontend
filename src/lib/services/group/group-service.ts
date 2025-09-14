@@ -75,8 +75,35 @@ export const groupService = {
   },
   
   createGroup: async (createGroupRequest: CreateGroupRequest): Promise<GroupData> => {
-    const response = await apiClient.post<GroupData, GroupData>('/group', createGroupRequest, {
-      withCredentials: true
+    // Create FormData to handle file upload
+    const formData = new FormData();
+    
+    // Append text fields
+    formData.append('group_name', createGroupRequest.group_name);
+    if (createGroupRequest.description) {
+      formData.append('description', createGroupRequest.description);
+    }
+    if (createGroupRequest.max_members) {
+      formData.append('max_members', createGroupRequest.max_members.toString());
+    }
+    
+    // Append interest fields as JSON string or individual entries
+    if (createGroupRequest.interest_fields && createGroupRequest.interest_fields.length > 0) {
+      createGroupRequest.interest_fields.forEach((interest, index) => {
+        formData.append(`interest_fields[${index}]`, interest);
+      });
+    }
+    
+    // Append file if provided
+    if (createGroupRequest.profile) {
+      formData.append('profile', createGroupRequest.profile);
+    }
+    
+    const response = await apiClient.post<GroupData, GroupData>('/group', formData, {
+      withCredentials: true,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
     return response;
   },
