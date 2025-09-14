@@ -56,6 +56,7 @@ export default function GroupSearchPage() {
   const [selectedTags, setSelectedTags] = useState<number[]>([]); // <-- use number[]
   const [page, setPage] = useState(1);
   const [groupCount, setGroupCount] = useState(0);
+  const [loading, setLoading] = useState(false); // <-- loading state
 
   // Interest API type and state
   type Interest = {
@@ -103,6 +104,7 @@ export default function GroupSearchPage() {
     tags = selectedTags,
     groupName = query
   ) => {
+    setLoading(true); // <-- set loading true
     const filterReq: groupFilterReq = {
       group_name: groupName,
       interest_id: tags,
@@ -114,6 +116,7 @@ export default function GroupSearchPage() {
     const group_count = backendRes?.data?.group_count ?? 0;
     setGroupCount(group_count);
     setResults(group_array);
+    setLoading(false); // <-- set loading false
   };
 
   useEffect(() => {
@@ -209,59 +212,65 @@ export default function GroupSearchPage() {
               Search
             </button>
           </div>
-          <ul className="mt-2 space-y-4">
-            {pagedGroups.length === 0 && (
-              <li className="text-orange-300 text-center py-6 text-lg font-semibold">No groups found.</li>
-            )}
-            {pagedGroups.map((group, idx) => (
-              <li
-                key={group.group_id + "-" + idx}
-                className="py-4 px-5 rounded-xl bg-gradient-to-r from-gray-800/80 to-orange-900/40 border border-orange-500/20 shadow-lg hover:scale-[1.02] transition-all"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-xl font-bold text-orange-200">{group.group_name}</div>
-                    <div className="text-xs mt-2 flex flex-wrap gap-2">
-                      {group.interest_id.map((tagId) => (
-                        <span
-                          key={tagId}
-                          style={{
-                            background:
-                              interests.find((i) => i.id === tagId)?.color + "33" ||
-                              "#fb923c33",
-                            borderColor:
-                              interests.find((i) => i.id === tagId)?.color ||
-                              "#fb923c33",
-                            color:
-                              interests.find((i) => i.id === tagId)?.color || "#fb923c",
-                          }}
-                          className="px-3 py-1 rounded-full border text-xs font-semibold shadow hover:scale-105 transition-all"
-                        >
-                          {interests.find((i) => i.id === tagId)?.emoji
-                            ? interests.find((i) => i.id === tagId)?.emoji + " "
-                            : ""}
-                          {interestLabelMap[String(tagId)] || tagId}
+          {loading ? ( // <-- loading indicator
+            <div className="text-center py-6">
+              <span className="text-orange-300 font-semibold">Loading...</span>
+            </div>
+          ) : (
+            <ul className="mt-2 space-y-4">
+              {pagedGroups.length === 0 && (
+                <li className="text-orange-300 text-center py-6 text-lg font-semibold">No groups found.</li>
+              )}
+              {pagedGroups.map((group, idx) => (
+                <li
+                  key={group.group_id + "-" + idx}
+                  className="py-4 px-5 rounded-xl bg-gradient-to-r from-gray-800/80 to-orange-900/40 border border-orange-500/20 shadow-lg hover:scale-[1.02] transition-all"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xl font-bold text-orange-200">{group.group_name}</div>
+                      <div className="text-xs mt-2 flex flex-wrap gap-2">
+                        {group.interest_id.map((tagId) => (
+                          <span
+                            key={tagId}
+                            style={{
+                              background:
+                                interests.find((i) => i.id === tagId)?.color + "33" ||
+                                "#fb923c33",
+                              borderColor:
+                                interests.find((i) => i.id === tagId)?.color ||
+                                "#fb923c33",
+                              color:
+                                interests.find((i) => i.id === tagId)?.color || "#fb923c",
+                            }}
+                            className="px-3 py-1 rounded-full border text-xs font-semibold shadow hover:scale-105 transition-all"
+                          >
+                            {interests.find((i) => i.id === tagId)?.emoji
+                              ? interests.find((i) => i.id === tagId)?.emoji + " "
+                              : ""}
+                            {interestLabelMap[String(tagId)] || tagId}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      {group.max_members && (
+                        <span className="text-xs text-orange-300 font-semibold">
+                          Max: {group.max_members}
                         </span>
-                      ))}
+                      )}
+                      <span className="text-xs text-gray-400">
+                        Leader ID: {group.group_leader_id}
+                      </span>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end">
-                    {group.max_members && (
-                      <span className="text-xs text-orange-300 font-semibold">
-                        Max: {group.max_members}
-                      </span>
-                    )}
-                    <span className="text-xs text-gray-400">
-                      Leader ID: {group.group_leader_id}
-                    </span>
-                  </div>
-                </div>
-                {group.description && (
-                  <div className="text-sm text-orange-400 mt-3">{group.description}</div>
-                )}
-              </li>
-            ))}
-          </ul>
+                  {group.description && (
+                    <div className="text-sm text-orange-400 mt-3">{group.description}</div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
           {totalPages > 1 && (
             <div className="flex justify-center items-center gap-4 mt-8">
               <button
