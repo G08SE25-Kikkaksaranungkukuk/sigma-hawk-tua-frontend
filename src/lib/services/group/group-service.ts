@@ -1,6 +1,7 @@
 import { GroupData, UserData, GroupResponse, CreateGroupRequest, Interest } from "@/lib/types";
-import {AxiosResponse} from "axios";
+import axios, {AxiosResponse} from "axios";
 import { apiClient } from "@/lib/api";
+import { X } from "lucide-react";
 
 // Sample data for development - move to API/database in production
 export const SAMPLE_GROUP_DATA = {
@@ -54,10 +55,24 @@ export const groupService = {
     const groupResponse = await apiClient.get<GroupData, GroupData>(`/group/${groupId}`, { withCredentials: true });
     return groupResponse;
   },
+
+  getGroupProfile: async (groupId: string): Promise<{ data: any | Blob }> => {
+    const response = await apiClient.get(`/group/${groupId}/profile`, { 
+      responseType: 'blob' // Handle both JSON and binary responses
+    });
+    console.log("getGroupProfile response:", response);
+    return response;
+  },
   
   getCurrentUser: async (): Promise<UserData> => {
     const response = await apiClient.get<UserData, UserData>(`/auth/whoami`, { withCredentials: true });
     return response;
+  },
+
+  leaveGroup: async (groupId: string): Promise<void> => {
+    await apiClient.delete(`/group/${groupId}/leave`, {
+      withCredentials: true,
+    });
   },
   
   joinGroup: async (groupId: string): Promise<void> => {
