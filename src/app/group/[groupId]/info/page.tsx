@@ -1,247 +1,134 @@
-"use client";
-import React, { useState } from "react";
-import { brand } from "@/components/ui/utils";
-import TravelInviteModal from "@/components/TravelInviteModal";
-import { GroupHeader } from "@/components/group/info/GroupHeader";
-import { GroupDetails } from "@/components/group/info/GroupDetails";
-import { GroupSidebar } from "@/components/group/info/GroupSidebar";
-import { GroupContact } from "@/components/group/info/GroupContact";
+'use client';
+
+import { GroupHero } from "@/components/group/info/GroupHero";
+import { GroupInfoCard } from "@/components/group/info/GroupInfoCard";
+import { GroupStatsCard } from "@/components/group/info/GroupStatsCard";
+import { GroupMembersCard } from "@/components/group/info/GroupMemberCard";
 import { GroupPageSkeleton, ErrorState } from "@/components/group/info/LoadingStates";
-import { useGroupActions } from "@/lib/hooks/group/useGroupActions";
-import { GroupData, UserData } from "@/lib/types";
-import { apiClient } from "@/lib/api";
-import { groupService } from "@/lib/services/group/group-service";
+import { Interest, GroupData, Member } from "@/lib/types/home/group";
+import { UserData } from "@/lib/types/user";
 
-interface TravelGroupPageProps {
-  params: Promise<{ groupId?: string }>;
-}
+import React, { useState } from "react";
+import { groupService } from '@/lib/services/group/group-service';
 
-/**
- * Main Travel Group Page Component
- * 
- * This component demonstrates the refactored, maintainable approach:
- * - Separated concerns (data fetching, UI, business logic)
- * - Reusable components
- * - Centralized configuration
- * - Proper error handling and loading states
- * - Easy to test and modify
- */
-export default function TravelGroupPage({ params }: TravelGroupPageProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [pageUrl,setPageUrl] = React.useState<string>("");
-  const [userInfo,setUserInfo] = React.useState<UserData>();
-  const [groupInfo , setGroupInfo] = React.useState<GroupData>();
+export default function GroupInfoPage({ params }: { params: Promise<{ groupId?: string }> }) {
+    
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-  const {groupId} = React.use(params);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
-  const { isRequested, isJoiningLoading, isContactLoading, requestToJoin: baseRequestToJoin, contactHost, resetRequest } = useGroupActions(groupId ?? "Nan");
+    const { groupId } = React.use(params);
+    const [userInfo,setUserInfo] = React.useState<UserData>();
+    const [groupInfo , setGroupInfo] = React.useState<GroupData>();
 
+  // Mock data for the group
   const refetch = React.useCallback(() => {
-    if (!groupId) return;
+    if (!groupId) {
+      setError("Invalid group ID");
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
     setError(null);
 
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-
     Promise.all([
+      groupService.getGroupProfile(groupId),
       groupService.getCurrentUser(),
       groupService.getGroupDetails(groupId),
     ])
-      .then(([userRes, groupRes]) => {
+      .then(([profileRes, userRes, groupRes]) => {
         setUserInfo(userRes);
         setGroupInfo(groupRes);
         console.log("groupInfo (refetch):", groupRes);
-
-        timeoutId = setTimeout(() => setLoading(false), 800);
+        setLoading(false);
       })
       .catch((err) => {
+        setError("Failed to fetch group information");
         console.error(err);
-        setError(err.message);
         setLoading(false);
       });
-    
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    };
   }, [groupId]);
 
   React.useEffect(() => {
-    if (typeof window !== "undefined") {
-      setPageUrl(window.location.href);
-      const cleanup = refetch();
-      return () => {
-        if (typeof cleanup === "function") cleanup();
-      };
-    }
+    refetch();
   }, [refetch]);
 
   if (loading) {
     return <GroupPageSkeleton />;
   }
-
+  
   if (error) {
     return <ErrorState title="Failed to load group" onRetry={refetch} />;
   }
-  console.log(userInfo)
-  if (!groupInfo) {
-    return (
-      <ErrorState
-        title="Group not found"
-        message="The group you're looking for doesn't exist or has been removed."
-        onRetry={refetch}
-      />
-    );
+  
+  if (!groupInfo || !userInfo) {
+    return <ErrorState title="Group not found" onRetry={refetch} />;
   }
 
 
-  
-  // Check if the current user is a member or leader
-  const isMember = userInfo && groupInfo?.members?.some(
-    member => member.user_id === userInfo.user_id
-  );
+  const groupData = {
+    title: groupInfo.group_name,
+    destination: "Bangkok & Chiang Mai, Thailand",
+    dateRange: "Nov 15-20, 2024",
+    timezone: "GMT+7 (ICT)",
+    location: "Thailand",
+    interests: groupInfo.interests as Interest[],
+    groupType: "Public Group",
+    isPublic: true
+  };
 
-  const isLeader = userInfo && groupInfo?.group_leader_id === userInfo.user_id;
+  const sidebarData = {
+    userRole: (userInfo && groupInfo) ? (userInfo.user_id === groupInfo.group_leader_id ? 'host' as const : groupInfo.members.some((member) => member.user_id === userInfo.user_id) ? 'member' as const : 'visitor' as const) : 'visitor' as const,
+    members: {
+      current: groupInfo.members.length,
+      max: groupInfo.max_members
+    },
+    spotsLeft: groupInfo.max_members - groupInfo.members.length,
+    pace: "Balanced",
+    languages: ["English", "Thai", "Mandarin"]
+  };
 
-  const group = groupInfo && groupId ? {
-    id: groupId,
-    group_id: groupInfo.group_id,
-    group_name: groupInfo.group_name,
-    group_leader_id: groupInfo.group_leader_id,
-    interests: groupInfo.interests || [],
-    description: groupInfo.description || '',
-    members: groupInfo.members || [],
-    max_members: groupInfo.max_members,
-    created_at: groupInfo.created_at,
-    updated_at: groupInfo.updated_at,
-    // Legacy fields for backward compatibility with existing components
-    title: groupInfo.group_name || '',
-    destination: 'Thailand',  // You can add this field to API later
-    dates: new Date(groupInfo.created_at).toLocaleDateString(),
-    timezone: 'GMT+7',
-    privacy: 'Public' as const,
-    maxSize: groupInfo.max_members,
-    currentSize: groupInfo.members?.length || 0,
-    pace: 'Balanced' as const,
-    languages: ['English'],
-    requirements: [],
-    rules: [],
-    itinerary: [{
-      day: 'Day 1',
-      plan: 'Welcome to the group!'
-    }],
-    hostNote: 'Welcome to our travel group!',
-    // Transform members to legacy format for compatibility
-    legacyMembers: (groupInfo.members || []).map(member => ({
+  // Map actual group members data
+  const membersData = {
+    members: groupInfo.members.map((member, index) => ({
       id: member.user_id.toString(),
       name: `${member.first_name} ${member.last_name}`,
-      role: member.user_id === groupInfo.group_leader_id ? ('Host' as const) : ('Member' as const),
-      avatar: '' // Add profile_url to Member interface if needed
-    }))
-  } : null;
-  
-
-  const handleShare = () => {
-    setIsModalOpen(true);
-  };
-
-  const handleLeaveGroup = async () => {
-    if (!groupId) return;
-    if (!userInfo?.user_id) {
-      setError("User not loaded");
-      return;
-    }
-
-    try {
-      await apiClient.delete(
-        `/group/${groupId}/leave`,
-        {
-          data: { "user_id": userInfo.user_id }, 
-          withCredentials: true,
-        }
-      );
-      refetch();
-      // Reset the request state so the button shows "Join now!"
-      resetRequest();
-
-    } catch (error) {
-      console.error("Failed to leave group:", error);
-      setError("Failed to leave group");
-      setLoading(false);
-    }
-  };
-
-  const requestToJoin = async () => {
-    try {
-      await baseRequestToJoin();
-      // After successful join, refetch to update the group data
-      refetch();
-
-    } catch (error) {
-      console.error('Failed to join group:', error);
-      // You might want to show an error message here
-    }
-  };
-
-
-  const handleContactHost = async () => {
-    try {
-      await contactHost("I'd like to know more about this trip!");
-      // In a real app, show success toast here
-    } catch (error) {
-      // In a real app, show error toast here
-      console.error('Failed to contact host:', error);
-    }
-  };
-
-  const handleMemberClick = (memberId: string) => {
-    console.log("Clicked member:", memberId);
-    // In a real app, navigate to member profile or show member details
+      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(`${member.first_name} ${member.last_name}`)}&background=ff6600&color=ffffff&size=128`,
+      joinDate: new Date(groupInfo.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+      location: "Unknown", // Since location is not available in Member type
+      isHost: member.user_id === groupInfo.group_leader_id,
+    })),
+    totalMembers: sidebarData.members.current,
+    maxMembers: sidebarData.members.max
   };
 
   return (
-    <div className="min-h-screen w-full flex justify-center p-6 md:p-10" style={{ background: brand.bg }}>
-      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left: Main Content */}
-        <div className="lg:col-span-2">
-          <div className="rounded-2xl shadow-xl overflow-hidden" style={{ background: brand.card, border: `1px solid ${brand.border}` }}>
-            {group && (
-              <>
-                <GroupHeader group={group} />
-                <GroupDetails group={group} onMemberClick={handleMemberClick} />
-              </>
-            )}
+    <div className="min-h-screen bg-[#0b0b0c] p-4 lg:p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Hero Section */}
+        <GroupHero 
+          {...groupData}
+          memberCount={sidebarData.members.current}
+          maxMembers={sidebarData.members.max}
+          groupImage="https://images.unsplash.com/photo-1674980630249-543635167c63?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxUaGFpbGFuZCUyMGxhbnRlcm4lMjBmZXN0aXZhbCUyMEJhbmdrb2slMjB0ZW1wbGUlMjBuaWdodHxlbnwxfHx8fDE3NTc3NjQ0MTl8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
+          groupId={groupId}
+          hasProfile={groupInfo.profile_url}
+        />
+        
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Left Column - Trip Details */}
+          <div className="lg:col-span-8 space-y-8">
+            <GroupInfoCard groupInfo={groupInfo} />
+          </div>
+          
+          {/* Right Column - Host & Stats */}
+          <div className="lg:col-span-4 space-y-6">
+            <GroupStatsCard groupId={groupId} {...sidebarData} onDataChange={refetch} />
+            <GroupMembersCard {...membersData} />
           </div>
         </div>
-
-        {/* Right: Sidebar */}
-        <aside className="lg:col-span-1 space-y-6">
-          {group && <GroupSidebar
-            group={group}
-            userInfo={userInfo!}
-            isRequested={isRequested}
-            isLoading={isJoiningLoading}
-            onRequestToJoin={requestToJoin}
-            onShare={handleShare}
-            onContactHost={handleContactHost}
-            onLeaveGroup={handleLeaveGroup}
-            isMember={!!isMember}
-            isLeader={!!isLeader}
-          />}
-          
-          <GroupContact
-            onContactHost={handleContactHost}
-            isLoading={isContactLoading}
-          />
-        </aside>
       </div>
-      
-      {/* Travel Invite Modal */}
-      <TravelInviteModal
-        inviteLink={pageUrl}
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-      />
     </div>
   );
 }
