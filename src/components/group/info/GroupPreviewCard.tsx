@@ -80,7 +80,7 @@ export function GroupPreviewCard({
         )}
         <div className="absolute top-4 left-4">
           <span className="bg-[#ff6600] text-white px-3 py-1 rounded-full text-sm">
-            Thamroi
+            ThamRoi
           </span>
         </div>
       </div>

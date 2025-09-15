@@ -213,7 +213,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                 <Card className="card-hover shadow-2xl border border-orange-500/20 bg-gray-900/80 backdrop-blur-sm bounce-in">
                     <CardHeader className="text-center bg-gradient-to-r from-orange-500 to-orange-600 text-black rounded-t-lg">
                         <CardTitle className="text-2xl font-bold">
-                            Join TravelMatch!
+                            Join ThamRoi!
                         </CardTitle>
                         <p className="text-black/80 text-center pb-2">
                             Start your adventure today
