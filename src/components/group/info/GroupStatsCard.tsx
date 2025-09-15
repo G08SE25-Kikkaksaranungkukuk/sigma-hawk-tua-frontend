@@ -17,9 +17,26 @@ interface GroupStatsCardProps {
   pace: string;
   languages: string[];
   onDataChange?: () => void;
+  // Success state management
+  showSuccess?: boolean;
+  successType?: 'join' | 'leave' | 'profile';
+  onShowSuccess?: (type: 'join' | 'leave' | 'profile') => void;
+  onHideSuccess?: () => void;
 }
 
-export function GroupStatsCard({ groupId, userRole, members, spotsLeft, pace, languages, onDataChange }: GroupStatsCardProps) {
+export function GroupStatsCard({ 
+  groupId, 
+  userRole, 
+  members, 
+  spotsLeft, 
+  pace, 
+  languages, 
+  onDataChange,
+  showSuccess,
+  successType,
+  onShowSuccess,
+  onHideSuccess
+}: GroupStatsCardProps) {
   const router = useRouter();
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
@@ -35,8 +52,12 @@ export function GroupStatsCard({ groupId, userRole, members, spotsLeft, pace, la
     if (groupId && userRole === 'visitor') {
       try {
         await groupService.joinGroup(groupId);
-        // Refresh the data by calling the parent's refetch function
-        onDataChange?.();
+        // Show success modal first
+        onShowSuccess?.('join');
+        // Then refresh the data after a small delay to let the success modal render
+        setTimeout(() => {
+          onDataChange?.();
+        }, 3000);
       } catch (error) {
         console.error('Failed to join group:', error);
       }
@@ -47,7 +68,12 @@ export function GroupStatsCard({ groupId, userRole, members, spotsLeft, pace, la
     if (userRole === 'member' && groupId) {
       try {
         await groupService.leaveGroup(groupId);
-        onDataChange?.();
+        // Show success modal first  
+        onShowSuccess?.('leave');
+        // Then refresh the data after a small delay to let the success modal render
+        setTimeout(() => {
+          onDataChange?.();
+        }, 3000);
       } catch (error) {
         console.error('Failed to leave group:', error);
       }
@@ -122,6 +148,10 @@ export function GroupStatsCard({ groupId, userRole, members, spotsLeft, pace, la
             onLeaveGroup={handleLeaveGroup}
             onViewInfo={handleViewInfo}
             onShare={handleShare}
+            showSuccess={showSuccess}
+            successType={successType}
+            onShowSuccess={onShowSuccess}
+            onHideSuccess={onHideSuccess}
           />
         </div>
 

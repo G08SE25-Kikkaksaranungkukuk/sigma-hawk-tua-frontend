@@ -80,10 +80,12 @@ export default function homePage() {
                         onSearchGroups={() => handleSearchGroups(router)}
                     />
                 </div>
-
-                {/* Bottom stats */}
-                <AppStats />
             </main>
+
+            {/* Stats positioned at bottom, right above footer */}
+            <div className="relative z-10 max-w-6xl mx-auto px-8 pb-8">
+                <AppStats />
+            </div>
         </div>
     );
 }
