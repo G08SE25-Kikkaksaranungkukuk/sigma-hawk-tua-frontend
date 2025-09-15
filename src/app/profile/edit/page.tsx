@@ -19,7 +19,10 @@ import ProfilePictureModal from "../../../components/editprofile/ProfilePictureM
 import ResetPasswordModal from "../../../components/editprofile/ResetPasswordModal";
 import ConfirmationDialog from "../../../components/editprofile/ConfirmationDialog";
 import { useUserProfile } from "../../../lib/hooks";
-import { interestOptions } from "@/components/editprofile/constants";
+import {
+    interestOptions,
+    travel_style_options,
+} from "@/components/editprofile/constants";
 import {
     getColorClasses,
     formatPhoneNumber,
@@ -390,21 +393,32 @@ export default function EditProfilePage() {
                         <div className="my-3">
                             {interestOptions.map((interest) => {
                                 const isSelected = formData.interests.includes(
-                                    interest.id
+                                    interest.key
                                 );
                                 const colorClasses = getColorClasses(
                                     interest.color,
                                     isSelected
                                 );
+
+                                // Create inline styles for selected state using hex color
+                                const selectedStyle = isSelected
+                                    ? {
+                                          backgroundColor: `${interest.color}20`, // 20 for 12.5% opacity
+                                          borderColor: interest.color,
+                                          color: interest.color,
+                                      }
+                                    : {};
+
                                 return (
                                     <button
-                                        key={interest.id}
+                                        key={interest.key}
                                         onClick={() =>
-                                            handleInterestToggle(interest.id)
+                                            handleInterestToggle(interest.key)
                                         }
                                         className={`px-4 py-3 mx-1 my-1 rounded-full text-sm font-medium transition-all duration-200 transform hover:scale-105 w-fit shadow-md backdrop-blur-sm ${colorClasses}`}
+                                        style={selectedStyle}
                                     >
-                                        {interest.label}
+                                        {interest.emoji} {interest.label}
                                     </button>
                                 );
                             })}
@@ -423,44 +437,41 @@ export default function EditProfilePage() {
                             Style <span className="text-red-500">*</span>
                         </Label>
                         <div className="mt-3 space-y-3">
-                            {[
-                                {
-                                    id: "BUDGET",
-                                    label: "💰 Budget",
-                                    color: "orange",
-                                },
-                                {
-                                    id: "COMFORT",
-                                    label: "🛏️ Comfort",
-                                    color: "blue",
-                                },
-                                {
-                                    id: "LUXURY",
-                                    label: "💎 Luxury",
-                                    color: "purple",
-                                },
-                                {
-                                    id: "BACKPACK",
-                                    label: "🎒 Backpack",
-                                    color: "green",
-                                },
-                            ].map((style) => {
+                            {travel_style_options.map((style) => {
                                 const isChecked = formData.travelStyle.includes(
-                                    style.id
+                                    style.key
                                 );
+
+                                // Create inline styles for selected state using hex color
+                                const checkboxStyle = isChecked
+                                    ? {
+                                          backgroundColor: style.color,
+                                          borderColor: style.color,
+                                      }
+                                    : {
+                                          backgroundColor: "transparent",
+                                          borderColor: "#fb923c60",
+                                      };
+
+                                const labelStyle = isChecked
+                                    ? {
+                                          color: style.color,
+                                      }
+                                    : {};
+
                                 return (
                                     <div
-                                        key={style.id}
+                                        key={style.key}
                                         className="flex items-center space-x-3"
                                     >
                                         <div className="relative flex items-center">
                                             <input
                                                 type="checkbox"
-                                                id={`travel-${style.id}`}
+                                                id={`travel-${style.key}`}
                                                 checked={isChecked}
                                                 onChange={() =>
                                                     handleTravelStyleToggle(
-                                                        style.id
+                                                        style.key
                                                     )
                                                 }
                                                 className="sr-only"
@@ -468,14 +479,11 @@ export default function EditProfilePage() {
                                             <div
                                                 onClick={() =>
                                                     handleTravelStyleToggle(
-                                                        style.id
+                                                        style.key
                                                     )
                                                 }
-                                                className={`w-5 h-5 rounded border-2 cursor-pointer transition-all duration-200 flex items-center justify-center ${
-                                                    isChecked
-                                                        ? "bg-orange-500 border-orange-500"
-                                                        : "bg-transparent border-orange-400/60 hover:border-orange-300"
-                                                }`}
+                                                className="w-5 h-5 rounded border-2 cursor-pointer transition-all duration-200 flex items-center justify-center hover:border-orange-300"
+                                                style={checkboxStyle}
                                             >
                                                 {isChecked && (
                                                     <svg
@@ -493,10 +501,11 @@ export default function EditProfilePage() {
                                             </div>
                                         </div>
                                         <label
-                                            htmlFor={`travel-${style.id}`}
+                                            htmlFor={`travel-${style.key}`}
                                             className="text-orange-300 text-sm cursor-pointer select-none hover:text-orange-200 transition-colors"
+                                            style={labelStyle}
                                         >
-                                            {style.label}
+                                            {style.emoji} {style.label}
                                         </label>
                                     </div>
                                 );
