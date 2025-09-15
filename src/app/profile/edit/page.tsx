@@ -1,5 +1,6 @@
 "use client";
-import axios from "axios";
+
+// Group imports logically: external libraries, hooks, components, and utilities
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -16,68 +17,31 @@ import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import ProfilePictureModal from "../../../components/editprofile/ProfilePictureModal";
 import ResetPasswordModal from "../../../components/editprofile/ResetPasswordModal";
-import { useUserProfile } from "../../../lib/hooks";
 import ConfirmationDialog from "../../../components/editprofile/ConfirmationDialog";
+import { useUserProfile } from "../../../lib/hooks";
+import {
+    interestOptions,
+    travel_style_options,
+} from "@/components/editprofile/constants";
+import {
+    getColorClasses,
+    formatPhoneNumber,
+} from "@/components/editprofile/helpers";
+import { validateForm, isFormValid } from "@/components/editprofile/validation";
 
-const interestOptions = [
-    { id: "SEA", label: "🌊 Sea", color: "blue" },
-    { id: "MOUNTAIN", label: "⛰️ Mountain", color: "green" },
-    { id: "WATERFALL", label: "💧 Waterfall", color: "sky" },
-    { id: "NATIONAL_PARK", label: "🏞️ National Park", color: "teal" },
-    { id: "ISLAND", label: "🏝️ Island", color: "cyan" },
-    { id: "TEMPLE", label: "🙏 Temple", color: "indigo" },
-    { id: "SHOPPING_MALL", label: "🛍️ Shopping Mall", color: "violet" },
-    { id: "MARKET", label: "🏪 Market", color: "orange" },
-    { id: "CAFE", label: "☕ Cafe", color: "amber" },
-    { id: "HISTORICAL", label: "🏛️ Historical", color: "yellow" },
-    { id: "AMUSEMENT_PARK", label: "🎢 Amusement Park", color: "pink" },
-    { id: "ZOO", label: "🦁 Zoo", color: "emerald" },
-    { id: "FESTIVAL", label: "🎉 Festival", color: "red" },
-    { id: "MUSEUM", label: "🏛️ Museum", color: "purple" },
-    { id: "FOOD_STREET", label: "🍴 Food Street", color: "rose" },
-    { id: "BEACH_BAR", label: "🍹 Beach Bar", color: "cyan" },
-    { id: "THEATRE", label: "🎭 Theatre", color: "slate" },
-];
-
-const getColorClasses = (color: string, isSelected: boolean) => {
-    if (!isSelected) {
-        // ยังไม่คลิก: สีดำ + กรอบส้มอ่อน
-        return "bg-slate-900 text-orange-300 border-2 border-orange-400/60 hover:border-orange-300 hover:text-orange-200";
-    }
-
-    // คลิกแล้ว: สีอ่อนๆ + กรอบสีที่ match
-    const colorMap: { [key: string]: string } = {
-        green: "bg-green-200/25 text-green-300 border-2 border-green-400/70",
-        red: "bg-red-200/25 text-red-300 border-2 border-red-400/70",
-        purple: "bg-purple-200/25 text-purple-300 border-2 border-purple-400/70",
-        blue: "bg-blue-200/25 text-blue-300 border-2 border-blue-400/70",
-        cyan: "bg-cyan-200/25 text-cyan-300 border-2 border-cyan-400/70",
-        slate: "bg-slate-200/25 text-slate-300 border-2 border-slate-400/70",
-        amber: "bg-amber-200/25 text-amber-300 border-2 border-amber-400/70",
-        yellow: "bg-yellow-200/25 text-yellow-300 border-2 border-yellow-400/70",
-        teal: "bg-teal-200/25 text-teal-300 border-2 border-teal-400/70",
-        pink: "bg-pink-200/25 text-pink-300 border-2 border-pink-400/70",
-        indigo: "bg-indigo-200/25 text-indigo-300 border-2 border-indigo-400/70",
-        emerald:
-            "bg-emerald-200/25 text-emerald-300 border-2 border-emerald-400/70",
-        violet: "bg-violet-200/25 text-violet-300 border-2 border-violet-400/70",
-        sky: "bg-sky-200/25 text-sky-300 border-2 border-sky-400/70",
-        orange: "bg-orange-200/25 text-orange-300 border-2 border-orange-400/70",
-        rose: "bg-rose-200/25 text-rose-300 border-2 border-rose-400/70",
-    };
-
-    return (
-        colorMap[color] ||
-        "bg-orange-200/25 text-orange-300 border-2 border-orange-400/70"
-    );
-};
-
+// Component definition
 export default function EditProfilePage() {
     const router = useRouter();
 
-    // Use the custom hook for user profile management
-    const { userProfile, userEmail, loading, error, updateProfile } =
-        useUserProfile();
+    // State declarations
+    const {
+        userProfile,
+        userEmail,
+        loading,
+        error,
+        updateProfile,
+        refreshProfile,
+    } = useUserProfile();
 
     const [formData, setFormData] = useState({
         firstName: "",
@@ -94,7 +58,6 @@ export default function EditProfilePage() {
         useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-    // Validation state
     const [validationErrors, setValidationErrors] = useState({
         firstName: "",
         lastName: "",
@@ -110,7 +73,7 @@ export default function EditProfilePage() {
                 firstName: userProfile.firstName,
                 lastName: userProfile.lastName,
                 middleName: userProfile.middleName || "",
-                phoneNumber: userProfile.phoneNumber,
+                phoneNumber: formatPhoneNumber(userProfile.phoneNumber), // Format phone number from backend
                 interests: userProfile.interests,
                 travelStyle: userProfile.travelStyle || [],
             });
@@ -118,52 +81,8 @@ export default function EditProfilePage() {
         }
     }, [userProfile]);
 
-    // Validation functions
-    const validateForm = () => {
-        const errors = {
-            firstName: "",
-            lastName: "",
-            phoneNumber: "",
-            interests: "",
-            travelStyle: "",
-        };
-
-        // First name validation
-        if (!formData.firstName || formData.firstName.trim() === "") {
-            errors.firstName = "First name is required";
-        }
-
-        // Last name validation
-        if (!formData.lastName || formData.lastName.trim() === "") {
-            errors.lastName = "Last name is required";
-        }
-
-        // Phone number validation
-        const phoneRegex = /^0\d{2}-\d{3}-\d{4}$/;
-        if (!formData.phoneNumber || formData.phoneNumber.trim() === "") {
-            errors.phoneNumber = "Phone number is required";
-        } else if (!phoneRegex.test(formData.phoneNumber)) {
-            errors.phoneNumber = "Phone number must be in format 0xx-xxx-xxxx";
-        }
-
-        // Interests validation
-        if (formData.interests.length === 0) {
-            errors.interests = "Please select at least 1 interest";
-        }
-
-        // Travel style validation
-        if (formData.travelStyle.length === 0) {
-            errors.travelStyle = "Please select at least 1 travel style";
-        }
-
-        setValidationErrors(errors);
-
-        // Return true if no errors
-        return Object.values(errors).every((error) => error === "");
-    };
-
     // Check if form is valid
-    const isFormValid = () => {
+    const isFormValidLocal = () => {
         return (
             formData.firstName.trim() !== "" &&
             formData.lastName.trim() !== "" &&
@@ -174,28 +93,13 @@ export default function EditProfilePage() {
         );
     };
 
+    // Utility functions
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
 
         // Special handling for phone number formatting
         if (name === "phoneNumber") {
-            // Remove all non-digits
-            const digits = value.replace(/\D/g, "");
-
-            // Format as 0xx-xxx-xxxx
-            let formattedValue = "";
-            if (digits.length > 0) {
-                if (digits.length <= 3) {
-                    formattedValue = digits;
-                } else if (digits.length <= 6) {
-                    formattedValue = `${digits.slice(0, 3)}-${digits.slice(3)}`;
-                } else {
-                    formattedValue = `${digits.slice(0, 3)}-${digits.slice(
-                        3,
-                        6
-                    )}-${digits.slice(6, 10)}`;
-                }
-            }
+            const formattedValue = formatPhoneNumber(value);
 
             setFormData((prev) => ({
                 ...prev,
@@ -249,7 +153,7 @@ export default function EditProfilePage() {
         if (loading) return;
 
         // Validate form before saving
-        if (!validateForm()) {
+        if (!validateForm(formData, setValidationErrors)) {
             return;
         }
 
@@ -265,25 +169,14 @@ export default function EditProfilePage() {
             });
 
             if (success) {
-                const payload = {
-                    email: userEmail,
-                    data: {
-                        first_name: formData.firstName.trim(),
-                        last_name: formData.lastName.trim(),
-                        middle_name: formData.middleName.trim() || null,
-                        phone: formData.phoneNumber.replace(/[-\s]/g, ""),
-                        interests: formData.interests,
-                        travel_styles: formData.travelStyle,
-                        profile_url: profileImage || null,
-                    },
-                };
                 try {
-                    console.log("Payload for backend:", payload);
-                    const response = await axios.patch(
-                        "http://localhost:8080/user/",
-                        payload
-                    );
+                    console.log("Payload for backend:", formData);
+                    await updateProfile(formData);
                     console.log("Profile updated successfully");
+
+                    // Refresh current user data for home page
+                    await refreshProfile();
+                    console.log("Home page user data refreshed");
                 } catch (error) {
                     console.error("Error updating profile:", error);
                 }
@@ -312,11 +205,6 @@ export default function EditProfilePage() {
         // For now, we'll just log the data
     };
 
-    // Back button navigation handler
-    const handleBackClick = () => {
-        router.push("/home");
-    };
-
     const handleImageSelect = (imageFile: File | null) => {
         if (imageFile) {
             const reader = new FileReader();
@@ -329,8 +217,12 @@ export default function EditProfilePage() {
         }
     };
 
+    // JSX structure
     return (
-        <div className="relative overflow-hidden">
+        <div
+            className="min-h-screen bg-black relative overflow-hidden"
+            suppressHydrationWarning={true}
+        >
             {/* Loading overlay */}
             {loading && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -347,6 +239,7 @@ export default function EditProfilePage() {
                     {error}
                 </div>
             )}
+
             {/* Floating decorative elements */}
             <div className="absolute inset-0 overflow-hidden z-0 pointer-events-none">
                 <div className="absolute top-20 left-10 w-16 h-16 bg-orange-500/20 rounded-full animate-bounce"></div>
@@ -364,7 +257,7 @@ export default function EditProfilePage() {
                 <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 shadow-md w-full max-w-md">
                     <div className="flex items-center">
                         <button
-                            onClick={handleBackClick}
+                            onClick={() => router.push("/home")}
                             className="mr-3 hover:bg-black/20 hover:scale-110 p-2 rounded-full transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-black/30 cursor-pointer relative z-10"
                             aria-label="Go back to home page"
                             type="button"
@@ -379,6 +272,7 @@ export default function EditProfilePage() {
                 </div>
             </div>
 
+            {/* Main content */}
             <div className="max-w-md mx-auto bg-slate-900 min-h-screen relative z-10">
                 {/* Profile Picture Section */}
                 <div className="bg-slate-800 px-6 py-8 text-center">
@@ -499,21 +393,32 @@ export default function EditProfilePage() {
                         <div className="my-3">
                             {interestOptions.map((interest) => {
                                 const isSelected = formData.interests.includes(
-                                    interest.id
+                                    interest.key
                                 );
                                 const colorClasses = getColorClasses(
                                     interest.color,
                                     isSelected
                                 );
+
+                                // Create inline styles for selected state using hex color
+                                const selectedStyle = isSelected
+                                    ? {
+                                          backgroundColor: `${interest.color}20`, // 20 for 12.5% opacity
+                                          borderColor: interest.color,
+                                          color: interest.color,
+                                      }
+                                    : {};
+
                                 return (
                                     <button
-                                        key={interest.id}
+                                        key={interest.key}
                                         onClick={() =>
-                                            handleInterestToggle(interest.id)
+                                            handleInterestToggle(interest.key)
                                         }
                                         className={`px-4 py-3 mx-1 my-1 rounded-full text-sm font-medium transition-all duration-200 transform hover:scale-105 w-fit shadow-md backdrop-blur-sm ${colorClasses}`}
+                                        style={selectedStyle}
                                     >
-                                        {interest.label}
+                                        {interest.emoji} {interest.label}
                                     </button>
                                 );
                             })}
@@ -532,44 +437,41 @@ export default function EditProfilePage() {
                             Style <span className="text-red-500">*</span>
                         </Label>
                         <div className="mt-3 space-y-3">
-                            {[
-                                {
-                                    id: "BUDGET",
-                                    label: "💰 Budget",
-                                    color: "orange",
-                                },
-                                {
-                                    id: "COMFORT",
-                                    label: "🛏️ Comfort",
-                                    color: "blue",
-                                },
-                                {
-                                    id: "LUXURY",
-                                    label: "💎 Luxury",
-                                    color: "purple",
-                                },
-                                {
-                                    id: "BACKPACK",
-                                    label: "🎒 Backpack",
-                                    color: "green",
-                                },
-                            ].map((style) => {
+                            {travel_style_options.map((style) => {
                                 const isChecked = formData.travelStyle.includes(
-                                    style.id
+                                    style.key
                                 );
+
+                                // Create inline styles for selected state using hex color
+                                const checkboxStyle = isChecked
+                                    ? {
+                                          backgroundColor: style.color,
+                                          borderColor: style.color,
+                                      }
+                                    : {
+                                          backgroundColor: "transparent",
+                                          borderColor: "#fb923c60",
+                                      };
+
+                                const labelStyle = isChecked
+                                    ? {
+                                          color: style.color,
+                                      }
+                                    : {};
+
                                 return (
                                     <div
-                                        key={style.id}
+                                        key={style.key}
                                         className="flex items-center space-x-3"
                                     >
                                         <div className="relative flex items-center">
                                             <input
                                                 type="checkbox"
-                                                id={`travel-${style.id}`}
+                                                id={`travel-${style.key}`}
                                                 checked={isChecked}
                                                 onChange={() =>
                                                     handleTravelStyleToggle(
-                                                        style.id
+                                                        style.key
                                                     )
                                                 }
                                                 className="sr-only"
@@ -577,14 +479,11 @@ export default function EditProfilePage() {
                                             <div
                                                 onClick={() =>
                                                     handleTravelStyleToggle(
-                                                        style.id
+                                                        style.key
                                                     )
                                                 }
-                                                className={`w-5 h-5 rounded border-2 cursor-pointer transition-all duration-200 flex items-center justify-center ${
-                                                    isChecked
-                                                        ? "bg-orange-500 border-orange-500"
-                                                        : "bg-transparent border-orange-400/60 hover:border-orange-300"
-                                                }`}
+                                                className="w-5 h-5 rounded border-2 cursor-pointer transition-all duration-200 flex items-center justify-center hover:border-orange-300"
+                                                style={checkboxStyle}
                                             >
                                                 {isChecked && (
                                                     <svg
@@ -602,10 +501,11 @@ export default function EditProfilePage() {
                                             </div>
                                         </div>
                                         <label
-                                            htmlFor={`travel-${style.id}`}
+                                            htmlFor={`travel-${style.key}`}
                                             className="text-orange-300 text-sm cursor-pointer select-none hover:text-orange-200 transition-colors"
+                                            style={labelStyle}
                                         >
-                                            {style.label}
+                                            {style.emoji} {style.label}
                                         </label>
                                     </div>
                                 );
@@ -691,19 +591,20 @@ export default function EditProfilePage() {
                             Reset Password
                         </Button>
                     </div>
-                        {/* Delete Profile Button */}
-                            <Button
-                            onClick={() => setShowDeleteConfirm(true)}
-                            className="w-full mt-2 bg-red-500/20 hover:bg-red-500/30 text-red-500 border border-red-500/50 font-semibold py-3 rounded-lg flex items-center justify-center gap-2">
-                            Delete Account
-                            </Button>
+                    {/* Delete Profile Button */}
+                    <Button
+                        onClick={() => setShowDeleteConfirm(true)}
+                        className="w-full mt-2 bg-red-500/20 hover:bg-red-500/30 text-red-500 border border-red-500/50 font-semibold py-3 rounded-lg flex items-center justify-center gap-2"
+                    >
+                        Delete Account
+                    </Button>
                     {/* Confirm Changes Button */}
                     <div className="pt-4">
                         <Button
                             onClick={handleSave}
-                            disabled={loading || !isFormValid()}
+                            disabled={loading || !isFormValidLocal()}
                             className={`w-full font-semibold py-4 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 ${
-                                loading || !isFormValid()
+                                loading || !isFormValidLocal()
                                     ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                                     : "bg-orange-500 hover:bg-orange-600 text-black"
                             }`}
@@ -713,7 +614,7 @@ export default function EditProfilePage() {
                                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
                                     Saving...
                                 </>
-                            ) : !isFormValid() ? (
+                            ) : !isFormValidLocal() ? (
                                 <>
                                     <Lock className="w-4 h-4" />
                                     Complete Required Fields
@@ -722,7 +623,7 @@ export default function EditProfilePage() {
                                 "Confirm Changes"
                             )}
                         </Button>
-                        {!isFormValid() && (
+                        {!isFormValidLocal() && (
                             <p className="text-red-500 text-xs mt-2 text-center">
                                 Please fill all required fields correctly to
                                 continue
@@ -749,15 +650,15 @@ export default function EditProfilePage() {
 
             {/* Confirmation Dialog */}
             <ConfirmationDialog
-              isOpen={showDeleteConfirm}
-              onClose={() => setShowDeleteConfirm(false)}
-              onConfirm={() => router.push("/")}
-              title="Delete Account"
-              description="Are you sure you want to delete your Account? This action cannot be undone. All of your data will be permanently removed. Please enter your password to confirm."
-              confirmText="Delete Account"
-              cancelText="Cancel"
-              variant="danger"
-              requirePassword={true}
+                isOpen={showDeleteConfirm}
+                onClose={() => setShowDeleteConfirm(false)}
+                onConfirm={() => router.push("/")}
+                title="Delete Account"
+                description="Are you sure you want to delete your Account? This action cannot be undone. All of your data will be permanently removed. Please enter your password to confirm."
+                confirmText="Delete Account"
+                cancelText="Cancel"
+                variant="danger"
+                requirePassword={true}
             />
         </div>
     );

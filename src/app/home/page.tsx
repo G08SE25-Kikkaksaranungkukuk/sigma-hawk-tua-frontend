@@ -23,13 +23,17 @@ import {
     handleCreateGroup,
     handleViewGroup,
     handleLogout,
-    handleSearchGroups
+    handleSearchGroups,
 } from "../../components/home/homeHandlers";
 
 export default function homePage() {
     const router = useRouter();
     const { groups, loading, error, refreshGroups } = useUserGroups();
-    const { currentUser, loading: userLoading, error: userError } = useCurrentUser();
+    const {
+        currentUser,
+        loading: userLoading,
+        error: userError,
+    } = useCurrentUser();
     const { searchGroups } = useGroupSearch();
 
     // Show loading state while fetching user data
@@ -42,7 +46,7 @@ export default function homePage() {
     }
 
     return (
-        <div className="relative overflow-hidden">
+        <div className="min-h-screen bg-black relative overflow-hidden">
             {/* Floating decorative elements */}
             <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute top-20 left-10 w-16 h-16 bg-orange-500/20 rounded-full float"></div>
