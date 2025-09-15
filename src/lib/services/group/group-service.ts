@@ -1,6 +1,7 @@
 import { GroupData, UserData, GroupResponse, CreateGroupRequest, Interest } from "@/lib/types";
-import {AxiosResponse} from "axios";
+import axios, {AxiosResponse} from "axios";
 import { apiClient } from "@/lib/api";
+import { X } from "lucide-react";
 
 // Sample data for development - move to API/database in production
 export const SAMPLE_GROUP_DATA = {
@@ -54,10 +55,24 @@ export const groupService = {
     const groupResponse = await apiClient.get<GroupData, GroupData>(`/group/${groupId}`, { withCredentials: true });
     return groupResponse;
   },
+
+  getGroupProfile: async (groupId: string): Promise<{ data: any | Blob }> => {
+    const response = await apiClient.get(`/group/${groupId}/profile`, { 
+      responseType: 'blob' // Handle both JSON and binary responses
+    });
+    console.log("getGroupProfile response:", response);
+    return response;
+  },
   
   getCurrentUser: async (): Promise<UserData> => {
     const response = await apiClient.get<UserData, UserData>(`/auth/whoami`, { withCredentials: true });
     return response;
+  },
+
+  leaveGroup: async (groupId: string): Promise<void> => {
+    await apiClient.delete(`/group/${groupId}/leave`, {
+      withCredentials: true,
+    });
   },
   
   joinGroup: async (groupId: string): Promise<void> => {
@@ -75,8 +90,35 @@ export const groupService = {
   },
   
   createGroup: async (createGroupRequest: CreateGroupRequest): Promise<GroupData> => {
-    const response = await apiClient.post<GroupData, GroupData>('/group', createGroupRequest, {
-      withCredentials: true
+    // Create FormData to handle file upload
+    const formData = new FormData();
+    
+    // Append text fields
+    formData.append('group_name', createGroupRequest.group_name);
+    if (createGroupRequest.description) {
+      formData.append('description', createGroupRequest.description);
+    }
+    if (createGroupRequest.max_members) {
+      formData.append('max_members', createGroupRequest.max_members.toString());
+    }
+    
+    // Append interest fields as JSON string or individual entries
+    if (createGroupRequest.interest_fields && createGroupRequest.interest_fields.length > 0) {
+      createGroupRequest.interest_fields.forEach((interest, index) => {
+        formData.append(`interest_fields[${index}]`, interest);
+      });
+    }
+    
+    // Append file if provided
+    if (createGroupRequest.profile) {
+      formData.append('profile', createGroupRequest.profile);
+    }
+    
+    const response = await apiClient.post<GroupData, GroupData>('/group', formData, {
+      withCredentials: true,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
     return response;
   },

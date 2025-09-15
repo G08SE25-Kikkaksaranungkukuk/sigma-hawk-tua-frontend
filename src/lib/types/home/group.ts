@@ -15,7 +15,12 @@ export interface Group {
 export interface CreateGroupRequest {
   group_name: string;
   description?: string;
+  destination?: string;
   max_members?: number;
+  profile?: File;
+  profile_url?: string;  // For preview purposes
+  start_date?: Date; 
+  end_date?: Date;    
   interest_fields?: string[];  // Use the specific enum type
 }
 
@@ -46,9 +51,11 @@ export interface GroupData {
   max_members: number
   created_at: string
   updated_at: string
+  profile_url?: string | null
 }
 
 export interface Interest {
+  id: number
   key: string  
   label: string
   emoji: string
@@ -60,4 +67,5 @@ export interface Member {
   first_name: string
   last_name: string
   email: string
+  birth_date?: Date
 }
