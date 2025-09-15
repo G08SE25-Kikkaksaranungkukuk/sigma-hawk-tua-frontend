@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { Sparkles, Users, MapPin } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 // Updated interfaces
 export interface groupFilterReq {
@@ -51,6 +52,7 @@ async function fetchGroups(req: groupFilterReq): Promise<any> {
 }
 
 export default function GroupSearchPage() {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<groupInfo[]>([]);
   const [selectedTags, setSelectedTags] = useState<number[]>([]); // <-- use number[]
@@ -143,6 +145,10 @@ export default function GroupSearchPage() {
     handleFilter(newPage, selectedTags, query);
   };
 
+  const handleGroupCardClick = (groupId: number) => {
+    router.push(`/group/${groupId}/info`);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-orange-900 p-4 bg-floating-shapes relative">
       {/* Floating decorative elements */}
@@ -224,7 +230,8 @@ export default function GroupSearchPage() {
               {pagedGroups.map((group, idx) => (
                 <li
                   key={group.group_id + "-" + idx}
-                  className="py-4 px-5 rounded-xl bg-gradient-to-r from-gray-800/80 to-orange-900/40 border border-orange-500/20 shadow-lg hover:scale-[1.02] transition-all"
+                  className="py-4 px-5 rounded-xl bg-gradient-to-r from-gray-800/80 to-orange-900/40 border border-orange-500/20 shadow-lg hover:scale-[1.02] transition-all cursor-pointer hover:border-orange-500/40"
+                  onClick={() => handleGroupCardClick(group.group_id)}
                 >
                   <div className="flex items-center justify-between">
                     <div>

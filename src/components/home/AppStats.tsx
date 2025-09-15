@@ -3,7 +3,7 @@ import { APP_CONFIG } from '../../config/shared';
 
 export const AppStats: React.FC = () => {
   return (
-    <div className="mt-12 mb-8 bg-gray-900/40 backdrop-blur-sm rounded-2xl p-6 border border-orange-500/20">
+    <div className="mt-12 mb-0 bg-gray-900/40 backdrop-blur-sm rounded-2xl p-6 border border-orange-500/20">
       <div className="grid grid-cols-3 gap-6 text-center">
         {APP_CONFIG.STATS.map((stat, index) => (
           <div key={stat.label}>
