@@ -37,8 +37,9 @@ class UserService {
   */
     private transformUserData(backendData: any): UserProfile {
         // Construct full profile image URL if profile_url exists
+        // Add timestamp to bust browser cache
         const profileImageUrl = backendData.profile_url
-            ? `http://localhost:6969/${backendData.profile_url}`
+            ? `http://localhost:6969/${backendData.profile_url}?t=${Date.now()}`
             : undefined;
 
         return {

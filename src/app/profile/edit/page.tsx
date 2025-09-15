@@ -178,11 +178,15 @@ export default function EditProfilePage() {
                     // Refresh current user data for home page
                     await refreshProfile();
                     console.log("Home page user data refreshed");
+                    
+                    // Set a flag to trigger header refresh
+                    localStorage.setItem('profileUpdated', 'true');
                 } catch (error) {
                     console.error("Error updating profile:", error);
                 }
-                // Navigate to home page after successful update
-                router.push("/home");
+                
+                // Navigate to home page after successful update with refresh parameter
+                router.push("/home?profileUpdated=true");
             } else {
                 console.log("Failed to update profile");
                 // You can add error handling here

@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { User, Settings, LogOut } from "lucide-react";
+import { User, Settings, LogOut, RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface ProfileDropdownProps {
@@ -18,6 +18,7 @@ interface ProfileDropdownProps {
   userImage?: string;
   userName?: string;
   userEmail?: string;
+  onRefreshUser?: () => Promise<void>;
 }
 
 export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
@@ -26,6 +27,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
   userImage,
   userName = "",
   userEmail = "",
+  onRefreshUser,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
@@ -41,12 +43,23 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
     console.log("Edit profile clicked");
   };
 
+  const handleRefreshUser = async () => {
+    if (onRefreshUser) {
+      try {
+        await onRefreshUser();
+        console.log("User data refreshed");
+      } catch (error) {
+        console.error("Error refreshing user data:", error);
+      }
+    }
+  };
+
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <div className="relative">
           <button className="flex items-center focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-900 rounded-full cursor-pointer">
-            <Avatar className="w-8 h-8 border-2 border-orange-500/20">
+            <Avatar key={userImage || 'no-image'} className="w-8 h-8 border-2 border-orange-500/20">
               <AvatarImage src={userImage} alt={userName} />
               <AvatarFallback className="bg-gradient-to-r from-orange-500 to-orange-600 text-black text-sm font-medium">
                 {userName.charAt(0).toUpperCase()}
@@ -82,6 +95,16 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
           <Settings className="w-4 h-4 mr-2" />
           Profile Management
         </DropdownMenuItem>
+
+        {onRefreshUser && (
+          <DropdownMenuItem
+            onClick={handleRefreshUser}
+            className="text-orange-300 cursor-pointer"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh Profile
+          </DropdownMenuItem>
+        )}
 
         <DropdownMenuSeparator className="bg-orange-500/20" />
 
