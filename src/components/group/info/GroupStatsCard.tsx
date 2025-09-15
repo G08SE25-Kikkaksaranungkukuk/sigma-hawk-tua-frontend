@@ -57,7 +57,7 @@ export function GroupStatsCard({
         // Then refresh the data after a small delay to let the success modal render
         setTimeout(() => {
           onDataChange?.();
-        }, 100);
+        }, 1500);
       } catch (error) {
         console.error('Failed to join group:', error);
       }
@@ -73,7 +73,7 @@ export function GroupStatsCard({
         // Then refresh the data after a small delay to let the success modal render
         setTimeout(() => {
           onDataChange?.();
-        }, 100);
+        }, 1500);
       } catch (error) {
         console.error('Failed to leave group:', error);
       }

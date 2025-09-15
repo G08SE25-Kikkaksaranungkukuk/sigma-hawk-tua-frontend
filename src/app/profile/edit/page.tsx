@@ -11,7 +11,6 @@ import {
     Sparkles,
     ArrowLeft,
     Lock,
-    CheckCircle2,
 } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
@@ -19,9 +18,8 @@ import { Label } from "../../../components/ui/label";
 import { ImageCropModal } from "../../../components/ImageCropModal";
 import ResetPasswordModal from "../../../components/editprofile/ResetPasswordModal";
 import ConfirmationDialog from "../../../components/editprofile/ConfirmationDialog";
-import { PopupCard } from "../../../components/ui/popup-card";
+import { SuccessModal } from "../../../components/shared/SuccessModal";
 import { useUserProfile } from "../../../lib/hooks";
-import { AnimatePresence, motion } from 'framer-motion';
 import {
     interestOptions,
     travel_style_options,
@@ -39,87 +37,11 @@ interface UpdateProfileSuccessProps {
 
 function UpdateProfileSuccess({ isOpen }: UpdateProfileSuccessProps) {
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
-        >
-          <motion.div
-            className="flex items-center justify-center p-6 w-full h-full"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              initial={{ y: 30, scale: 0.9, opacity: 0 }}
-              animate={{ y: 0, scale: 1, opacity: 1 }}
-              exit={{ y: 30, scale: 0.9, opacity: 0 }}
-              transition={{ 
-                type: "spring", 
-                stiffness: 400, 
-                damping: 30, 
-                mass: 0.8,
-                duration: 0.5
-              }}
-              className="w-full max-w-xl mx-4"
-            >
-              <PopupCard className="w-full bg-slate-900/98 border-2 border-orange-500/50 shadow-2xl backdrop-blur-md ring-1 ring-orange-500/20">
-                <div className="p-10 flex flex-col items-center gap-8 text-center">
-                  {/* Success Icon with animation */}
-                  <motion.div 
-                    className="flex items-center justify-center w-20 h-20 rounded-full bg-green-500/20 border-2 border-green-500/40"
-                    initial={{ scale: 0, rotate: -180 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
-                  >
-                    <CheckCircle2 className="w-10 h-10 text-green-400" />
-                  </motion.div>
-                  
-                  {/* Content */}
-                  <div className="space-y-4 max-w-md">
-                    <motion.h2 
-                      className="text-3xl font-bold text-orange-400"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3 }}
-                    >
-                      Profile Updated Successfully! 🎉
-                    </motion.h2>
-                    <motion.p 
-                      className="text-gray-300 text-lg leading-relaxed"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4 }}
-                    >
-                      Your profile has been updated! Redirecting you back to the home page...
-                    </motion.p>
-                  </div>
-
-                  {/* Progress indicator */}
-                  <motion.div 
-                    className="w-32 h-1 bg-gray-700 rounded-full overflow-hidden"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                  >
-                    <motion.div 
-                      className="h-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-full"
-                      initial={{ width: "0%" }}
-                      animate={{ width: "100%" }}
-                      transition={{ delay: 0.6, duration: 2, ease: "easeInOut" }}
-                    />
-                  </motion.div>
-                </div>
-              </PopupCard>
-            </motion.div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <SuccessModal
+      isOpen={isOpen}
+      actionType="profile"
+      autoCloseDuration={2000}
+    />
   );
 }
 

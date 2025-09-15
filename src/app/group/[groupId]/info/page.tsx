@@ -28,7 +28,7 @@ export default function GroupInfoPage({ params }: { params: Promise<{ groupId?: 
     if (showSuccess) {
       const timer = setTimeout(() => {
         setShowSuccess(false);
-      }, 3000);
+      }, 1500);
       return () => clearTimeout(timer);
     }
   }, [showSuccess]);
