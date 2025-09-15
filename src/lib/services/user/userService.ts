@@ -132,6 +132,45 @@ class UserService {
                 },
             };
 
+            const profileImageFile = profileData.profileImage;
+            if (profileImageFile) {
+                console.log("File object details:", {
+                    name: profileImageFile.name,
+                    size: profileImageFile.size,
+                    type: profileImageFile.type,
+                    lastModified: profileImageFile.lastModified,
+                });
+
+                // Create FormData object for multipart upload
+                const formData = new FormData();
+                formData.append("profile", profileImageFile);
+                // formData.append("email", user.email);
+
+                console.log("Uploading profile image with fetch...");
+
+                // Use fetch instead of apiClient for file upload to avoid Content-Type conflicts
+                const response_img = await fetch(
+                    `${this.baseUrl}user/profile_pic`,
+                    {
+                        method: "POST",
+                        body: formData,
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            // Don't set Content-Type - let browser set it with boundary
+                        },
+                        credentials: "include",
+                    }
+                );
+
+                if (!response_img.ok) {
+                    throw new Error(
+                        `Upload failed: ${response_img.statusText}`
+                    );
+                }
+
+                const uploadResult = await response_img.json();
+                console.log("Profile image upload response:", uploadResult);
+            }
             const response = await apiClient.patch(
                 `${this.baseUrl}user/`,
                 payload,

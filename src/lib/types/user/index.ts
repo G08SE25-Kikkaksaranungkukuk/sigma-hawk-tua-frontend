@@ -19,7 +19,7 @@ export interface UpdateUserProfile {
     phoneNumber: string;
     interests: string[];
     travelStyle?: string[];
-    profileImage?: string;
+    profileImage?: File;
 }
 
 export interface UserEmailInfo {
