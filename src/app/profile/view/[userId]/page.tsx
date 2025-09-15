@@ -9,14 +9,17 @@ type Interest = {
   emoji: string;
   color: string;
 };
-const travelStylesList = [
-  { id: "BUDGET", label: "💰 Budget", color: "text-orange-400" },
-  { id: "BACKPACK", label: "🎒 Backpack", color: "text-orange-400" },
-  // ...add more as needed
-];
+// Travel styles will be fetched from backend
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+
+type TravelStyle = {
+  key: string;
+  label: string;
+  emoji: string;
+  color: string;
+};
 
 const defaultUserData = {
   first_name: "",
@@ -36,6 +39,7 @@ export default function UserProfileView() {
   const userId = params?.userId;
   const [userData, setUserData] = useState(defaultUserData);
   const [interestsList, setInterestsList] = useState<Interest[]>([]);
+  const [travelStylesList, setTravelStylesList] = useState<TravelStyle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -52,6 +56,20 @@ export default function UserProfileView() {
         }
       })
       .catch(() => setInterestsList([]));
+
+    // Fetch travel styles list
+    // will move to api folder later for cleaner code
+    fetch('http://localhost:8080/user/travel-styles/all')
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch travel styles');
+        return res.json();
+      })
+      .then((data) => {
+        if (data?.data?.travelStyles) {
+          setTravelStylesList(data.data.travelStyles);
+        }
+      })
+      .catch(() => setTravelStylesList([]));
   }, []);
 
   React.useEffect(() => {
@@ -87,7 +105,7 @@ export default function UserProfileView() {
 
   const fullName = [userData.first_name, userData.middle_name, userData.last_name]
     .filter(Boolean)
-    .join(" ");
+    .join(" ") || 'N/A';
 
   if (loading) {
     return (
@@ -115,11 +133,21 @@ export default function UserProfileView() {
             className="w-24 h-24 rounded-full border-4 border-orange-400 shadow-lg mb-3"
           />
           <h2 className="text-2xl font-bold text-orange-300 mb-1">{fullName}</h2>
-          {/* Display Phone Number */}
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-orange-200 font-semibold">📱 Phone:</span>
-            <span className="text-orange-200">{userData.phone}</span>
+          <div className="w-full mb-3">
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-orange-200 font-semibold">🎂 Birth Date:</span>
+              <span className="text-orange-200">{userData.birth_date ? userData.birth_date.split('T')[0] : 'N/A'}</span>
+            </div>
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-orange-200 font-semibold">🧑 Sex:</span>
+              <span className="text-orange-200">{userData.sex || 'N/A'}</span>
+            </div>
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-orange-200 font-semibold">📱 Phone:</span>
+              <span className="text-orange-200">{userData.phone || 'N/A'}</span>
+            </div>
           </div>
+
           <div className="w-full space-y-3">
             <div>
               <span className="text-orange-300 font-semibold">🎯 Interests</span>
@@ -151,14 +179,26 @@ export default function UserProfileView() {
               <span className="text-orange-300 font-semibold">🧳 Travel Styles</span>
               <div className="flex flex-wrap gap-2 mt-2">
                 {userData.userTravelStyles.length > 0 ? (
-                  userData.userTravelStyles.map((id, idx) => {
-                    const style = travelStylesList.find((s) => s.id === id);
+                  userData.userTravelStyles.map((num: number | string, idx: number) => {
+                    // If backend sends number, use index; if string, fallback to key
+                    let style: TravelStyle | undefined = undefined;
+                    if (typeof num === 'number') {
+                      style = travelStylesList[num];
+                    } else {
+                      style = travelStylesList.find((s) => s.key === num);
+                    }
                     return (
                       <span
-                        key={id + '-' + idx}
-                        className={`px-3 py-2 rounded-full border-2 text-sm font-medium bg-gray-800/50 border-orange-500/30 ${style?.color ?? ""}`}
+                        key={num + '-' + idx}
+                        style={{
+                          background: style ? style.color + '33' : '#23272a',
+                          borderColor: style ? style.color : '#fb923c33',
+                          color: style ? '#fff' : '#fb923c',
+                        }}
+                        className={`px-4 py-2 rounded-full border-2 text-base font-semibold transition-all duration-200 shadow hover:scale-105 hover:shadow-lg`}
                       >
-                        {style?.label ?? id}
+                        {style?.emoji ? `${style.emoji} ` : ''}
+                        {style?.label ?? num}
                       </span>
                     );
                   })
@@ -168,9 +208,17 @@ export default function UserProfileView() {
               </div>
             </div>
             <div>
-              <span className="text-orange-300 font-semibold">⭐ Social Credit</span>
+              <span className="text-orange-300 font-semibold">⭐ User Rating</span>
               <div className="flex items-center gap-2 mt-2">
-                <span className="text-orange-400 font-bold text-lg">{userData.social_credit}</span>
+                {[...Array(5)].map((_, i) => (
+                  <span key={i}>
+                    {i < Math.round(userData.social_credit)
+                      ? <span style={{ color: '#fb923c', fontSize: '1.5em' }}>★</span>
+                      : <span style={{ color: '#444', fontSize: '1.5em' }}>☆</span>
+                    }
+                  </span>
+                ))}
+                <span className="text-orange-400 font-bold text-lg ml-2">{userData.social_credit.toFixed(1)}</span>
               </div>
             </div>
           </div>
