@@ -74,7 +74,7 @@ export default function GroupSearchPage() {
   useEffect(() => {
     async function fetchInterests() {
       try {
-        const res = await fetch("/api/interest");
+        const res = await fetch("/api/interest/all");
         const data = await res.json();
         const interestsArr: Interest[] = data.data.interests || [];
         setInterests(interestsArr);
