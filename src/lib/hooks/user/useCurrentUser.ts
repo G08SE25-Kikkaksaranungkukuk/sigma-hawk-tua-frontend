@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { userService } from "../../services/user";
 import { UserProfile } from "../../types/user";
 
@@ -22,9 +22,22 @@ export function useCurrentUser(): UseCurrentUserReturn {
     const [error, setError] = useState<string | null>(null);
     const hasFetched = useRef(false);
     const router = useRouter();
+    const pathname = usePathname();
+
+    // Define public pages that don't require authentication
+    const publicPages = ['/login', '/signup', '/'];
+    const isPublicPage = publicPages.includes(pathname);
 
     // Fetch current user data
     const fetchCurrentUser = async () => {
+        // Skip authentication check for public pages
+        if (isPublicPage) {
+            setLoading(false);
+            setCurrentUser(null);
+            setError(null);
+            return;
+        }
+
         try {
             setLoading(true);
             setError(null);
@@ -44,10 +57,11 @@ export function useCurrentUser(): UseCurrentUserReturn {
             // Set null user data on error
             setCurrentUser(null);
 
-            // If authentication failed, redirect to login
+            // If authentication failed and not on a public page, redirect to login
             if (
-                errorMessage.includes("Authentication failed") ||
-                errorMessage.includes("No authentication token found")
+                !isPublicPage &&
+                (errorMessage.includes("Authentication failed") ||
+                errorMessage.includes("No authentication token found"))
             ) {
                 router.push("/login");
             }
