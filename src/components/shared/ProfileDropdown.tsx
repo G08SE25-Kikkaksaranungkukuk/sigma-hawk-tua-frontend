@@ -68,7 +68,10 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
         {/* Profile Actions */}
         <DropdownMenuItem
-          onClick={() => console.log("Navigate to profile view page")} // TODO: Navigate to profile view page
+          onClick={() => {
+            router.push("/profile/view/current-user");
+            setIsOpen(false);
+        }}
           className="text-orange-300 cursor-pointer"
         >
           <User className="w-4 h-4 mr-2" />
