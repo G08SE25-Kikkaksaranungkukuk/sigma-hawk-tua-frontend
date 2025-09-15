@@ -55,6 +55,7 @@ export interface GroupData {
 }
 
 export interface Interest {
+  id: number
   key: string  
   label: string
   emoji: string

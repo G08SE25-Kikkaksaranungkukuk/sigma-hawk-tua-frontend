@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Crop, X } from 'lucide-react';
 
@@ -244,6 +244,9 @@ export function ImageCropModal({ isOpen, onClose, imageUrl, onCropComplete, file
       <DialogContent className="max-w-2xl bg-[#12131a] border border-gray-800">
         <DialogHeader>
           <DialogTitle className="text-orange-400">Crop Your Image</DialogTitle>
+          <DialogDescription className="text-gray-400">
+            Adjust the crop area by dragging the handles or moving the selection area.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">

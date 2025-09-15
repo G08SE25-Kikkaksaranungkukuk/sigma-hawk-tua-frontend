@@ -40,6 +40,7 @@ export function InterestSelector({ selectedInterestKeys, onInterestKeysChange }:
 
   const toggleInterest = (interestKey: string) => {
     const isSelected = selectedInterestKeys.includes(interestKey);
+    console.log(`Toggling interest ${interestKey}, currently selected:`, selectedInterestKeys);
     
     if (isSelected) {
       onInterestKeysChange(selectedInterestKeys.filter(key => key !== interestKey));
