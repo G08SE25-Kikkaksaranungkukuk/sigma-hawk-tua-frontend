@@ -42,24 +42,24 @@ export default function UserProfileView() {
     if (!userId) return;
     setLoading(true);
     setError("");
-  fetch(`/api/profile?user_id=${userId}`)
+    fetch(`/api/profile?user_id=${userId}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch user profile");
         return res.json();
       })
       .then((data) => {
-        if (data?.user) {
+        if (data?.data?.user) {
           setUserData({
-            first_name: data.user.first_name || "",
-            middle_name: data.user.middle_name,
-            last_name: data.user.last_name || "",
-            birth_date: data.user.birth_date || "",
-            sex: data.user.sex || "",
-            phone: data.user.phone || "",
-            profile_url: data.user.profile_url,
-            social_credit: data.user.social_credit || 0,
-            userInterests: data.user.userInterests || [],
-            userTravelStyles: data.user.userTravelStyles || [],
+            first_name: data.data.user.first_name || "",
+            middle_name: data.data.user.middle_name,
+            last_name: data.data.user.last_name || "",
+            birth_date: data.data.user.birth_date || "",
+            sex: data.data.user.sex || "",
+            phone: data.data.user.phone || "",
+            profile_url: data.data.user.profile_url,
+            social_credit: data.data.user.social_credit || 0,
+            userInterests: (data.data.user.userInterests || []).map((obj: any) => obj.interest_id || obj),
+            userTravelStyles: (data.data.user.userTravelStyles || []).map((obj: any) => obj.travel_style_id || obj),
           });
         } else {
           setError("User not found");
@@ -108,11 +108,11 @@ export default function UserProfileView() {
               <span className="text-orange-300 font-semibold">🎯 Interests</span>
               <div className="flex flex-wrap gap-2 mt-2">
                 {userData.userInterests.length > 0 ? (
-                  userData.userInterests.map((id) => {
+                  userData.userInterests.map((id, idx) => {
                     const interest = interestsList.find((i) => i.id === id);
                     return (
                       <span
-                        key={id}
+                        key={id + '-' + idx}
                         className={`px-3 py-2 rounded-full border-2 text-sm font-medium ${interest?.color ?? ""} border-orange-500/30`}
                       >
                         {interest?.label ?? id}
@@ -128,11 +128,11 @@ export default function UserProfileView() {
               <span className="text-orange-300 font-semibold">🧳 Travel Styles</span>
               <div className="flex flex-wrap gap-2 mt-2">
                 {userData.userTravelStyles.length > 0 ? (
-                  userData.userTravelStyles.map((id) => {
+                  userData.userTravelStyles.map((id, idx) => {
                     const style = travelStylesList.find((s) => s.id === id);
                     return (
                       <span
-                        key={id}
+                        key={id + '-' + idx}
                         className={`px-3 py-2 rounded-full border-2 text-sm font-medium bg-gray-800/50 border-orange-500/30 ${style?.color ?? ""}`}
                       >
                         {style?.label ?? id}
