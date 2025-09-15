@@ -53,6 +53,7 @@ export default function EditProfilePage() {
     });
 
     const [profileImage, setProfileImage] = useState<string | null>(null);
+    const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] =
         useState(false);
@@ -165,7 +166,7 @@ export default function EditProfilePage() {
                 phoneNumber: formData.phoneNumber,
                 interests: formData.interests,
                 travelStyle: formData.travelStyle,
-                profileImage: profileImage || undefined,
+                profileImage: profileImageFile || undefined,
             });
 
             if (success) {
@@ -207,12 +208,14 @@ export default function EditProfilePage() {
 
     const handleImageSelect = (imageFile: File | null) => {
         if (imageFile) {
+            setProfileImageFile(imageFile);
             const reader = new FileReader();
             reader.onload = (e) => {
                 setProfileImage(e.target?.result as string);
             };
             reader.readAsDataURL(imageFile);
         } else {
+            setProfileImageFile(null);
             setProfileImage(null);
         }
     };
