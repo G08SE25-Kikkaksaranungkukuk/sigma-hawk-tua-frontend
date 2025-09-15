@@ -7,6 +7,7 @@ import { ProfileDropdown } from './ProfileDropdown';
 interface AppHeaderProps {
   onEditProfileClick: () => void;
   onLogoutClick: () => void;
+  onHomeClick: () => void;
   // TODO: Replace with actual user data from database
   firstName?: string;
   middleName?: string;
@@ -17,6 +18,7 @@ interface AppHeaderProps {
 export const AppHeader: React.FC<AppHeaderProps> = ({ 
   onEditProfileClick,
   onLogoutClick,
+  onHomeClick,
   firstName = "",
   middleName = "", 
   lastName = "",
@@ -28,14 +30,17 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
     <nav className="relative z-20 bg-gray-900/90 backdrop-blur-sm border-b border-orange-500/20 px-6 py-4">
       <div className="max-w-6xl mx-auto flex items-center justify-between">
         {/* Logo */}
-        <div className="flex items-center gap-3">
+        <button 
+          onClick={onHomeClick}
+          className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
+        >
           <div className="w-10 h-10 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center">
             <Plane className="w-5 h-5 text-black" />
           </div>
           <span className="text-xl font-bold text-white">
             {APP_CONFIG.APP_NAME}
           </span>
-        </div>
+        </button>
 
         {/* Navigation Links */}
         <div className="hidden md:flex items-center gap-6">

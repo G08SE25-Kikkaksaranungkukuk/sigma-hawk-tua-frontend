@@ -330,7 +330,7 @@ export default function EditProfilePage() {
     };
 
     return (
-        <div className="min-h-screen bg-black relative overflow-hidden">
+        <div className="relative overflow-hidden">
             {/* Loading overlay */}
             {loading && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">

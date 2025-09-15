@@ -45,7 +45,7 @@ export default function UserProfileView() {
     .join(" ");
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
+    <div className="flex items-center justify-center p-4 min-h-[80vh]">
       <div className="max-w-md w-full bg-gray-900/80 border border-orange-500/20 rounded-xl shadow-2xl p-6 relative">
         <div className="flex flex-col items-center">
           <img

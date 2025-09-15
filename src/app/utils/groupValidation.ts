@@ -72,8 +72,6 @@ export const validateGroupForm = (groupData: CreateGroupRequest): ValidationErro
   // Interest fields validation
   if (!groupData.interest_fields || groupData.interest_fields.length === 0) {
     errors.interest_fields = 'Please select at least one interest';
-  } else if (groupData.interest_fields.length > 5) {
-    errors.interest_fields = 'Please select no more than 5 interests';
   }
 
   return errors;
