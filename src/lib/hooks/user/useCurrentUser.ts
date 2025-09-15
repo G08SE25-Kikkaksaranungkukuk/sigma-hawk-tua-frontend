@@ -31,6 +31,7 @@ export function useCurrentUser(): UseCurrentUserReturn {
 
             // Get user profile from database instead of token for up-to-date data
             const userData = await userService.getUserProfile("demo-user-id");
+            console.log('useCurrentUser: Fetched user data:', userData);
             setCurrentUser(userData);
         } catch (err) {
             const errorMessage =
@@ -57,6 +58,9 @@ export function useCurrentUser(): UseCurrentUserReturn {
 
     // Refresh current user data
     const refreshCurrentUser = async () => {
+        // Force a complete refresh by resetting state
+        setCurrentUser(null);
+        setError(null);
         hasFetched.current = false;
         await fetchCurrentUser();
     };

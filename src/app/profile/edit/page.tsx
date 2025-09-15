@@ -15,9 +15,10 @@ import {
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
-import ProfilePictureModal from "../../../components/editprofile/ProfilePictureModal";
+import { ImageCropModal } from "../../../components/ImageCropModal";
 import ResetPasswordModal from "../../../components/editprofile/ResetPasswordModal";
 import ConfirmationDialog from "../../../components/editprofile/ConfirmationDialog";
+import { SuccessModal } from "../../../components/shared/SuccessModal";
 import { useUserProfile } from "../../../lib/hooks";
 import {
     interestOptions,
@@ -28,6 +29,21 @@ import {
     formatPhoneNumber,
 } from "@/components/editprofile/helpers";
 import { validateForm, isFormValid } from "@/components/editprofile/validation";
+
+// Success Modal Component
+interface UpdateProfileSuccessProps {
+  isOpen: boolean;
+}
+
+function UpdateProfileSuccess({ isOpen }: UpdateProfileSuccessProps) {
+  return (
+    <SuccessModal
+      isOpen={isOpen}
+      actionType="profile"
+      autoCloseDuration={2000}
+    />
+  );
+}
 
 // Component definition
 export default function EditProfilePage() {
@@ -55,6 +71,8 @@ export default function EditProfilePage() {
     const [profileImage, setProfileImage] = useState<string | null>(null);
     const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedImageForCrop, setSelectedImageForCrop] = useState<string>("");
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] =
         useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -178,11 +196,20 @@ export default function EditProfilePage() {
                     // Refresh current user data for home page
                     await refreshProfile();
                     console.log("Home page user data refreshed");
+                    
+                    // Set a flag to trigger header refresh
+                    localStorage.setItem('profileUpdated', 'true');
                 } catch (error) {
                     console.error("Error updating profile:", error);
                 }
-                // Navigate to home page after successful update
-                router.push("/home");
+                
+                // Show success modal
+                setShowSuccessModal(true);
+
+                // Redirect after a short delay
+                setTimeout(() => {
+                    router.push("/home?profileUpdated=true");
+                }, 2000);
             } else {
                 console.log("Failed to update profile");
                 // You can add error handling here
@@ -208,16 +235,34 @@ export default function EditProfilePage() {
 
     const handleImageSelect = (imageFile: File | null) => {
         if (imageFile) {
-            setProfileImageFile(imageFile);
             const reader = new FileReader();
             reader.onload = (e) => {
-                setProfileImage(e.target?.result as string);
+                const imageUrl = e.target?.result as string;
+                setSelectedImageForCrop(imageUrl);
+                setIsModalOpen(true);
             };
             reader.readAsDataURL(imageFile);
         } else {
             setProfileImageFile(null);
             setProfileImage(null);
         }
+    };
+
+    const handleCropComplete = (croppedImageUrl: string, croppedFile: File) => {
+        setProfileImage(croppedImageUrl);
+        setProfileImageFile(croppedFile);
+        setIsModalOpen(false);
+    };
+
+    const handleImageButtonClick = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = (e) => {
+            const file = (e.target as HTMLInputElement).files?.[0];
+            handleImageSelect(file || null);
+        };
+        input.click();
     };
 
     // JSX structure
@@ -292,8 +337,9 @@ export default function EditProfilePage() {
                             )}
                         </div>
                         <button
-                            onClick={() => setIsModalOpen(true)}
+                            onClick={handleImageButtonClick}
                             className="absolute bottom-4 right-4 bg-gray-800 p-2 rounded-full border border-gray-600 hover:bg-gray-700 transition-colors"
+                            title="Change profile picture"
                         >
                             <Camera className="w-4 h-4 text-white" />
                         </button>
@@ -636,12 +682,13 @@ export default function EditProfilePage() {
                 </div>
             </div>
 
-            {/* Profile Picture Modal */}
-            <ProfilePictureModal
+            {/* Image Crop Modal */}
+            <ImageCropModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                onImageSelect={handleImageSelect}
-                currentImage={profileImage || undefined}
+                imageUrl={selectedImageForCrop}
+                onCropComplete={handleCropComplete}
+                fileName="profile-image.jpg"
             />
 
             {/* Reset Password Modal */}
@@ -663,6 +710,9 @@ export default function EditProfilePage() {
                 variant="danger"
                 requirePassword={true}
             />
+
+            {/* Success Modal */}
+            <UpdateProfileSuccess isOpen={showSuccessModal} />
         </div>
     );
 }

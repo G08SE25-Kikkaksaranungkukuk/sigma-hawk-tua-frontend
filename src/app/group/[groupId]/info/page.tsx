@@ -5,20 +5,44 @@ import { GroupInfoCard } from "@/components/group/info/GroupInfoCard";
 import { GroupStatsCard } from "@/components/group/info/GroupStatsCard";
 import { GroupMembersCard } from "@/components/group/info/GroupMemberCard";
 import { GroupPageSkeleton, ErrorState } from "@/components/group/info/LoadingStates";
+import { ActionSuccess } from "@/components/group/info/ActionButton";
 import { Interest, GroupData, Member } from "@/lib/types/home/group";
 import { UserData } from "@/lib/types/user";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { groupService } from '@/lib/services/group/group-service';
 
 export default function GroupInfoPage({ params }: { params: Promise<{ groupId?: string }> }) {
     
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [successType, setSuccessType] = useState<'join' | 'leave' | 'profile'>('profile');
 
     const { groupId } = React.use(params);
     const [userInfo,setUserInfo] = React.useState<UserData>();
     const [groupInfo , setGroupInfo] = React.useState<GroupData>();
+
+  // Auto-hide success modal after 3 seconds
+  useEffect(() => {
+    if (showSuccess) {
+      const timer = setTimeout(() => {
+        setShowSuccess(false);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccess]);
+
+  // Success handlers
+  const handleJoinSuccess = () => {
+    setSuccessType('join');
+    setShowSuccess(true);
+  };
+
+  const handleLeaveSuccess = () => {
+    setSuccessType('leave');
+    setShowSuccess(true);
+  };
 
   // Mock data for the group
   const refetch = React.useCallback(() => {
@@ -53,16 +77,40 @@ export default function GroupInfoPage({ params }: { params: Promise<{ groupId?: 
     refetch();
   }, [refetch]);
 
+  // Render success modal first, before any loading/error states
+  const renderSuccessModal = () => (
+    <ActionSuccess 
+      isOpen={showSuccess} 
+      actionType={successType} 
+      onClose={() => setShowSuccess(false)} 
+    />
+  );
+
   if (loading) {
-    return <GroupPageSkeleton />;
+    return (
+      <>
+        {renderSuccessModal()}
+        <GroupPageSkeleton />
+      </>
+    );
   }
   
   if (error) {
-    return <ErrorState title="Failed to load group" onRetry={refetch} />;
+    return (
+      <>
+        {renderSuccessModal()}
+        <ErrorState title="Failed to load group" onRetry={refetch} />
+      </>
+    );
   }
   
   if (!groupInfo || !userInfo) {
-    return <ErrorState title="Group not found" onRetry={refetch} />;
+    return (
+      <>
+        {renderSuccessModal()}
+        <ErrorState title="Group not found" onRetry={refetch} />
+      </>
+    );
   }
 
 
@@ -124,11 +172,25 @@ export default function GroupInfoPage({ params }: { params: Promise<{ groupId?: 
           
           {/* Right Column - Host & Stats */}
           <div className="lg:col-span-4 space-y-6">
-            <GroupStatsCard groupId={groupId} {...sidebarData} onDataChange={refetch} />
+            <GroupStatsCard 
+              groupId={groupId} 
+              {...sidebarData} 
+              onDataChange={refetch}
+              showSuccess={showSuccess}
+              successType={successType}
+              onShowSuccess={(type) => {
+                if (type === 'join') handleJoinSuccess();
+                else if (type === 'leave') handleLeaveSuccess();
+              }}
+              onHideSuccess={() => setShowSuccess(false)}
+            />
             <GroupMembersCard {...membersData} />
           </div>
         </div>
       </div>
+      
+      {/* Success Modal - Always rendered */}
+      {renderSuccessModal()}
     </div>
   );
 }

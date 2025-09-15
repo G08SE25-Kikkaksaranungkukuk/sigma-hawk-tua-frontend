@@ -28,11 +28,6 @@ export function ImageCropModal({ isOpen, onClose, imageUrl, onCropComplete, file
   const imageRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Don't render modal if no valid image URL is provided
-  if (!imageUrl || imageUrl.trim() === '') {
-    return null;
-  }
-
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
     const rect = containerRef.current?.getBoundingClientRect();
@@ -238,6 +233,11 @@ export function ImageCropModal({ isOpen, onClose, imageUrl, onCropComplete, file
       });
     }
   };
+
+  // Don't render modal if no valid image URL is provided
+  if (!imageUrl || imageUrl.trim() === '') {
+    return null;
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
