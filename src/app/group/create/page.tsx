@@ -26,7 +26,7 @@ function GroupCreateSuccess({ isOpen }: GroupCreateSuccessProps) {
           exit={{ opacity: 0 }}
         >
           <motion.div
-            className="min-h-screen bg-black/90 flex items-center justify-center p-4"
+            className="flex items-center justify-center p-4 min-h-[80vh]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

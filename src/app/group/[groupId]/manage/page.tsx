@@ -94,7 +94,7 @@ export default function GroupManagementPage({params} : {params : Promise<GroupMa
   };
 
   return (
-    <div className="min-h-screen bg-black p-4 bg-floating-shapes relative">
+    <div className="p-4 bg-floating-shapes relative min-h-[80vh]">
       {/* Floating decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-12 h-12 bg-orange-500/20 rounded-full float"></div>

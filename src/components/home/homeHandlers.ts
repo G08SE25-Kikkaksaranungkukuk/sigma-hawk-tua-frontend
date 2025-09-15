@@ -9,6 +9,10 @@ export const handleProfileClick = (router: RouterType) => {
     router.push('/profile/edit');
 };
 
+export const handleHomeClick = (router: RouterType) => {
+    router.push('/home');
+};
+
 export const handleCreateGroup = (router: RouterType) => {
     router.push('/group/create');
     console.log('Create group clicked');
