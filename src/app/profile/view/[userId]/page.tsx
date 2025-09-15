@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { apiClient } from "@/lib/api";
 import { userService } from "@/lib/services/user";
-
+import { tokenService } from "@/lib/services/user/tokenService";
+import { interestOptions, travel_style_options } from "@/components/editprofile/constants";
 
 
 export default function UserProfileView() {
@@ -16,32 +17,35 @@ export default function UserProfileView() {
       setLoading(true);
       setError(null);
       try {
+        const token = await tokenService.getAuthToken();
         console.log("Fetching current user...");
-        const user = await userService.getCurrentUser();
-        console.log("Current user fetched:", user);
-        const email = user.email;
-        console.log("Fetching profile for email:", email);
-        const response = await apiClient.post("/user", { email });
-        console.log("Profile response:", response);
-        // If your apiClient unwraps the data, response is the user object. If not, use response.data or response.data.user
-        const profile = response.data?.user ||response;
+        const profile = await userService.getUserProfile("");
+
+        console.log("Profile image URL:", profile.profileImage);
+        console.log("Profile data:", profile.interests);
         setFormData({
-          firstName: profile.first_name,
-          lastName: profile.last_name,
-          middleName: profile.middle_name || "",
-          phoneNumber: profile.phone,
-          email: email,
-          profileImage: profile.profile_url,
-          interests: profile.userInterests?.map((i: any) => ({
-            label: i.interest.label,
-            color: i.interest.color,
-            emoji: i.interest.emoji,
-          })) || [],
-          travelStyle: profile.userTravelStyles?.map((t: any) => ({
-            label: t.travel_style.label,
-            color: t.travel_style.color,
-            emoji: t.travel_style.emoji,
-          })) || [],
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          middleName: profile.middleName || "",
+          phoneNumber: profile.phoneNumber,
+          email: profile.email,
+          profileImage: profile.profileImage,
+          interests: profile.interests?.map((interestKey: string) => {
+            const interest = interestOptions.find(opt => opt.key === interestKey);
+            return {
+              label: interest?.label || interestKey,
+              color: interest?.color || "#666666",
+              emoji: interest?.emoji || "",
+            };
+          }) || [],
+          travelStyle: profile.travelStyle?.map((styleKey: string) => {
+            const style = travel_style_options.find(opt => opt.key === styleKey);
+            return {
+              label: style?.label || styleKey,
+              color: style?.color || "#666666",
+              emoji: style?.emoji || "",
+            };
+          }) || [],
           scoreRating: profile.social_credit || 0,
           reviews: [], // Add mapping if reviews are available in backend
         });

@@ -8,6 +8,7 @@ export interface UserProfile {
     interests: string[];
     travelStyle?: string[];
     profileImage?: string;
+    social_credit?: number;
     createdAt?: string;
     updatedAt?: string;
 }
