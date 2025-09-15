@@ -30,13 +30,19 @@ export default function RootLayout({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { currentUser, loading } = useCurrentUser();
   const [triggerRefresh, setTriggerRefresh] = useState(false);
   
   // Define pages where header should not be shown
   const pagesWithoutHeader = ['/login', '/signup', '/'];
-
+  
+  // Define pages that don't require authentication
+  const publicPages = ['/login', '/signup', '/'];
+  
   const showHeader = !pagesWithoutHeader.includes(pathname);
+  const isPublicPage = publicPages.includes(pathname);
+  
+  // Call useCurrentUser but pass info about whether authentication is required
+  const { currentUser, loading } = useCurrentUser();
 
   // Check if profile was updated and trigger refresh
   useEffect(() => {
