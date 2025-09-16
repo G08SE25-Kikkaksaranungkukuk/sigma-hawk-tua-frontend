@@ -16,7 +16,7 @@ export function GroupHeader({ group }: GroupHeaderProps) {
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <Badge variant="solid">TravelMatch</Badge>
+            <Badge variant="solid">ThamRoi</Badge>
             {group.privacy === "Private" ? (
               <Badge>
                 <Lock className="mr-1 h-3 w-3" /> Private Group

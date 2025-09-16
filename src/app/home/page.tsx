@@ -82,9 +82,7 @@ export default function homePage() {
                 </div>
             </main>
 
-            {/* Stats positioned at bottom, right above footer */}
             <div className="relative z-10 max-w-6xl mx-auto px-8 pb-8">
-                <AppStats />
             </div>
         </div>
     );

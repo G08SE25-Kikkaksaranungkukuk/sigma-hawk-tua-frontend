@@ -49,7 +49,7 @@ export default function WelcomeScreen({
                         </div>
                         <div>
                             <h1 className="text-4xl font-bold text-white drop-shadow-lg">
-                                TravelMatch
+                                ThamRoi
                             </h1>
                             <p className="text-xl text-orange-300 mt-2 drop-shadow">
                                 Find your perfect travel companion
