@@ -190,6 +190,7 @@ class UserService {
             throw new Error("Failed to update user profile");
         }
     }
+    
 }
 
 export const userService = new UserService();
