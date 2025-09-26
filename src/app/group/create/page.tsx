@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { CreateGroupRequest, Interest } from '@/lib/types';
+import { CreateGroupRequest } from '@/lib/types';
 import { GroupPreviewCard } from '@/components/group/info/GroupPreviewCard';
 import { CreateGroupForm } from '@/components/group/info/CreateGroupForm';
 import { groupService } from '@/lib/services/group/group-service';
