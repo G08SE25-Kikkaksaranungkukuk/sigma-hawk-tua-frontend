@@ -1,9 +1,8 @@
-import { GroupData, UserData, GroupResponse, CreateGroupRequest, Interest } from "@/lib/types";
+import { UserData, GroupResponse, CreateGroupRequest, Interest } from "@/lib/types";
 import axios, {AxiosResponse} from "axios";
 import { apiClient } from "@/lib/api";
-import { X } from "lucide-react";
 
-// Sample data for development - move to API/database in production
+// Sample data for overview and testing
 export const SAMPLE_GROUP_DATA = {
   id: "g1",
   title: "Bangkok → Chiang Mai Lantern Trip",
@@ -39,7 +38,7 @@ export const SAMPLE_GROUP_DATA = {
 // Group service implementation
 export const groupService = {
 
-  async getUserGroups(): Promise<GroupData[]> {
+  async getUserGroups(): Promise<GroupResponse[]> {
     const responseGroup = await apiClient.get<GroupResponse[], GroupResponse[]>('group/my/groups', { withCredentials: true });
     
     // Get detailed information for each group
@@ -51,8 +50,8 @@ export const groupService = {
     return groupDetails;
   },
   
-  getGroupDetails: async (groupId: string): Promise<GroupData> => {
-    const groupResponse = await apiClient.get<GroupData, GroupData>(`/group/${groupId}`, { withCredentials: true });
+  getGroupDetails: async (groupId: string): Promise<GroupResponse> => {
+    const groupResponse = await apiClient.get<GroupResponse, GroupResponse>(`/group/${groupId}`, { withCredentials: true });
     return groupResponse;
   },
 
@@ -60,7 +59,6 @@ export const groupService = {
     const response = await apiClient.get(`/group/${groupId}/profile`, { 
       responseType: 'blob' // Handle both JSON and binary responses
     });
-    console.log("getGroupProfile response:", response);
     return response;
   },
   
@@ -89,7 +87,7 @@ export const groupService = {
     }
   },
   
-  createGroup: async (createGroupRequest: CreateGroupRequest): Promise<GroupData> => {
+  createGroup: async (createGroupRequest: CreateGroupRequest): Promise<GroupResponse> => {
     // Create FormData to handle file upload
     const formData = new FormData();
     
@@ -114,7 +112,7 @@ export const groupService = {
       formData.append('profile', createGroupRequest.profile);
     }
     
-    const response = await apiClient.post<GroupData, GroupData>('/group', formData, {
+    const response = await apiClient.post<GroupResponse, GroupResponse>('/group', formData, {
       withCredentials: true,
       headers: {
         'Content-Type': 'multipart/form-data',

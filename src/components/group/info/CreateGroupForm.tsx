@@ -1,5 +1,5 @@
 import React from 'react';
-import { CreateGroupRequest, Interest } from '@/lib/types';
+import { CreateGroupRequest } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';

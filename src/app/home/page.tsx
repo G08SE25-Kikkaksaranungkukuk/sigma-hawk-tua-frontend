@@ -4,7 +4,6 @@ import { Button } from "../../components/ui/button";
 import { AppIntro, AppStats, YourGroupsSection } from "../../components/home";
 import { useUserGroups, useGroupSearch } from "../../lib/hooks/home";
 import { useCurrentUser } from "../../lib/hooks/user";
-import { Group } from "../../lib/types/home";
 import {
     Heart,
     Users,

@@ -1,5 +1,5 @@
 import { useRouter } from "next/navigation";
-import { Group, GroupData } from "../../lib/types/home";
+import { GroupResponse } from '@/lib/types';
 
 type RouterType = ReturnType<typeof useRouter>;
 
@@ -18,7 +18,7 @@ export const handleCreateGroup = (router: RouterType) => {
     console.log('Create group clicked');
 };
 
-export const handleViewGroup = (router: RouterType, group: GroupData) => {
+export const handleViewGroup = (router: RouterType, group: GroupResponse) => {
     router.push(`/group/${group.group_id}/info`);
     console.log('View group:', group);
 };
