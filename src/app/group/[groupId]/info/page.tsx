@@ -6,7 +6,8 @@ import { GroupStatsCard } from "@/components/group/info/GroupStatsCard";
 import { GroupMembersCard } from "@/components/group/info/GroupMemberCard";
 import { GroupPageSkeleton, ErrorState } from "@/components/group/info/LoadingStates";
 import { ActionSuccess } from "@/components/group/info/ActionButton";
-import { Interest, GroupData, Member } from "@/lib/types/home/group";
+import { Interest, GroupResponse, Member } from "@/lib/types";
+import { FloatingElements } from "@/components/shared";
 import { UserData } from "@/lib/types/user";
 
 import React, { useState, useEffect } from "react";
@@ -21,7 +22,7 @@ export default function GroupInfoPage({ params }: { params: Promise<{ groupId?: 
 
     const { groupId } = React.use(params);
     const [userInfo,setUserInfo] = React.useState<UserData>();
-    const [groupInfo , setGroupInfo] = React.useState<GroupData>();
+    const [groupInfo , setGroupInfo] = React.useState<GroupResponse>();
 
   // Auto-hide success modal after 3 seconds
   useEffect(() => {
@@ -152,6 +153,7 @@ export default function GroupInfoPage({ params }: { params: Promise<{ groupId?: 
 
   return (
     <div className="min-h-screen bg-[#0b0b0c] p-4 lg:p-8">
+      <FloatingElements />
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Hero Section */}
         <GroupHero 
