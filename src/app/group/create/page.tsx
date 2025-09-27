@@ -7,6 +7,7 @@ import { GroupPreviewCard } from '@/components/group/info/GroupPreviewCard';
 import { CreateGroupForm } from '@/components/group/info/CreateGroupForm';
 import { groupService } from '@/lib/services/group/group-service';
 import { SuccessModal } from '@/components/shared/SuccessModal';
+import { FloatingElements } from '@/components/shared';
 
 // Success Modal Component
 interface GroupCreateSuccessProps {
@@ -83,6 +84,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#0b0b0c] text-white p-6">
+      <FloatingElements />
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
