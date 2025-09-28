@@ -83,7 +83,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                   error ? "Error loading user" : "User";
 
   return (
-    <nav className="sticky top-0 z-20 bg-gray-900/90 backdrop-blur-sm border-b border-orange-500/20 px-6 py-4">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-md border-b border-orange-500/20 px-6 py-4">
       <div className="max-w-6xl mx-auto flex items-center justify-between">
         {/* Logo */}
         <button 

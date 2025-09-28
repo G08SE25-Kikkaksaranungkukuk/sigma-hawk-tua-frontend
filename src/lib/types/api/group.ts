@@ -37,6 +37,7 @@ export interface Member {
   user_id: number
   first_name: string
   last_name: string
+  profile_url?: string | null
   email: string
   birth_date?: Date
 }

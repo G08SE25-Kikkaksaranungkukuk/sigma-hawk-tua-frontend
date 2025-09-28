@@ -142,9 +142,10 @@ export default function GroupInfoPage({ params }: { params: Promise<{ groupId?: 
     members: groupInfo.members.map((member, index) => ({
       id: member.user_id.toString(),
       name: `${member.first_name} ${member.last_name}`,
-      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(`${member.first_name} ${member.last_name}`)}&background=ff6600&color=ffffff&size=128`,
+      avatar: member.profile_url 
+        ? `http://localhost:6969/${member.profile_url}?t=${Date.now()}` 
+        : `https://ui-avatars.com/api/?name=${encodeURIComponent(`${member.first_name} ${member.last_name}`)}&background=ff6600&color=ffffff&size=128`,
       joinDate: new Date(groupInfo.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-      location: "Unknown", // Since location is not available in Member type
       isHost: member.user_id === groupInfo.group_leader_id,
     })),
     totalMembers: sidebarData.members.current,

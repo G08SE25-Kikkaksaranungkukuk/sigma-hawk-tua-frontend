@@ -120,6 +120,11 @@ export const groupService = {
     });
     return response;
   },
+
+  getMemberProfile: async (userEmail: string): Promise<{ data: any | Blob }> => {
+    const response = await apiClient.get(`/user/${userEmail}/profile_pic`, { responseType: 'blob' });
+    return response;
+  },
   
   contactHost: async (groupId: string, message: string): Promise<void> => {
     // Simulate API call
