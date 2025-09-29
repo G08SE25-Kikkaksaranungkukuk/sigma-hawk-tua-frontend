@@ -24,7 +24,7 @@ const TypewriterText = ({ text, delay = 0, className = "" }: { text: string; del
         <motion.span
           animate={{ opacity: [1, 0, 1] }}
           transition={{ duration: 0.8, repeat: Infinity }}
-          className="inline-block w-0.5 h-8 bg-white ml-1"
+          className="inline-block w-0.5 h-15 bg-white ml-1"
         />
       )}
     </span>
