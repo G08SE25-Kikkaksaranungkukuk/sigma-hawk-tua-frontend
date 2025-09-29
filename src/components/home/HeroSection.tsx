@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Sparkles, BookOpen } from 'lucide-react';
+import TravelMarquee3D from '@/components/home/TravelMarquee';
+import { ArrowRight, BookOpen, Compass } from 'lucide-react';
 
 const TypewriterText = ({ text, delay = 0, className = "" }: { text: string; delay?: number; className?: string }) => {
   const [displayText, setDisplayText] = useState('');
@@ -32,10 +33,12 @@ const TypewriterText = ({ text, delay = 0, className = "" }: { text: string; del
 };
 
 export default function HeroSection() {
+  
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      <TravelMarquee3D />
       {/* Main Content */}
-      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <div className="absolute z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         {/* Badge */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -43,9 +46,10 @@ export default function HeroSection() {
           transition={{ duration: 0.6 }}
           className="mb-8"
         >
+
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/20 backdrop-blur-sm">
-            <Sparkles className="w-4 h-4 text-orange-500" />
-            <span className="text-sm text-orange-500">Welcome to our blog</span>
+            <Compass className="w-4 h-4 text-orange-500" />
+            <span className="text-sm text-orange-500">Explore the World</span>
           </div>
         </motion.div>
 
@@ -64,7 +68,7 @@ export default function HeroSection() {
             />
             <br />
             <span className="bg-gradient-to-r from-orange-400 via-red-500 to-pink-500 bg-clip-text text-transparent">
-              Stories & Ideas
+              Travel Adventures
             </span>
           </h1>
         </motion.div>
@@ -76,7 +80,7 @@ export default function HeroSection() {
           transition={{ duration: 0.8, delay: 0.6 }}
           className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto mb-8 leading-relaxed"
         >
-          Explore our collection of thoughtful articles, insights, and stories that inspire, educate, and entertain. Join our community of passionate readers and writers.
+          Journey through breathtaking destinations, hidden gems, and unforgettable experiences. Let our travel stories inspire your next adventure and guide you to the world's most incredible places.
         </motion.p>
 
         {/* CTA Buttons */}
@@ -92,7 +96,7 @@ export default function HeroSection() {
           >
             <Button size="lg" className="group px-8 py-6 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300">
               <BookOpen className="w-5 h-5 mr-2" />
-              Start Reading
+              Start Exploring
               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
             </Button>
           </motion.div>
@@ -102,37 +106,9 @@ export default function HeroSection() {
             whileTap={{ scale: 0.95 }}
           >
             <Button variant="outline" size="lg" className="px-8 py-6 rounded-full border-2 border-orange-500 text-orange-500 hover:bg-orange-500/10 transition-all duration-300">
-              Browse Categories
+              View Gallery
             </Button>
           </motion.div>
-        </motion.div>
-
-        {/* Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 1.0 }}
-          className="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-2xl mx-auto"
-        >
-          {[
-            { number: '500+', label: 'Articles' },
-            { number: '50K+', label: 'Readers' },
-            { number: '20+', label: 'Categories' },
-          ].map((stat, index) => (
-            <motion.div
-              key={stat.label}
-              className="text-center"
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.2 }}
-            >
-              <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent mb-1">
-                {stat.number}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {stat.label}
-              </div>
-            </motion.div>
-          ))}
         </motion.div>
       </div>
     </section>
