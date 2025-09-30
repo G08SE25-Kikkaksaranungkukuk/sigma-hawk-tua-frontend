@@ -8,7 +8,6 @@ interface Member {
   name: string;
   avatar: string;
   joinDate: string;
-  location: string;
   isHost?: boolean;
 }
 
@@ -63,10 +62,6 @@ export function GroupMembersCard({ members, totalMembers, maxMembers }: GroupMem
                   )}
                 </div>
                 <div className="flex items-center gap-4 mt-1">
-                  <div className="flex items-center gap-1 text-gray-400 text-sm">
-                    <MapPin className="w-3 h-3" />
-                    <span className="truncate">{member.location}</span>
-                  </div>
                   <div className="flex items-center gap-1 text-gray-400 text-sm">
                     <Calendar className="w-3 h-3" />
                     <span>Joined {member.joinDate}</span>

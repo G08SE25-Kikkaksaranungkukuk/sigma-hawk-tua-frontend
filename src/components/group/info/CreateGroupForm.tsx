@@ -1,5 +1,5 @@
 import React from 'react';
-import { CreateGroupRequest, Interest } from '@/lib/types';
+import { CreateGroupRequest } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -100,7 +100,7 @@ export function CreateGroupForm({ groupData, updateGroupData, onSubmit, onCancel
   };
 
   return (
-    <div className="bg-[#12131a] rounded-3xl p-8 border border-gray-800/50">
+    <div className="bg-[#12131a]/90 backdrop-blur-sm rounded-3xl p-8 border border-gray-800/70 shadow-2xl">
       <div className="space-y-6">
         {/* Form Header */}
         <div>
@@ -126,7 +126,7 @@ export function CreateGroupForm({ groupData, updateGroupData, onSubmit, onCancel
               }
             }}
             placeholder="Enter group title..."
-            className={`bg-[#1a1b23] border-gray-700 text-[#e8eaee] placeholder:text-[#9aa3b2] focus:border-[#ff6600] focus:ring-[#ff6600]/20 ${
+            className={`bg-[#1a1b23]/80 backdrop-blur-sm border-gray-600 text-white placeholder:text-gray-400 focus:border-[#ff6600] focus:ring-[#ff6600]/30 ${
               errors.group_name ? 'border-red-400 focus:border-red-400' : ''
             }`}
           />
@@ -151,7 +151,7 @@ export function CreateGroupForm({ groupData, updateGroupData, onSubmit, onCancel
               }
             }}
             placeholder="Describe your travel group and what makes it special..."
-            className={`bg-[#1a1b23] border-gray-700 text-[#e8eaee] placeholder:text-[#9aa3b2] focus:border-[#ff6600] focus:ring-[#ff6600]/20 min-h-[100px] resize-none ${
+            className={`bg-[#1a1b23]/80 backdrop-blur-sm border-gray-600 text-white placeholder:text-gray-400 focus:border-[#ff6600] focus:ring-[#ff6600]/30 min-h-[100px] resize-none ${
               errors.description ? 'border-red-400 focus:border-red-400' : ''
             }`}
           />
@@ -181,7 +181,7 @@ export function CreateGroupForm({ groupData, updateGroupData, onSubmit, onCancel
               }
             }}
             placeholder="Where are you planning to go?"
-            className={`bg-[#1a1b23] border-gray-700 text-[#e8eaee] placeholder:text-[#9aa3b2] focus:border-[#ff6600] focus:ring-[#ff6600]/20 ${
+            className={`bg-[#1a1b23]/80 backdrop-blur-sm border-gray-600 text-white placeholder:text-gray-400 focus:border-[#ff6600] focus:ring-[#ff6600]/30 ${
               errors.destination ? 'border-red-400 focus:border-red-400' : ''
             }`}
           />
@@ -207,7 +207,7 @@ export function CreateGroupForm({ groupData, updateGroupData, onSubmit, onCancel
             }}
             min="1"
             max="50"
-            className={`bg-[#1a1b23] border-gray-700 text-[#e8eaee] placeholder:text-[#9aa3b2] focus:border-[#ff6600] focus:ring-[#ff6600]/20 ${
+            className={`bg-[#1a1b23]/80 backdrop-blur-sm border-gray-600 text-white placeholder:text-gray-400 focus:border-[#ff6600] focus:ring-[#ff6600]/30 ${
               errors.max_members ? 'border-red-400 focus:border-red-400' : ''
             }`}
           />
@@ -233,7 +233,7 @@ export function CreateGroupForm({ groupData, updateGroupData, onSubmit, onCancel
                     setErrors(prev => ({ ...prev, start_date: error }));
                   }
                 }}
-                className={`bg-[#1a1b23] border-gray-700 text-white focus:border-[#ff6600] focus:ring-[#ff6600]/20 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:brightness-0 [&::-webkit-calendar-picker-indicator]:contrast-200 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer ${
+                className={`bg-[#1a1b23]/80 backdrop-blur-sm border-gray-600 text-white placeholder:text-gray-400 focus:border-[#ff6600] focus:ring-[#ff6600]/30 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:brightness-0 [&::-webkit-calendar-picker-indicator]:contrast-200 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer ${
                   errors.start_date ? 'border-red-400 focus:border-red-400' : ''
                 }`}
                 style={{ colorScheme: 'dark' }}
@@ -257,7 +257,7 @@ export function CreateGroupForm({ groupData, updateGroupData, onSubmit, onCancel
                     setErrors(prev => ({ ...prev, end_date: error }));
                   }
                 }}
-                className={`bg-[#1a1b23] border-gray-700 text-white focus:border-[#ff6600] focus:ring-[#ff6600]/20 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:brightness-0 [&::-webkit-calendar-picker-indicator]:contrast-200 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer ${
+                className={`bg-[#1a1b23]/80 backdrop-blur-sm border-gray-600 text-white placeholder:text-gray-400 focus:border-[#ff6600] focus:ring-[#ff6600]/30 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:brightness-0 [&::-webkit-calendar-picker-indicator]:contrast-200 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer ${
                   errors.end_date ? 'border-red-400 focus:border-red-400' : ''
                 }`}
                 style={{ colorScheme: 'dark' }}

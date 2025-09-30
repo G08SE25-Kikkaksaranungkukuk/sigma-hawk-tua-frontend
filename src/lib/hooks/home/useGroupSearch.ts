@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Group, SearchGroupsParams } from '../../types/home';
+import { GroupResponse, SearchGroupsParams } from '@/lib/types';
 import { groupService } from '../../services/home';
 
 export const useGroupSearch = () => {
-  const [searchResults, setSearchResults] = useState<Group[]>([]);
+  const [searchResults, setSearchResults] = useState<GroupResponse[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
 

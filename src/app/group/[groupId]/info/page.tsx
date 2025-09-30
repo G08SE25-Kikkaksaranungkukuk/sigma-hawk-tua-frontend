@@ -6,7 +6,8 @@ import { GroupStatsCard } from "@/components/group/info/GroupStatsCard";
 import { GroupMembersCard } from "@/components/group/info/GroupMemberCard";
 import { GroupPageSkeleton, ErrorState } from "@/components/group/info/LoadingStates";
 import { ActionSuccess } from "@/components/group/info/ActionButton";
-import { Interest, GroupData, Member } from "@/lib/types/home/group";
+import { Interest, GroupResponse, Member } from "@/lib/types";
+import { FloatingElements } from "@/components/shared";
 import { UserData } from "@/lib/types/user";
 
 import React, { useState, useEffect } from "react";
@@ -21,7 +22,7 @@ export default function GroupInfoPage({ params }: { params: Promise<{ groupId?: 
 
     const { groupId } = React.use(params);
     const [userInfo,setUserInfo] = React.useState<UserData>();
-    const [groupInfo , setGroupInfo] = React.useState<GroupData>();
+    const [groupInfo , setGroupInfo] = React.useState<GroupResponse>();
 
   // Auto-hide success modal after 3 seconds
   useEffect(() => {
@@ -141,9 +142,10 @@ export default function GroupInfoPage({ params }: { params: Promise<{ groupId?: 
     members: groupInfo.members.map((member, index) => ({
       id: member.user_id.toString(),
       name: `${member.first_name} ${member.last_name}`,
-      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(`${member.first_name} ${member.last_name}`)}&background=ff6600&color=ffffff&size=128`,
+      avatar: member.profile_url 
+        ? `http://localhost:6969/${member.profile_url}?t=${Date.now()}` 
+        : `https://ui-avatars.com/api/?name=${encodeURIComponent(`${member.first_name} ${member.last_name}`)}&background=ff6600&color=ffffff&size=128`,
       joinDate: new Date(groupInfo.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-      location: "Unknown", // Since location is not available in Member type
       isHost: member.user_id === groupInfo.group_leader_id,
     })),
     totalMembers: sidebarData.members.current,
@@ -152,6 +154,7 @@ export default function GroupInfoPage({ params }: { params: Promise<{ groupId?: 
 
   return (
     <div className="min-h-screen bg-[#0b0b0c] p-4 lg:p-8">
+      <FloatingElements />
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Hero Section */}
         <GroupHero 

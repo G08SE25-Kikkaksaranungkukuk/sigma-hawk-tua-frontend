@@ -1,12 +1,12 @@
 import React from 'react';
 import { Button } from '../ui/button';
 import { InterestsPill } from '../ui/interests-pill';
-import { Group, GroupData } from '../../lib/types/home';
+import { GroupResponse } from '@/lib/types';
 
 interface GroupCardProps {
-  group: GroupData;
-  onView?: (group: GroupData) => void;
-  onJoin?: (group: GroupData) => void;
+  group: GroupResponse;
+  onView?: (group: GroupResponse) => void;
+  onJoin?: (group: GroupResponse) => void;
   showJoinButton?: boolean;
 }
 

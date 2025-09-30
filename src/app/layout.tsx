@@ -117,7 +117,7 @@ export default function RootLayout({
               triggerRefresh={triggerRefresh}
             />
           )}
-          <main className="flex-1 relative">
+          <main className={`flex-1 relative ${showHeader && !loading ? 'pt-20' : ''}`}>
             {children}
           </main>
           {showHeader && !loading && <AppFooter />}
