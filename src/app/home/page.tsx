@@ -1,10 +1,12 @@
 "use client";
+
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { AppIntro, AppStats, YourGroupsSection } from "@/components/home";
 import { useUserGroups, useGroupSearch } from "@/lib/hooks/home";
 import { useCurrentUser } from "@/lib/hooks/user";
-import { FloatingElements } from "@/components/shared"
+import { FloatingElements }  from "@/components/shared"
+import HeroSection from "@/components/home/HeroSection";
 
 import {
     handleProfileClick,
@@ -37,6 +39,7 @@ export default function homePage() {
         <div className="min-h-screen bg-black relative overflow-hidden">
             
             <FloatingElements />
+            <HeroSection />
             {/* App Introduction */}
             <AppIntro />
 
