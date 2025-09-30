@@ -153,9 +153,9 @@ export default function GroupInfoPage({ params }: { params: Promise<{ groupId?: 
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0b0c] p-4 lg:p-8">
+    <div className="min-h-screen bg-[#0b0b0c] p-4 lg:p-8 overflow-x-hidden">
       <FloatingElements />
-      <div className="max-w-7xl mx-auto space-y-8">
+      <div className="max-w-7xl mx-auto space-y-8 w-full">
         {/* Hero Section */}
         <GroupHero 
           {...groupData}
@@ -167,14 +167,14 @@ export default function GroupInfoPage({ params }: { params: Promise<{ groupId?: 
         />
         
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full">
           {/* Left Column - Trip Details */}
-          <div className="lg:col-span-8 space-y-8">
+          <div className="lg:col-span-8 space-y-8 min-w-0">
             <GroupInfoCard groupInfo={groupInfo} />
           </div>
           
           {/* Right Column - Host & Stats */}
-          <div className="lg:col-span-4 space-y-6">
+          <div className="lg:col-span-4 space-y-6 min-w-0">
             <GroupStatsCard 
               groupId={groupId} 
               {...sidebarData} 

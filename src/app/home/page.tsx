@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { AppIntro, AppStats, YourGroupsSection } from "@/components/home";
 import { useUserGroups, useGroupSearch } from "@/lib/hooks/home";
 import { useCurrentUser } from "@/lib/hooks/user";
-import { FloatingElements } from "@/components/shared"
+import { FloatingElements }  from "@/components/shared"
 import HeroSection from "@/components/home/HeroSection";
 
 import {
