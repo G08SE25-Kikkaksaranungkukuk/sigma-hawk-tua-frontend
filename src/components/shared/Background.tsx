@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 
 export function FloatingElements() {
   return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden">
+    <div className="fixed inset-0 pointer-events-none overflow-hidden w-full h-full">
       {/* Floating gradient orbs - more visible version */}
       
       {/* Left side - top */}
