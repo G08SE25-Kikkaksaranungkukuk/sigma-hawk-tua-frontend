@@ -87,68 +87,7 @@ const MainToolbarContent = ({
 }) => {
   return (
     <>
-      <Spacer />
-
-      <ToolbarGroup>
-        <UndoRedoButton action="undo" />
-        <UndoRedoButton action="redo" />
-      </ToolbarGroup>
-
-      <ToolbarSeparator />
-
-      <ToolbarGroup>
-        <HeadingDropdownMenu levels={[1, 2, 3, 4]} portal={isMobile} />
-        <ListDropdownMenu
-          types={["bulletList", "orderedList", "taskList"]}
-          portal={isMobile}
-        />
-        <BlockquoteButton />
-        <CodeBlockButton />
-      </ToolbarGroup>
-
-      <ToolbarSeparator />
-
-      <ToolbarGroup>
-        <MarkButton type="bold" />
-        <MarkButton type="italic" />
-        <MarkButton type="strike" />
-        <MarkButton type="code" />
-        <MarkButton type="underline" />
-        {!isMobile ? (
-          <ColorHighlightPopover />
-        ) : (
-          <ColorHighlightPopoverButton onClick={onHighlighterClick} />
-        )}
-        {!isMobile ? <LinkPopover /> : <LinkButton onClick={onLinkClick} />}
-      </ToolbarGroup>
-
-      <ToolbarSeparator />
-
-      <ToolbarGroup>
-        <MarkButton type="superscript" />
-        <MarkButton type="subscript" />
-      </ToolbarGroup>
-
-      <ToolbarSeparator />
-
-      <ToolbarGroup>
-        <TextAlignButton align="left" />
-        <TextAlignButton align="center" />
-        <TextAlignButton align="right" />
-        <TextAlignButton align="justify" />
-      </ToolbarGroup>
-
-      <ToolbarSeparator />
-
-      <ToolbarGroup>
-        <ImageUploadButton text="Add" />
-      </ToolbarGroup>
-
-      <Spacer />
-
-      {isMobile && <ToolbarSeparator />}
-
-      <ToolbarGroup>
+      <ToolbarGroup className="hidden">
         <ThemeToggle />
       </ToolbarGroup>
     </>
@@ -163,7 +102,7 @@ const MobileToolbarContent = ({
   onBack: () => void
 }) => (
   <>
-    <ToolbarGroup>
+    <ToolbarGroup className="hidden">
       <Button data-style="ghost" onClick={onBack}>
         <ArrowLeftIcon className="tiptap-button-icon" />
         {type === "highlighter" ? (
@@ -174,7 +113,7 @@ const MobileToolbarContent = ({
       </Button>
     </ToolbarGroup>
 
-    <ToolbarSeparator />
+    <ToolbarSeparator className="hidden" />
 
     {type === "highlighter" ? (
       <ColorHighlightPopoverContent />
@@ -184,7 +123,7 @@ const MobileToolbarContent = ({
   </>
 )
 
-export function SimpleEditor({onUpdate,onInit,mode,blog_id} : {onInit? : (title : string,description : string) => void,onUpdate : (json_config? : string , html_output? : string) => void,mode : "default" | "edit" ,blog_id? : string}) {
+export function SimpleViewer({blog_id} : {blog_id? : string}) {
   const isMobile = useIsMobile()
   const { height } = useWindowSize()
   const [mobileView, setMobileView] = React.useState<
@@ -193,6 +132,7 @@ export function SimpleEditor({onUpdate,onInit,mode,blog_id} : {onInit? : (title 
   const toolbarRef = React.useRef<HTMLDivElement>(null)
 
   const editor = useEditor({
+    editable : false,
     immediatelyRender: false,
     shouldRerenderOnTransaction: false,
     editorProps: {
@@ -230,29 +170,13 @@ export function SimpleEditor({onUpdate,onInit,mode,blog_id} : {onInit? : (title 
         onError: (error) => console.error("Upload failed:", error),
       }),
     ],
-    content : (mode == "default")? content : ""
+    content : ""
   })
 
   React.useMemo(()=>{
-    if(mode == "edit" && editor) {
-      (apiClient.get(`/api/v2/blogs/${blog_id}/manifest`,{
-          withCredentials : true
-      })).then((val : any)=>{
-        console.log(onInit)
-        if(onInit) {
-          onInit(val.title,val.description)
-        }
-        editor?.commands.setContent(val.html_output)
-      })
-    }
-  },[editor])
-
-  React.useEffect(()=>{
-
     if(editor) {
-      onUpdate(JSON.stringify(editor?.getJSON() ?? "{}"),editor?.getHTML())
-      editor?.on('update',({editor})=>{
-        onUpdate(JSON.stringify(editor?.getJSON() ?? "{}"),editor?.getHTML())
+      (apiClient.get(`/api/v2/blogs/${blog_id}/content`)).then((val : any)=>{
+        editor?.commands.setContent(val)
       })
     }
   },[editor])
@@ -272,6 +196,7 @@ export function SimpleEditor({onUpdate,onInit,mode,blog_id} : {onInit? : (title 
     <div className="simple-editor-wrapper">
       <EditorContext.Provider value={{ editor }}>
         <Toolbar
+          className="hidden border-none"
           ref={toolbarRef}
           style={{
             ...(isMobile
