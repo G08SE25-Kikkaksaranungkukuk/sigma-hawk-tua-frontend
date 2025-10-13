@@ -161,7 +161,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
             console.log("Sending payload:", payload);
 
             const response = await axios.post(
-                "http://localhost:8080/auth/register",
+                "http://localhost:8080/api/v1/auth/register",
                 payload
             );
 

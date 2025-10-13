@@ -27,7 +27,7 @@ export default function GroupManagementPage({params} : {params : Promise<GroupMa
 
   React.useEffect(()=>{
     (async () => {
-      const ret =  await (await apiClient.get<GroupData, GroupData>(`/group/${groupId}`));
+      const ret =  await (await apiClient.get<GroupData, GroupData>(`/api/v1/group/${groupId}`));
       const processed_members = ret.members?.map((val : Member)=>{return {...val,isOwner : val.user_id == ret.group_leader_id}}) ?? [];
       if (window) {
         setPageUrl(window.location.protocol + "//" + window.location.host + "/group/" + groupId + "/info");
@@ -43,7 +43,7 @@ export default function GroupManagementPage({params} : {params : Promise<GroupMa
   const confirmDeleteMember = async () => {
     try {
       if (pendingDeleteId !== null) {
-        await apiClient.delete(`/group/${groupId}/member`,{
+        await apiClient.delete(`/api/v1/group/${groupId}/member`,{
           data : {
             "user_id" : pendingDeleteId
           },
@@ -70,7 +70,7 @@ export default function GroupManagementPage({params} : {params : Promise<GroupMa
   const confirmTransferOwnership = async () => {
     try {
       if (transferTargetId !== null) {
-        await apiClient.patch(`/group/${groupId}/owner`, {
+        await apiClient.patch(`/api/v1/group/${groupId}/owner`, {
             "user_id" : transferTargetId
           },{
           withCredentials : true
