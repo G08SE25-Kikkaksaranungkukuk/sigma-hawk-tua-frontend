@@ -39,7 +39,7 @@ export const SAMPLE_GROUP_DATA = {
 export const groupService = {
 
   async getUserGroups(): Promise<GroupResponse[]> {
-    const responseGroup = await apiClient.get<GroupResponse[], GroupResponse[]>('group/my/groups', { withCredentials: true });
+    const responseGroup = await apiClient.get<GroupResponse[], GroupResponse[]>('/api/v1/group/my/groups', { withCredentials: true });
     
     // Get detailed information for each group
     const groupDetailsPromises = responseGroup.map(group => 
@@ -51,35 +51,35 @@ export const groupService = {
   },
   
   getGroupDetails: async (groupId: string): Promise<GroupResponse> => {
-    const groupResponse = await apiClient.get<GroupResponse, GroupResponse>(`/group/${groupId}`, { withCredentials: true });
+    const groupResponse = await apiClient.get<GroupResponse, GroupResponse>(`/api/v1/group/${groupId}`, { withCredentials: true });
     return groupResponse;
   },
 
   getGroupProfile: async (groupId: string): Promise<{ data: any | Blob }> => {
-    const response = await apiClient.get(`/group/${groupId}/profile`, { 
+    const response = await apiClient.get(`/api/v1/group/${groupId}/profile`, { 
       responseType: 'blob' // Handle both JSON and binary responses
     });
     return response;
   },
   
   getCurrentUser: async (): Promise<UserData> => {
-    const response = await apiClient.get<UserData, UserData>(`/auth/whoami`, { withCredentials: true });
+    const response = await apiClient.get<UserData, UserData>(`/api/v1/auth/whoami`, { withCredentials: true });
     return response;
   },
 
   leaveGroup: async (groupId: string): Promise<void> => {
-    await apiClient.delete(`/group/${groupId}/leave`, {
+    await apiClient.delete(`/api/v1/group/${groupId}/leave`, {
       withCredentials: true,
     });
   },
   
   joinGroup: async (groupId: string): Promise<void> => {
-    await apiClient.put(`/group/${groupId}/member`, {}, { withCredentials: true });
+    await apiClient.put(`/api/v1/group/${groupId}/member`, {}, { withCredentials: true });
   },
 
   getInterests: async (): Promise<Interest[]> => {
     try {
-      const response = await apiClient.get<Interest[], Interest[]>('/user/interests/all');
+      const response = await apiClient.get<Interest[], Interest[]>('/api/v1/user/interests/all');
       return response
     } catch (error) {
       console.error('Failed to fetch interests from API:', error);
@@ -112,7 +112,7 @@ export const groupService = {
       formData.append('profile', createGroupRequest.profile);
     }
     
-    const response = await apiClient.post<GroupResponse, GroupResponse>('/group', formData, {
+    const response = await apiClient.post<GroupResponse, GroupResponse>('/api/v1/group', formData, {
       withCredentials: true,
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -122,7 +122,7 @@ export const groupService = {
   },
 
   getMemberProfile: async (userEmail: string): Promise<{ data: any | Blob }> => {
-    const response = await apiClient.get(`/user/${userEmail}/profile_pic`, { responseType: 'blob' });
+    const response = await apiClient.get(`/api/v1/user/${userEmail}/profile_pic`, { responseType: 'blob' });
     return response;
   },
   
