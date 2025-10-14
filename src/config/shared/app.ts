@@ -14,6 +14,5 @@ export const APP_CONFIG = {
   ],
   NAV_LINKS: [
     { label: 'Blog', href: '/blog' },
-    { label: 'My Groups', href: '/group' },
   ],
 } as const;
