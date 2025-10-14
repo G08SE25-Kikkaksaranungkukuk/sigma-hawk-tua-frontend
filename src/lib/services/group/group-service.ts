@@ -131,5 +131,31 @@ export const groupService = {
     await new Promise(resolve => setTimeout(resolve, 500));
     
     console.log(`Contacting host for group ${groupId}:`, message);
+  },
+
+  removeMember: async (groupId: string, userId: number): Promise<void> => {
+    await apiClient.delete(`/api/v1/group/${groupId}/member`, {
+      data: { user_id: userId },
+      withCredentials: true
+    });
+  },
+
+  transferOwnership: async (groupId: string, userId: number): Promise<void> => {
+    await apiClient.patch(`/api/v1/group/${groupId}/owner`, {
+      user_id: userId
+    }, {
+      withCredentials: true
+    });
+  },
+
+  updateGroup: async (groupId: string, updateData: FormData): Promise<GroupResponse> => {
+    const response = await apiClient.patch<GroupResponse, GroupResponse>(
+      `/api/v1/group/${groupId}`,
+      updateData,
+      {
+        withCredentials: true
+      }
+    );
+    return response;
   }
 };

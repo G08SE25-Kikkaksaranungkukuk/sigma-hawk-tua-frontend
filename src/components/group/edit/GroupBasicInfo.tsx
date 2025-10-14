@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Upload, Save } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { ImageUpload } from "@/components/imageUpload";
+import { groupService } from "@/lib/services/group/group-service";
 
 interface GroupBasicInfoProps {
   groupData: {
@@ -16,20 +18,87 @@ interface GroupBasicInfoProps {
     max_members: number;
   };
   setGroupData: (data: any) => void;
+  onDataChange?: (data: { formData: any; profileImageFile: File | null }) => void;
 }
 
-export function GroupBasicInfo({ groupData, setGroupData }: GroupBasicInfoProps) {
+export function GroupBasicInfo({ groupData, setGroupData, onDataChange }: GroupBasicInfoProps) {
   const [formData, setFormData] = useState({
     group_name: groupData.group_name,
     description: groupData.description || "",
-    profile_url: groupData.profile_url || "",
     max_members: groupData.max_members
   });
+  
+  const [profileImageUrl, setProfileImageUrl] = useState<string>("");
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+  const [isLoadingImage, setIsLoadingImage] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setGroupData({ ...groupData, ...formData });
-    toast.success("Group information updated successfully!");
+  // Fetch the current profile image on mount
+  useEffect(() => {
+    const fetchProfileImage = async () => {
+      if (!groupData.profile_url) {
+        setProfileImageUrl("");
+        return;
+      }
+      
+      setIsLoadingImage(true);
+      try {
+        const response = await groupService.getGroupProfile(groupData.group_id.toString());
+        
+        if (response instanceof Blob && response.size > 0) {
+          const imageUrl = URL.createObjectURL(response);
+          setProfileImageUrl(imageUrl);
+          
+          return () => URL.revokeObjectURL(imageUrl);
+        } else {
+          setProfileImageUrl("");
+        }
+      } catch (error) {
+        console.error('Failed to fetch group profile image:', error);
+        setProfileImageUrl("");
+      } finally {
+        setIsLoadingImage(false);
+      }
+    };
+
+    fetchProfileImage();
+  }, [groupData.group_id, groupData.profile_url]);
+
+  // Update parent component whenever form data changes (draft mode)
+  useEffect(() => {
+    // Check if there are any changes from original data
+    const hasFormChanges = 
+      formData.group_name !== groupData.group_name ||
+      formData.description !== (groupData.description || "") ||
+      formData.max_members !== groupData.max_members ||
+      profileImageFile !== null;
+    
+    setHasChanges(hasFormChanges);
+    
+    // Notify parent of changes (only if there are changes)
+    if (onDataChange && hasFormChanges) {
+      onDataChange({ formData, profileImageFile });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData, profileImageFile]);
+
+  const handleImageChange = (imageUrl: string) => {
+    setProfileImageUrl(imageUrl);
+  };
+
+  const handleFileChange = (file: File | null) => {
+    setProfileImageFile(file);
+  };
+
+  const handleReset = () => {
+    setFormData({
+      group_name: groupData.group_name,
+      description: groupData.description || "",
+      max_members: groupData.max_members
+    });
+    setProfileImageFile(null);
+    setHasChanges(false);
+    toast.info("Changes discarded");
   };
 
   return (
@@ -37,40 +106,31 @@ export function GroupBasicInfo({ groupData, setGroupData }: GroupBasicInfoProps)
       <CardHeader>
         <CardTitle className="text-orange-400">Basic Information</CardTitle>
         <CardDescription className="text-orange-200/80">
-          Update your group's basic details and settings
+          Update your group's basic details and settings (changes are saved as draft)
         </CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit}>
+      <div>
         <CardContent className="space-y-6">
           {/* Banner Image */}
           <div className="space-y-2">
-            <Label htmlFor="profile_url" className="text-orange-300">Group Banner Image</Label>
-            <div className="space-y-3">
-              {formData.profile_url && (
-                <div className="relative h-40 w-full overflow-hidden rounded-lg border border-gray-800/70">
-                  <img
-                    src={formData.profile_url}
-                    alt="Group banner preview"
-                    className="w-full h-full object-cover"
-                  />
+            <Label className="text-orange-300">Group Banner Image</Label>
+            {isLoadingImage ? (
+              <div className="w-full h-32 bg-[#1a1b23] rounded-xl border-2 border-dashed border-gray-700 flex items-center justify-center">
+                <div className="text-center text-orange-300">
+                  <Loader2 className="w-8 h-8 mx-auto animate-spin mb-2" />
+                  <p className="text-sm">Loading image...</p>
                 </div>
-              )}
-              <div className="flex gap-2">
-                <Input
-                  id="profile_url"
-                  placeholder="Enter banner image URL"
-                  value={formData.profile_url}
-                  onChange={(e) => setFormData({ ...formData, profile_url: e.target.value })}
-                  className="bg-[#1a1b23]/80 backdrop-blur-sm border-gray-600 text-white placeholder:text-gray-400 focus:border-[#ff6600] focus:ring-[#ff6600]/30"
-                />
-                <Button type="button" variant="outline" size="icon" className="border-gray-600 text-orange-300 hover:bg-[#ff6600] hover:text-white hover:border-[#ff6600]">
-                  <Upload className="h-4 w-4" />
-                </Button>
               </div>
-              <p className="text-orange-200/60 text-sm">
-                This image will be displayed as the hero banner on your group page
-              </p>
-            </div>
+            ) : (
+              <ImageUpload
+                currentImage={profileImageUrl}
+                onImageChange={handleImageChange}
+                onFileChange={handleFileChange}
+              />
+            )}
+            <p className="text-orange-200/60 text-sm">
+              This image will be displayed as the hero banner on your group page
+            </p>
           </div>
 
           {/* Group Name */}
@@ -118,15 +178,20 @@ export function GroupBasicInfo({ groupData, setGroupData }: GroupBasicInfoProps)
           </div>
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button type="button" variant="outline" className="border-gray-600 text-orange-300 hover:bg-[#1a1b23]/80 hover:text-orange-200">
-            Cancel
+          <Button 
+            type="button" 
+            variant="outline" 
+            className="border-gray-600 text-orange-300 hover:bg-[#1a1b23]/80 hover:text-orange-200"
+            onClick={handleReset}
+            disabled={!hasChanges}
+          >
+            Discard Changes
           </Button>
-          <Button type="submit" className="bg-gradient-to-r from-[#ff6600] to-[#ff8533] hover:from-[#e55a00] hover:to-[#ff6600] text-white shadow-lg shadow-[#ff6600]/25 transition-all duration-200">
-            <Save className="mr-2 h-4 w-4" />
-            Save Changes
-          </Button>
+          <div className="text-sm text-orange-300/60">
+            {hasChanges ? "✓ Unsaved changes" : "No changes"}
+          </div>
         </CardFooter>
-      </form>
+      </div>
     </Card>
   );
 }
