@@ -95,75 +95,86 @@ export function ItineraryEditor({ itinerary, onSave, onCancel }: ItineraryEditor
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={onCancel}>
+      <div className="flex items-center gap-4 mb-6">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={onCancel}
+          className="hover:bg-orange-500/10 hover:text-orange-400 transition-colors"
+        >
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h2>{itinerary ? "Edit Itinerary" : "Create New Itinerary"}</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-2xl font-semibold text-orange-400">
+            {itinerary ? "Edit Itinerary" : "Create New Itinerary"}
+          </h2>
+          <p className="text-orange-200/70">
             Plan your journey and add places to visit
           </p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form id="itinerary-form" onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Info Card */}
-        <Card>
+        <Card className="bg-[#12131a]/90 backdrop-blur-sm border-gray-800/70">
           <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
-            <CardDescription>Set the title, dates, and description</CardDescription>
+            <CardTitle className="text-orange-400">Basic Information</CardTitle>
+            <CardDescription className="text-orange-200/60">Set the title, dates, and description</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="title" className="text-orange-200/90">Title</Label>
               <Input
                 id="title"
                 placeholder="e.g., Summer Beach Trip"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 required
+                className="bg-[#0b0b0c]/50 border-gray-700/50 text-white placeholder:text-gray-500 focus:border-orange-400/50 focus:ring-orange-400/30"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="start_date">Start Date</Label>
+                <Label htmlFor="start_date" className="text-orange-200/90">Start Date</Label>
                 <Input
                   id="start_date"
                   type="date"
                   value={formData.start_date}
                   onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
                   required
+                  className="bg-[#0b0b0c]/50 border-gray-700/50 text-white focus:border-orange-400/50 focus:ring-orange-400/30"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="end_date">End Date</Label>
+                <Label htmlFor="end_date" className="text-orange-200/90">End Date</Label>
                 <Input
                   id="end_date"
                   type="date"
                   value={formData.end_date}
                   onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
                   required
+                  className="bg-[#0b0b0c]/50 border-gray-700/50 text-white focus:border-orange-400/50 focus:ring-orange-400/30"
                 />
               </div>
             </div>
 
             {calculateDuration() && (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Calendar className="h-4 w-4" />
+              <div className="flex items-center gap-2 text-orange-200/70">
+                <Calendar className="h-4 w-4 text-orange-400" />
                 <span>Duration: {calculateDuration()}</span>
               </div>
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description" className="text-orange-200/90">Description</Label>
               <Textarea
                 id="description"
                 placeholder="Describe your itinerary..."
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={3}
+                className="bg-[#0b0b0c]/50 border-gray-700/50 text-white placeholder:text-gray-500 focus:border-orange-400/50 focus:ring-orange-400/30"
               />
             </div>
           </CardContent>
@@ -171,10 +182,10 @@ export function ItineraryEditor({ itinerary, onSave, onCancel }: ItineraryEditor
 
         {/* Map Preview Card */}
         {places.length > 0 && (
-          <Card>
+          <Card className="bg-[#12131a]/90 backdrop-blur-sm border-gray-800/70">
             <CardHeader>
-              <CardTitle>Map Preview</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-orange-400">Map Preview</CardTitle>
+              <CardDescription className="text-orange-200/60">
                 {places.length} {places.length === 1 ? 'location' : 'locations'} selected
               </CardDescription>
             </CardHeader>
@@ -185,28 +196,36 @@ export function ItineraryEditor({ itinerary, onSave, onCancel }: ItineraryEditor
         )}
 
         {/* Places Card */}
-        <Card>
+        <Card className="bg-[#12131a]/90 backdrop-blur-sm border-gray-800/70">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <div>
-              <CardTitle>Places</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-orange-400">Places</CardTitle>
+              <CardDescription className="text-orange-200/60">
                 Add destinations and activities to your itinerary
               </CardDescription>
             </div>
-            <Button type="button" onClick={() => setIsSearchModalOpen(true)}>
+            <Button 
+              type="button" 
+              onClick={() => setIsSearchModalOpen(true)}
+              className="bg-gradient-to-r from-[#ff6600] to-[#ff8533] hover:from-[#ff7722] hover:to-[#ff9944] text-white shadow-lg shadow-[#ff6600]/30 hover:shadow-[#ff6600]/50 transition-all"
+            >
               <Plus className="mr-2 h-4 w-4" />
               Add Place
             </Button>
           </CardHeader>
           <CardContent>
             {places.length === 0 ? (
-              <div className="text-center py-12 border-2 border-dashed rounded-lg">
-                <MapPin className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                <h4>No places added yet</h4>
-                <p className="text-muted-foreground mt-2 mb-4">
+              <div className="text-center py-12 border-2 border-dashed border-gray-700/50 rounded-lg bg-[#0b0b0c]/30">
+                <MapPin className="mx-auto h-12 w-12 text-orange-400/50 mb-4" />
+                <h4 className="text-orange-200/90 text-lg font-semibold">No places added yet</h4>
+                <p className="text-orange-200/60 mt-2 mb-4">
                   Start building your itinerary by adding places
                 </p>
-                <Button type="button" onClick={() => setIsSearchModalOpen(true)}>
+                <Button 
+                  type="button" 
+                  onClick={() => setIsSearchModalOpen(true)}
+                  className="bg-gradient-to-r from-[#ff6600] to-[#ff8533] hover:from-[#ff7722] hover:to-[#ff9944] text-white shadow-lg shadow-[#ff6600]/30 hover:shadow-[#ff6600]/50 transition-all"
+                >
                   <Plus className="mr-2 h-4 w-4" />
                   Add First Place
                 </Button>
@@ -227,11 +246,19 @@ export function ItineraryEditor({ itinerary, onSave, onCancel }: ItineraryEditor
         </Card>
 
         {/* Action Buttons */}
-        <div className="flex justify-between items-center sticky bottom-0 bg-background py-4 border-t">
-          <Button type="button" variant="outline" onClick={onCancel}>
+        <div className="flex justify-end items-center gap-3 pt-4">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onCancel}
+            className="border-gray-700/50 text-orange-200/90 hover:bg-orange-500/10 hover:text-orange-400 hover:border-orange-400/50 transition-colors"
+          >
             Cancel
           </Button>
-          <Button type="submit">
+          <Button 
+            type="submit"
+            className="bg-gradient-to-r from-[#ff6600] to-[#ff8533] hover:from-[#ff7722] hover:to-[#ff9944] text-white shadow-lg shadow-[#ff6600]/30 hover:shadow-[#ff6600]/50 transition-all transform hover:scale-105"
+          >
             {itinerary ? "Update Itinerary" : "Create Itinerary"}
           </Button>
         </div>
@@ -249,14 +276,14 @@ export function ItineraryEditor({ itinerary, onSave, onCancel }: ItineraryEditor
 
 function PlaceCard({ place, index, onRemove }: { place: Place; index: number; onRemove: () => void }) {
   return (
-    <div className="relative group flex gap-4 p-4 border rounded-lg hover:border-primary/50 transition-colors">
+    <div className="relative group flex gap-4 p-4 border border-gray-700/50 rounded-lg hover:border-orange-400/50 transition-colors bg-[#0b0b0c]/30">
       {/* Place Number Badge */}
-      <div className="absolute -left-3 -top-3 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center z-10 shadow-sm">
+      <div className="absolute -left-3 -top-3 w-8 h-8 rounded-full bg-gradient-to-r from-[#ff6600] to-[#ff8533] text-white flex items-center justify-center z-10 shadow-lg shadow-[#ff6600]/30 font-semibold">
         {index + 1}
       </div>
 
       {/* Place Image */}
-      <div className="relative w-32 h-32 rounded-lg overflow-hidden shrink-0 bg-muted">
+      <div className="relative w-32 h-32 rounded-lg overflow-hidden shrink-0 bg-[#12131a]/50 border border-gray-800/50">
         {place.picture_url ? (
           <img
             src={place.picture_url}
@@ -265,7 +292,7 @@ function PlaceCard({ place, index, onRemove }: { place: Place; index: number; on
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <MapPin className="h-8 w-8 text-muted-foreground" />
+            <MapPin className="h-8 w-8 text-orange-400/50" />
           </div>
         )}
       </div>
@@ -274,9 +301,9 @@ function PlaceCard({ place, index, onRemove }: { place: Place; index: number; on
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="flex-1 min-w-0">
-            <h4 className="truncate">{place.name}</h4>
+            <h4 className="truncate text-orange-200/90 font-semibold">{place.name}</h4>
             {place.place_type && (
-              <Badge variant="secondary" className="mt-1">
+              <Badge variant="secondary" className="mt-1 bg-orange-500/20 text-orange-300 border-orange-400/30">
                 {place.place_type}
               </Badge>
             )}
@@ -285,7 +312,7 @@ function PlaceCard({ place, index, onRemove }: { place: Place; index: number; on
             type="button"
             variant="ghost"
             size="icon"
-            className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/10 hover:text-red-400"
             onClick={onRemove}
           >
             <X className="h-4 w-4" />
@@ -293,20 +320,20 @@ function PlaceCard({ place, index, onRemove }: { place: Place; index: number; on
         </div>
 
         {place.rating > 0 && (
-          <div className="flex items-center gap-1 mb-2">
+          <div className="flex items-center gap-1 mb-2 text-orange-200/90">
             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
             <span>{place.rating.toFixed(1)}</span>
           </div>
         )}
 
         {place.description && (
-          <p className="text-muted-foreground line-clamp-2 mb-2">
+          <p className="text-orange-200/60 line-clamp-2 mb-2">
             {place.description}
           </p>
         )}
 
         {place.address && (
-          <div className="flex items-center gap-1 text-muted-foreground">
+          <div className="flex items-center gap-1 text-orange-200/60">
             <MapPin className="h-3 w-3" />
             <span className="truncate">{place.address}</span>
           </div>
@@ -322,10 +349,10 @@ function MapPreview({ places }: { places: Place[] }) {
   const avgLng = places.reduce((sum, p) => sum + (p.longitude || 0), 0) / places.length;
 
   return (
-    <div className="relative w-full h-64 bg-muted rounded-lg overflow-hidden">
+    <div className="relative w-full h-64 bg-[#0b0b0c]/50 rounded-lg overflow-hidden border border-gray-800/50">
       {/* Map Background with Grid Pattern */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-green-50 dark:from-blue-950 dark:to-green-950">
-        <svg className="w-full h-full opacity-20" xmlns="http://www.w3.org/2000/svg">
+      <div className="absolute inset-0 bg-gradient-to-br from-orange-950/20 to-orange-900/10">
+        <svg className="w-full h-full opacity-10" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
               <path d="M 20 0 L 0 0 0 20" fill="none" stroke="currentColor" strokeWidth="0.5"/>
@@ -348,13 +375,13 @@ function MapPreview({ places }: { places: Place[] }) {
             return (
               <div
                 key={place.place_id}
-                className="absolute transform -translate-x-1/2 -translate-y-full"
+                className="absolute transform -translate-x-1/2 -translate-y-full pin-wrapper"
                 style={{ left: `${x}%`, top: `${y}%` }}
               >
                 <div className="relative group">
-                  <MapPin className="h-8 w-8 fill-red-500 text-red-700 drop-shadow-lg animate-bounce" style={{ animationDelay: `${index * 0.1}s`, animationDuration: '2s' }} />
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-background border rounded shadow-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                    <p className="text-xs">{place.name}</p>
+                  <MapPin className="h-8 w-8 fill-[#ff6600] text-[#ff8533] drop-shadow-lg animate-bounce pin-animation" style={{ animationDelay: `${index * 0.1}s`, animationDuration: '2s' }} />
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-[#12131a]/95 backdrop-blur-sm border border-orange-400/30 rounded shadow-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                    <p className="text-xs text-orange-200/90">{place.name}</p>
                   </div>
                 </div>
               </div>
@@ -365,8 +392,8 @@ function MapPreview({ places }: { places: Place[] }) {
 
       {/* Map Controls Overlay */}
       <div className="absolute bottom-4 right-4 flex flex-col gap-2">
-        <div className="bg-background border rounded shadow px-3 py-1.5">
-          <p className="text-xs text-muted-foreground">
+        <div className="bg-[#12131a]/90 backdrop-blur-sm border border-gray-800/70 rounded shadow-lg px-3 py-1.5">
+          <p className="text-xs text-orange-200/70">
             {places.length} {places.length === 1 ? 'location' : 'locations'}
           </p>
         </div>

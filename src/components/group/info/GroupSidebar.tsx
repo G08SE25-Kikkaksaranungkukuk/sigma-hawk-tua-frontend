@@ -77,7 +77,7 @@ export function GroupSidebar({
         <div className="mt-5 grid gap-3">
           {isLeader ? (
             <a
-              href={`/group/${group.id}/manage`}
+              href={`/group/${group.id}/edit`}
               className="block w-full rounded-xl px-4 py-3 text-sm font-semibold text-center transition active:scale-[0.99]"
               style={{
                 backgroundColor: APP_CONFIG.ui.colors.primary,
