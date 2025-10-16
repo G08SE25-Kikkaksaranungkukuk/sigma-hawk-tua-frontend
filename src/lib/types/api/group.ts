@@ -1,0 +1,43 @@
+import { Interest } from "./interest"
+
+export interface SearchGroupsParams {
+  query?: string;
+  destination?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface CreateGroupRequest {
+  group_name: string;
+  description?: string;
+  destination?: string;
+  max_members?: number;
+  profile?: File;
+  profile_url?: string;  // For preview purposes
+  start_date?: Date; 
+  end_date?: Date;    
+  interest_fields?: string[];  // Use the specific enum type
+}
+
+export interface GroupResponse {
+  group_id: number
+  group_name: string
+  group_leader_id: number
+  description: string
+  profile_url?: string | null
+  max_members: number
+  created_at: string
+  updated_at: string
+  leader: Member
+  members: Member[]
+  interests: Interest[]
+}
+
+export interface Member {
+  user_id: number
+  first_name: string
+  last_name: string
+  profile_url?: string | null
+  email: string
+  birth_date?: Date
+}

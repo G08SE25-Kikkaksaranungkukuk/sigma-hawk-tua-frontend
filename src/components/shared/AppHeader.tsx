@@ -1,9 +1,12 @@
+"use client";
 import React, { useEffect, useState } from 'react';
 import { Button } from '../ui/button';
-import { Plane, Menu } from 'lucide-react';
+import { Plane, Menu, Home, Users, User, Search } from 'lucide-react';
 import { APP_CONFIG } from '../../config/shared';
 import { ProfileDropdown } from './ProfileDropdown';
 import { useCurrentUser } from '../../lib/hooks/user/useCurrentUser';
+import { usePathname } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface AppHeaderProps {
   onEditProfileClick: () => void;
@@ -31,8 +34,37 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   // Use the useCurrentUser hook to fetch and manage user data
   const { currentUser, loading, error, refreshCurrentUser, isAuthenticated } = useCurrentUser();
   
+  // Get current pathname for active state tracking
+  const pathname = usePathname();
+  
   // Add a key to force re-render of profile image when it changes
   const [imageKey, setImageKey] = useState(Date.now());
+  
+  // Track hover state for enhanced interactions
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+
+  // Enhanced navigation items with proper routes and icons
+  const navigationItems = [
+    {
+      label: 'Home',
+      href: '/home',
+      icon: Home,
+      isActive: pathname === '/' || pathname === '/home',
+    },
+    {
+      label: 'Groups',
+      href: '/group/search',
+      icon: Search,
+      isActive: pathname.startsWith('/group'),
+    },
+    // Add any additional nav items from APP_CONFIG
+    ...APP_CONFIG.NAV_LINKS.map((link) => ({
+      label: link.label,
+      href: link.href || '#',
+      icon: Users, // Default icon
+      isActive: pathname === link.href,
+    })),
+  ];
 
   // Trigger refresh when triggerRefresh prop changes
   useEffect(() => {
@@ -82,58 +114,175 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                   loading ? "Loading..." : 
                   error ? "Error loading user" : "User";
 
+  // Get current page title for breadcrumb awareness
+  const getCurrentPageTitle = () => {
+    if (pathname === '/' || pathname === '/home') return 'Home';
+    if (pathname.startsWith('/group')) {
+      if (pathname.includes('/search')) return 'Find Groups';
+      if (pathname.includes('/create')) return 'Create Group';
+      if (pathname.includes('/manage')) return 'Manage Group';
+      return 'Groups';
+    }
+    if (pathname.startsWith('/profile')) {
+      if (pathname.includes('/edit')) return 'Edit Profile';
+      return 'Profile';
+    }
+    if (pathname.startsWith('/login')) return 'Login';
+    if (pathname.startsWith('/signup')) return 'Sign Up';
+    return 'Dashboard';
+  };
+
   return (
-    <nav className="relative z-20 bg-gray-900/90 backdrop-blur-sm border-b border-orange-500/20 px-6 py-4">
-      <div className="max-w-6xl mx-auto flex items-center justify-between">
-        {/* Logo */}
-        <button 
-          onClick={onHomeClick}
-          className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
-        >
-          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center">
-            <Plane className="w-5 h-5 text-black" />
-          </div>
-          <span className="text-xl font-bold text-white">
-            {APP_CONFIG.APP_NAME}
-          </span>
-        </button>
-
-        {/* Navigation Links */}
-        <div className="hidden md:flex items-center gap-6">
-          {APP_CONFIG.NAV_LINKS.map((link) => (
-            <Button
-              key={link.label}
-              variant="ghost"
-              className="text-orange-300 hover:text-orange-400"
-            >
-              {link.label}
-            </Button>
-          ))}
-        </div>
-
-        {/* Right Side Icons */}
-        <div className="flex items-center gap-3">
-          {/* User Name Display */}
-          <span className="hidden md:block text-orange-300 font-medium">
-            {fullName}
-          </span>
-          <ProfileDropdown 
-            onEditProfileClick={onEditProfileClick} 
-            onLogoutClick={onLogoutClick}
-            userName={firstName}
-            userEmail={userEmail}
-            userImage={profileImageWithKey}
-            onRefreshUser={refreshCurrentUser}
-          />
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden text-orange-400 hover:bg-orange-500/10"
+    <>
+      {/* Enhanced Navigation Bar with Motion UI */}
+      <motion.nav 
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="fixed top-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-md border-b border-orange-500/20 px-6 py-4"
+      >
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          {/* Enhanced Logo with Motion */}
+          <motion.button 
+            onClick={onHomeClick}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center gap-3 cursor-pointer relative"
           >
-            <Menu className="w-5 h-5" />
-          </Button>
+            <motion.div 
+              className="w-10 h-10 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center"
+              whileHover={{ 
+                boxShadow: "0 0 20px rgba(249, 115, 22, 0.6)",
+                rotate: [0, -10, 10, 0]
+              }}
+              transition={{ duration: 0.3 }}
+            >
+              <Plane className="w-5 h-5 text-black" />
+            </motion.div>
+            <span className="text-xl font-bold text-white">
+              {APP_CONFIG.APP_NAME}
+            </span>
+          </motion.button>
+
+          {/* Enhanced Navigation Links with Active State Indicators */}
+          <div className="hidden md:flex items-center gap-1 relative">
+            {navigationItems.map((item, index) => {
+              const Icon = item.icon;
+              return (
+                <motion.div
+                  key={item.label}
+                  className="relative"
+                  onMouseEnter={() => setHoveredItem(item.label)}
+                  onMouseLeave={() => setHoveredItem(null)}
+                >
+                  <motion.a
+                    href={item.href}
+                    className={`relative px-4 py-2 rounded-lg flex items-center gap-2 transition-all duration-300 ${
+                      item.isActive 
+                        ? 'text-orange-400 bg-orange-500/10' 
+                        : 'text-orange-300 hover:text-orange-400 hover:bg-orange-500/5'
+                    }`}
+                    whileHover={{ y: -1 }}
+                    whileTap={{ y: 0 }}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span className="font-medium">{item.label}</span>
+                    
+                    {/* Active State Indicator */}
+                    {item.isActive && (
+                      <motion.div
+                        layoutId="activeIndicator"
+                        className="absolute inset-0 bg-orange-500/20 rounded-lg border border-orange-500/30"
+                        initial={false}
+                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                      />
+                    )}
+                    
+                    {/* Hover Effect */}
+                    {hoveredItem === item.label && !item.isActive && (
+                      <motion.div
+                        className="absolute inset-0 bg-orange-500/10 rounded-lg"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        transition={{ duration: 0.2 }}
+                      />
+                    )}
+                  </motion.a>
+                  
+                  {/* Tooltip for better UX */}
+                  <AnimatePresence>
+                    {hoveredItem === item.label && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.8 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.8 }}
+                        className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded-md border border-orange-500/20"
+                      >
+                        {item.label}
+                        <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-800 rotate-45 border-l border-t border-orange-500/20"></div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {/* Enhanced Right Side with Motion */}
+          <div className="flex items-center gap-3">
+            {/* Current Page Indicator */}
+            
+            {/* User Name Display with Animation */}
+            <motion.span 
+              className="hidden md:block text-orange-300 font-medium"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              {fullName}
+            </motion.span>
+            
+            {/* Enhanced Profile Dropdown */}
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <ProfileDropdown 
+                onEditProfileClick={onEditProfileClick} 
+                onLogoutClick={onLogoutClick}
+                userName={firstName}
+                userEmail={userEmail}
+                userImage={profileImageWithKey}
+                onRefreshUser={refreshCurrentUser}
+              />
+            </motion.div>
+            
+            {/* Enhanced Mobile Menu Button */}
+            <motion.div
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden text-orange-400 hover:bg-orange-500/10"
+              >
+                <Menu className="w-5 h-5" />
+              </Button>
+            </motion.div>
+          </div>
         </div>
-      </div>
-    </nav>
+        
+        {/* Enhanced Progress Bar for Content Awareness */}
+        <motion.div 
+          className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600"
+          initial={{ width: "0%" }}
+          animate={{ width: "100%" }}
+          transition={{ duration: 1, delay: 0.5 }}
+        />
+      </motion.nav>
+      
+    </>
   );
 };

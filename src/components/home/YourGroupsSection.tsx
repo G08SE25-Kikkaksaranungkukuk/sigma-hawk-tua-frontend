@@ -2,14 +2,14 @@ import React from 'react';
 import { Button } from '../ui/button';
 import { Search, Plus } from 'lucide-react';
 import { GroupCard } from './GroupCard';
-import { Group, GroupData } from '../../lib/types/home';
+import { GroupResponse } from '@/lib/types';
 
 interface YourGroupsSectionProps {
-  groups: GroupData[];
+  groups: GroupResponse[];
   loading: boolean;
   error: string | null;
   onCreateGroup: () => void;
-  onViewGroup: (group: GroupData) => void;
+  onViewGroup: (group: GroupResponse) => void;
   onSearchGroups: () => void;
 }
 

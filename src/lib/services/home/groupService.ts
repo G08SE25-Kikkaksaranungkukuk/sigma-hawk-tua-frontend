@@ -6,7 +6,7 @@ class GroupService {
   private apiUrl = process.env.NEXT_PUBLIC_BASE_API_URL;
 
   async getUserGroups(): Promise<GroupData[]> {
-    const response = await apiClient.get<GroupData[], GroupData[]>('group/my/groups', { withCredentials: true });
+    const response = await apiClient.get<GroupData[], GroupData[]>('/api/v1/group/my/groups', { withCredentials: true });
     console.log("response:", response);
     return response;
   }
