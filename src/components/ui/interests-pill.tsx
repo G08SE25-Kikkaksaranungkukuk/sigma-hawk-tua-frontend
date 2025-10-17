@@ -1,5 +1,5 @@
 import React from 'react';
-import { Interest } from '@/lib/types/home';
+import { Interest } from '@/lib/types/api';
 
 interface InterestsPillProps {
   interests: Interest[];

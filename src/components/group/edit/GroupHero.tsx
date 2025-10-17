@@ -1,8 +1,10 @@
-import { Users, Calendar, Settings } from "lucide-react";
+import { Users, Calendar, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { groupService } from "@/lib/services/group/group-service";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { toast } from "sonner";
+import { ImageCropModal } from "@/components/ImageCropModal";
 
 interface GroupHeroProps {
   groupData: {
@@ -14,17 +16,77 @@ interface GroupHeroProps {
   memberCount: number;
   maxMembers: number;
   groupId: number;
+  onImageChange?: (imageUrl: string) => void;
+  onFileChange?: (file: File | null) => void;
+  previewImageUrl?: string;
 }
 
-export function GroupHero({ groupData, memberCount, maxMembers, groupId }: GroupHeroProps) {
+export function GroupHero({ groupData, memberCount, maxMembers, groupId, onImageChange, onFileChange, previewImageUrl }: GroupHeroProps) {
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
   const [imageLoading, setImageLoading] = useState(false);
+  const [isCropModalOpen, setIsCropModalOpen] = useState(false);
+  const [selectedImageForCrop, setSelectedImageForCrop] = useState<string>("");
+  const [originalFileName, setOriginalFileName] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', { 
       month: 'long', 
       year: 'numeric' 
     }).format(date);
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Validate file size (e.g., 5MB limit)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      toast.error('Image size must be less than 5MB');
+      return;
+    }
+
+    // Create preview URL and open crop modal
+    const imageUrl = URL.createObjectURL(file);
+    setSelectedImageForCrop(imageUrl);
+    setOriginalFileName(file.name);
+    setIsCropModalOpen(true);
+  };
+
+  const handleCropComplete = (croppedImageUrl: string, croppedFile: File) => {
+    // Update preview with cropped image
+    setProfileImageUrl(croppedImageUrl);
+    
+    // Notify parent components
+    if (onImageChange) onImageChange(croppedImageUrl);
+    if (onFileChange) onFileChange(croppedFile);
+    
+    // Close modal
+    setIsCropModalOpen(false);
+  };
+
+  const handleCropModalClose = () => {
+    setIsCropModalOpen(false);
+    // Clean up the temporary image URL
+    if (selectedImageForCrop) {
+      URL.revokeObjectURL(selectedImageForCrop);
+      setSelectedImageForCrop("");
+    }
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   useEffect(() => {
@@ -64,8 +126,29 @@ export function GroupHero({ groupData, memberCount, maxMembers, groupId }: Group
     fetchProfileImage();
   }, [groupId, groupData.profile_url]);
 
+  // Use preview image if available, otherwise use fetched image
+  const displayImageUrl = previewImageUrl || profileImageUrl;
+
   return (
-    <div className="relative w-full mb-8">
+    <>
+      <ImageCropModal
+        isOpen={isCropModalOpen}
+        onClose={handleCropModalClose}
+        imageUrl={selectedImageForCrop}
+        onCropComplete={handleCropComplete}
+        fileName={originalFileName}
+      />
+      
+      <div className="relative w-full mb-8">
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileSelect}
+          className="hidden"
+        />
+      
       {/* Banner Image */}
       <div className="relative h-100 w-full overflow-hidden rounded-3xl bg-gradient-to-br from-orange-600/20 via-orange-400/10 to-[#12131a]">
         {imageLoading ? (
@@ -75,9 +158,9 @@ export function GroupHero({ groupData, memberCount, maxMembers, groupId }: Group
               <p>Loading image...</p>
             </div>
           </div>
-        ) : profileImageUrl ? (
+        ) : displayImageUrl ? (
           <img
-            src={profileImageUrl}
+            src={displayImageUrl}
             alt={groupData.group_name}
             className="w-full h-full object-cover"
           />
@@ -90,10 +173,22 @@ export function GroupHero({ groupData, memberCount, maxMembers, groupId }: Group
           </div>
         )}
         {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0b0b0c] via-[#0b0b0c]/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0b0b0c] via-[#0b0b0c]/60 to-transparent pointer-events-none" />
+        
+        {/* Upload Button - Bottom Right */}
+        <div className="absolute bottom-6 right-6 z-20">
+          <Button
+            onClick={handleUploadClick}
+            size="sm"
+            className="backdrop-blur-sm bg-gradient-to-r from-[#ff6600] to-[#ff8533] hover:from-[#ff7722] hover:to-[#ff9944] text-white shadow-lg shadow-[#ff6600]/30 pointer-events-auto"
+          >
+            <Upload className="h-4 w-4 mr-1" />
+            {displayImageUrl ? 'Change Image' : 'Upload Image'}
+          </Button>
+        </div>
         
         {/* Group Information - Overlaying the banner */}
-        <div className="absolute bottom-0 left-0 right-0 px-6 pb-6">
+        <div className="absolute bottom-0 left-0 right-0 px-6 pb-6 z-10">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
@@ -118,6 +213,7 @@ export function GroupHero({ groupData, memberCount, maxMembers, groupId }: Group
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

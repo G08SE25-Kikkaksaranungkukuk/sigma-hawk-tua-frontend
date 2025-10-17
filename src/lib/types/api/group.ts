@@ -19,6 +19,14 @@ export interface CreateGroupRequest {
   interest_fields: string[];  // Use the specific enum type
 }
 
+export interface UpdateGroupRequest {
+  group_name: string;
+  description?: string;
+  max_members: number;
+  profile?: File;
+  interest_fields: string[];
+}
+
 export interface ItineraryRequest {
   title: string;
   description: string;

@@ -1,4 +1,4 @@
-import { UserData, GroupResponse, CreateGroupRequest, Interest, ItineraryRequest, Itinerary, ItineraryResponse } from "@/lib/types";
+import { UserData, GroupResponse, CreateGroupRequest, UpdateGroupRequest, Interest, ItineraryRequest, Itinerary, ItineraryResponse } from "@/lib/types";
 import axios, {AxiosResponse} from "axios";
 import { apiClient } from "@/lib/api";
 import { create } from "domain";
@@ -117,12 +117,37 @@ export const groupService = {
     });
   },
 
-  updateGroup: async (groupId: string, updateData: FormData): Promise<GroupResponse> => {
-    const response = await apiClient.patch<GroupResponse, GroupResponse>(
+  updateGroup: async (groupId: string, updateGroupRequest: UpdateGroupRequest): Promise<GroupResponse> => {
+    // Create FormData to handle file upload (same as createGroup)
+    const formData = new FormData();
+    
+    // Append text fields
+    formData.append('group_name', updateGroupRequest.group_name);
+    if (updateGroupRequest.description) {
+      formData.append('description', updateGroupRequest.description);
+    }
+    formData.append('max_members', updateGroupRequest.max_members.toString());
+    
+    // Append interest fields as individual entries
+    if (updateGroupRequest.interest_fields && updateGroupRequest.interest_fields.length > 0) {
+      updateGroupRequest.interest_fields.forEach((interest, index) => {
+        formData.append(`interest_fields[${index}]`, interest);
+      });
+    }
+    
+    // Append file if provided
+    if (updateGroupRequest.profile) {
+      formData.append('profile', updateGroupRequest.profile);
+    }
+    
+    const response = await apiClient.put<GroupResponse, GroupResponse>(
       `/api/v1/group/${groupId}`,
-      updateData,
+      formData,
       {
-        withCredentials: true
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       }
     );
     return response;

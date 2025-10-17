@@ -2,17 +2,13 @@
 
 import { useState, useEffect, use } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
 import { GroupBasicInfo } from "@/components/group/edit/GroupBasicInfo";
 import { GroupItineraries } from "@/components/group/edit/GroupItineraries";
 import { GroupMembers } from "@/components/group/edit/GroupMembers";
-import { GroupInterests } from "@/components/group/edit/GroupInterests";
 import { GroupHero } from "@/components/group/edit/GroupHero";
 import { FloatingElements } from "@/components/shared";
 import { groupService } from '@/lib/services/group/group-service';
 import { GroupResponse } from "@/lib/types";
-import { Save, Loader2 } from "lucide-react";
-import { toast } from "sonner";
 
 export default function App({ params }: { params: Promise<{ groupId?: string }> }) {
   const { groupId } = use(params);
@@ -20,11 +16,8 @@ export default function App({ params }: { params: Promise<{ groupId?: string }> 
   const [groupData, setGroupData] = useState<GroupResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // Draft data for Basic Info
-  const [draftBasicInfo, setDraftBasicInfo] = useState<{ formData: any; profileImageFile: File | null } | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string>("");
 
   // Fetch group data from API
   useEffect(() => {
@@ -51,51 +44,6 @@ export default function App({ params }: { params: Promise<{ groupId?: string }> 
 
     fetchGroupData();
   }, [groupId]);
-
-  // Track if there are unsaved changes
-  useEffect(() => {
-    setHasUnsavedChanges(draftBasicInfo !== null);
-  }, [draftBasicInfo]);
-
-  // Handle save all changes
-  const handleSaveChanges = async () => {
-    if (!groupData || !draftBasicInfo) {
-      toast.error("No changes to save");
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      // Create FormData for the update request
-      const updateData = new FormData();
-      updateData.append('group_name', draftBasicInfo.formData.group_name);
-      if (draftBasicInfo.formData.description) {
-        updateData.append('description', draftBasicInfo.formData.description);
-      }
-      updateData.append('max_members', draftBasicInfo.formData.max_members.toString());
-      
-      // Add profile image if a new one was uploaded
-      if (draftBasicInfo.profileImageFile) {
-        updateData.append('profile', draftBasicInfo.profileImageFile);
-      }
-
-      // Call the update API
-      const updatedGroup = await groupService.updateGroup(groupData.group_id.toString(), updateData);
-      
-      // Update the group data with the response
-      setGroupData(updatedGroup);
-      
-      // Clear draft data
-      setDraftBasicInfo(null);
-      
-      toast.success("Changes saved successfully!");
-    } catch (error: any) {
-      console.error('Failed to save changes:', error);
-      toast.error(error.message || "Failed to save changes");
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
   // Loading state
   if (loading) {
@@ -147,48 +95,25 @@ export default function App({ params }: { params: Promise<{ groupId?: string }> 
           memberCount={groupData.members?.length || 0}
           maxMembers={groupData.max_members}
           groupId={groupData.group_id}
+          onImageChange={setPreviewImageUrl}
+          onFileChange={setProfileImageFile}
+          previewImageUrl={previewImageUrl}
         />
 
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl text-orange-400 mb-2">Group Configuration</h2>
-            <p className="text-orange-200/80">
-              Manage your group settings, itineraries, and members
-            </p>
-          </div>
-          <Button
-            onClick={handleSaveChanges}
-            disabled={!hasUnsavedChanges || isSaving}
-            className="relative px-6 py-3 bg-gradient-to-r from-[#ff6600] via-[#ff7722] to-[#ff8533] hover:from-[#ff7722] hover:via-[#ff8533] hover:to-[#ff9944] text-white font-semibold shadow-2xl shadow-[#ff6600]/50 hover:shadow-[#ff6600]/70 transition-all duration-300 transform hover:scale-105 disabled:bg-gradient-to-r disabled:from-gray-600 disabled:via-gray-700 disabled:to-gray-800 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:shadow-gray-700/50 border border-orange-400/20 hover:border-orange-400/40 disabled:border-gray-700"
-          >
-            {/* Glow effect */}
-            {hasUnsavedChanges && !isSaving && (
-              <span className="absolute inset-0 rounded-md bg-gradient-to-r from-[#ff6600] to-[#ff8533] opacity-30 blur-xl animate-pulse" />
-            )}
-            <span className="relative flex items-center">
-              {isSaving ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Saving...
-                </> 
-              ) : (
-                <>
-                  <Save className="mr-2 h-5 w-5" />
-                  Save All Changes
-                  {hasUnsavedChanges && <span className="ml-2 inline-block w-2 h-2 bg-white rounded-full animate-pulse" />}
-                </>
-              )}
-            </span>
-          </Button>
+        <div className="mb-8">
+          <h2 className="text-3xl text-orange-400 mb-2">Group Configuration</h2>
+          <p className="text-orange-200/80">
+            Manage your group settings, itineraries, and members
+          </p>
         </div>
 
         <Tabs defaultValue="basic" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8 bg-[#12131a]/90 backdrop-blur-sm border border-gray-800/70 p-1.5 gap-1.5 rounded-xl h-auto">
+          <TabsList className="grid w-full grid-cols-3 mb-8 bg-[#12131a]/90 backdrop-blur-sm border border-gray-800/70 p-1.5 gap-1.5 rounded-xl h-auto">
             <TabsTrigger 
               value="basic"
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#ff6600] data-[state=active]:to-[#ff8533] data-[state=active]:text-white text-orange-200/80 hover:text-orange-300 transition-all rounded-lg h-11"
             >
-              Basic Info
+              Basic Info & Interests
             </TabsTrigger>
             <TabsTrigger 
               value="itineraries"
@@ -202,12 +127,6 @@ export default function App({ params }: { params: Promise<{ groupId?: string }> 
             >
               Members
             </TabsTrigger>
-            <TabsTrigger 
-              value="interests"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#ff6600] data-[state=active]:to-[#ff8533] data-[state=active]:text-white text-orange-200/80 hover:text-orange-300 transition-all rounded-lg h-11"
-            >
-              Interests
-            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="basic">
@@ -217,12 +136,11 @@ export default function App({ params }: { params: Promise<{ groupId?: string }> 
                 group_name: groupData.group_name,
                 description: groupData.description,
                 profile_url: groupData.profile_url || null,
-                max_members: groupData.max_members
+                max_members: groupData.max_members,
+                interests: groupData.interests
               }} 
-              setGroupData={(updatedData) => {
-                setGroupData(prev => prev ? { ...prev, ...updatedData } : null);
-              }}
-              onDataChange={setDraftBasicInfo}
+              setGroupData={setGroupData}
+              profileImageFile={profileImageFile}
             />
           </TabsContent>
 
@@ -232,10 +150,6 @@ export default function App({ params }: { params: Promise<{ groupId?: string }> 
 
           <TabsContent value="members">
             <GroupMembers groupId={groupData.group_id} maxMembers={groupData.max_members} />
-          </TabsContent>
-
-          <TabsContent value="interests">
-            <GroupInterests groupId={groupData.group_id} />
           </TabsContent>
         </Tabs>
       </div>
