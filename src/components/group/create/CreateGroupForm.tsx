@@ -303,12 +303,12 @@ export function CreateGroupForm({ groupData, updateGroupData, onSubmit, onCancel
             {isSubmitting ? (
               <>
                 <div className="w-5 h-5 mr-2 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Creating...
+                Processing...
               </>
             ) : (
               <>
                 <Plus className="w-5 h-5 mr-2" />
-                Create Group
+                Continue to Itineraries
               </>
             )}
           </Button>
