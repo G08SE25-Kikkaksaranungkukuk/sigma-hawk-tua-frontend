@@ -3,7 +3,7 @@
 import { apiClient } from "@/lib/api";
 import { UserProfile } from "@/lib/types";
 import axios from "axios";
-import { Pencil, Trash } from "lucide-react";
+import { HeartIcon, Pencil, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -12,6 +12,7 @@ type Blog = {
     title: string;
     description: string;
     created_at?: string;
+    likes?: any[];
 };
 
 type Props = {
@@ -80,7 +81,20 @@ export default function BlogList({ currentUser, refreshSignal = 0, onDeleted }: 
                 <article key={b.blog_id} className="p-4 bg-slate-900/60 hover:bg-slate-900/80 rounded-md border border-slate-700">
                     <div className="flex justify-between items-start" onClick={(e)=>{ if(e.target === e.currentTarget) router.push(`/blog/${b.blog_id}`)}}>
                         <div>
-                            <h3 className="text-lg font-semibold text-white">{b.title}</h3>
+                            <div className="flex items-center gap-3">
+                                <h3 className="text-lg font-semibold text-white">{b.title}</h3>
+                                <button
+                                className="gap-1.5 justify-center items-center flex flex-row px-3 py-1.5 rounded-full 
+                                    bg-gradient-to-r from-rose-500/10 to-orange-500/10 
+                                    hover:from-rose-500/20 hover:to-orange-500/20
+                                    border border-rose-500/20 hover:border-rose-500/30
+                                    text-white text-sm transition-all duration-300 ease-in-out
+                                    shadow-lg hover:shadow-rose-500/20 group"
+                                >
+                                    <HeartIcon className="text-rose-400 group-hover:text-rose-300 transition-colors" size={16}/>
+                                    <span className="text-rose-300/90 group-hover:text-rose-200 text-sm">{b.likes?.length || 0}</span>
+                                </button>
+                            </div>
                             <div className="text-sm text-gray-400 mt-1">
                                 {b.created_at ? new Date(b.created_at).toLocaleString() : ""}
                             </div>
