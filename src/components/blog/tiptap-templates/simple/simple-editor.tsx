@@ -184,78 +184,109 @@ const MobileToolbarContent = ({
   </>
 )
 
-export function SimpleEditor({onUpdate,onInit,mode,blog_id} : {onInit? : (title : string,description : string) => void,onUpdate : (json_config? : string , html_output? : string) => void,mode : "default" | "edit" ,blog_id? : string}) {
-  const isMobile = useIsMobile()
-  const { height } = useWindowSize()
-  const [mobileView, setMobileView] = React.useState<
-    "main" | "highlighter" | "link"
-  >("main")
-  const toolbarRef = React.useRef<HTMLDivElement>(null)
+export function SimpleEditor({
+    onUpdate,
+    onInit,
+    mode,
+    blog_id,
+    initialContent,
+}: {
+    onInit?: (title: string, description: string) => void;
+    onUpdate?: (json_config?: string, html_output?: string) => void;
+    mode: "default" | "edit";
+    blog_id?: string;
+    initialContent?: string;
+}) {
+    const isMobile = useIsMobile();
+    const { height } = useWindowSize();
+    const [mobileView, setMobileView] = React.useState<
+        "main" | "highlighter" | "link"
+    >("main");
+    const toolbarRef = React.useRef<HTMLDivElement>(null);
 
-  const editor = useEditor({
-    immediatelyRender: false,
-    shouldRerenderOnTransaction: false,
-    editorProps: {
-      attributes: {
-        autocomplete: "off",
-        autocorrect: "off",
-        autocapitalize: "off",
-        "aria-label": "Main content area, start typing to enter text.",
-        class: "simple-editor",
-      },
-    },
-    extensions: [
-      StarterKit.configure({
-        horizontalRule: false,
-        link: {
-          openOnClick: false,
-          enableClickSelection: true,
+    const editor = useEditor({
+        immediatelyRender: false,
+        shouldRerenderOnTransaction: false,
+        editorProps: {
+            attributes: {
+                autocomplete: "off",
+                autocorrect: "off",
+                autocapitalize: "off",
+                "aria-label": "Main content area, start typing to enter text.",
+                class: "simple-editor",
+            },
         },
-      }),
-      HorizontalRule,
-      TextAlign.configure({ types: ["heading", "paragraph"] }),
-      TaskList,
-      TaskItem.configure({ nested: true }),
-      Highlight.configure({ multicolor: true }),
-      Image,
-      Typography,
-      Superscript,
-      Subscript,
-      Selection,
-      ImageUploadNode.configure({
-        accept: "image/*",
-        maxSize: MAX_FILE_SIZE,
-        limit: 3,
-        upload: handleImageUpload,
-        onError: (error) => console.error("Upload failed:", error),
-      }),
-    ],
-    content : (mode == "default")? content : ""
-  })
+        extensions: [
+            StarterKit.configure({
+                horizontalRule: false,
+                link: {
+                    openOnClick: false,
+                    enableClickSelection: true,
+                },
+            }),
+            HorizontalRule,
+            TextAlign.configure({ types: ["heading", "paragraph"] }),
+            TaskList,
+            TaskItem.configure({ nested: true }),
+            Highlight.configure({ multicolor: true }),
+            Image,
+            Typography,
+            Superscript,
+            Subscript,
+            Selection,
+            ImageUploadNode.configure({
+                accept: "image/*",
+                maxSize: MAX_FILE_SIZE,
+                limit: 3,
+                upload: handleImageUpload,
+                onError: (error) => console.error("Upload failed:", error),
+            }),
+        ],
+        content: initialContent || (mode === "default" ? content : ""),
+    });
 
-  React.useMemo(()=>{
-    if(mode == "edit" && editor) {
-      (apiClient.get(`/api/v2/blogs/${blog_id}/manifest`,{
-          withCredentials : true
-      })).then((val : any)=>{
-        console.log(onInit)
-        if(onInit) {
-          onInit(val.title,val.description)
+    React.useEffect(() => {
+        if (editor && initialContent && editor.getHTML() !== initialContent) {
+            editor.commands.setContent(initialContent, false);
         }
-        editor?.commands.setContent(val.html_output)
-      })
-    }
-  },[editor])
+    }, [initialContent, editor]);
 
-  React.useEffect(()=>{
+    React.useMemo(() => {
+        if (mode == "edit" && editor) {
+            (apiClient.get(`/api/v2/blogs/${blog_id}/manifest`, {
+                withCredentials: true,
+            })).then((val: any) => {
+                console.log(onInit);
+                if (onInit) {
+                    onInit(val.title, val.description);
+                }
+                editor?.commands.setContent(val.html_output);
+            });
+        }
+    }, [editor, mode, blog_id, onInit]);
 
-    if(editor) {
-      onUpdate(JSON.stringify(editor?.getJSON() ?? "{}"),editor?.getHTML())
-      editor?.on('update',({editor})=>{
-        onUpdate(JSON.stringify(editor?.getJSON() ?? "{}"),editor?.getHTML())
-      })
-    }
-  },[editor])
+    React.useEffect(() => {
+        if (editor) {
+            const handleUpdate = () => {
+                if (onUpdate) {
+                    onUpdate(JSON.stringify(editor.getJSON() ?? "{}"), editor.getHTML());
+                }
+            };
+
+            // Set up the event listener
+            editor.on("update", handleUpdate);
+
+            // Trigger initial update if needed, but be careful not to overwrite parent state
+            if (onUpdate && !initialContent) {
+                 onUpdate(JSON.stringify(editor.getJSON() ?? "{}"), editor.getHTML());
+            }
+
+            // Cleanup
+            return () => {
+                editor.off("update", handleUpdate);
+            };
+        }
+    }, [editor, onUpdate, initialContent]);
 
   const rect = useCursorVisibility({
     editor,
