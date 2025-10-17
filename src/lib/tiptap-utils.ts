@@ -311,7 +311,7 @@ export const handleImageUpload = async (
   const formData = new FormData()
   formData.append("media",file)
   try {
-    ret = (await apiClient.post("/api/v2/blog/media",formData,{
+    ret = (await apiClient.post("/api/v2/blogs/media/",formData,{
       transformRequest : (r) => r
     })) as Record<string,string>
   }
