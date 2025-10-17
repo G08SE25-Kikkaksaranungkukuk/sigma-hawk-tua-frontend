@@ -1,39 +1,8 @@
-import { UserData, GroupResponse, CreateGroupRequest, Interest } from "@/lib/types";
+import { UserData, GroupResponse, CreateGroupRequest, Interest, ItineraryRequest, Itinerary, ItineraryResponse } from "@/lib/types";
 import axios, {AxiosResponse} from "axios";
 import { apiClient } from "@/lib/api";
-
-// Sample data for overview and testing
-export const SAMPLE_GROUP_DATA = {
-  id: "g1",
-  title: "Bangkok → Chiang Mai Lantern Trip",
-  destination: "Chiang Mai, Thailand",
-  dates: "12–16 Nov 2025 • 4 nights",
-  timezone: "GMT+7",
-  description:
-    "We're catching the Yi Peng lantern festival, cafe hopping, and a one‑day trek. Looking for easy‑going travelers who like food, photos, and night markets.",
-  privacy: "Private",
-  maxSize: 8,
-  currentSize: 5,
-  pace: "Balanced",
-  languages: ["English", "ไทย"],
-  interests: ["Food tour", "Temples", "Street photo", "Hiking", "Night market"],
-  requirements: ["ID/passport required for flights", "Comfortable with shared rooms", "Respect local culture"],
-  rules: ["No smoking in rooms", "Split bills with app", "Quiet hours 22:30–07:00"],
-  itinerary: [
-    { day: "Day 1", plan: "Fly BKK → CNX | Nimman dinner" },
-    { day: "Day 2", plan: "Old City temples + cafe crawl" },
-    { day: "Day 3", plan: "Doi Suthep + Hmong village" },
-    { day: "Day 4", plan: "Yi Peng Lantern Festival" },
-  ],
-  hostNote: "We prioritize friendly vibes over strict schedules ✨",
-  members: [
-    { id: "u1", name: "Mild", role: "Host" },
-    { id: "u2", name: "Ken", role: "Co‑host" },
-    { id: "u3", name: "Bea", role: "Member" },
-    { id: "u4", name: "Poom", role: "Member" },
-    { id: "u5", name: "Nui", role: "Member" },
-  ],
-};
+import { create } from "domain";
+import { get } from "http";
 
 // Group service implementation
 export const groupService = {
@@ -157,5 +126,38 @@ export const groupService = {
       }
     );
     return response;
+  },
+
+  getItineraries: async (groupId: string): Promise<ItineraryResponse[]> => {
+    const response = await apiClient.get<ItineraryResponse[], ItineraryResponse[]>(`/api/v2/groups/${groupId}/itineraries`, {
+      withCredentials: true,
+    });
+    return response;
+  },
+
+  updateItinerary: async (groupId: string, itinerary: ItineraryResponse): Promise<ItineraryResponse> => {
+    const response = await apiClient.patch<ItineraryResponse, ItineraryResponse>(`/api/v2/groups/${groupId}/itineraries/${itinerary.itinerary_id}`, itinerary, {
+      withCredentials: true,
+    });
+    return response;
+  },
+
+  createItinerary: async (createItineraryRequest: ItineraryRequest): Promise<ItineraryResponse> => {
+    const response = await apiClient.post<ItineraryResponse, ItineraryResponse>(`/api/v2/itineraries`, createItineraryRequest, {
+      withCredentials: true,
+    });
+    return response;
+  },
+
+  assignItineraryToGroup: async (groupId: string, itinerary_id: number): Promise<void> => {
+    await apiClient.post(`/api/v2/groups/${groupId}/itineraries/assign`, { itinerary_id: itinerary_id }, {
+      withCredentials: true,
+    });
+  },
+
+  deleteItinerary: async (groupId: string, itineraryId: number): Promise<void> => {
+    await apiClient.delete(`/api/v2/groups/${groupId}/itineraries/${itineraryId}`, {
+      withCredentials: true,
+    });
   }
 };
