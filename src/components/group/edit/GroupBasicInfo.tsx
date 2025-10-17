@@ -20,7 +20,7 @@ interface GroupBasicInfoProps {
     interests?: Interest[];
   };
   setGroupData: (data: any) => void;
-  onDataChange?: (data: { formData: any; profileImageFile: File | null; interestKeys?: string[] }) => void;
+  onDataChange?: (data: { formData: any; profileImageFile: File | null | undefined; interestKeys?: string[] }) => void;
   profileImageFile?: File | null;
 }
 
