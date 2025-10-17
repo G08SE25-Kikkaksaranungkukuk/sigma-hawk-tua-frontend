@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useCurrentUser } from "@/lib/hooks/user";
 import React from "react";
+import { useState } from 'react';
+import { z } from 'zod';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +25,15 @@ import {
     Check,
 } from "lucide-react";
 import { apiClient } from "@/lib/api";
+
+// Report Schema
+const reportSchema = z.object({
+    title: z.string().min(3, 'Title must be at least 3 characters').max(100, 'Title must be less than 100 characters'),
+    reason: z.string().min(1, 'Please select a reason'),
+    description: z.string().min(10, 'Description must be at least 10 characters').max(500, 'Description must be less than 500 characters'),
+});
+
+type ReportSchema = z.infer<typeof reportSchema>;
 
 const reportReasons = [
     { id: "HARASSMENT", label: "🚫 Harassment", description: "Bullying, threats, or intimidation" },
@@ -76,13 +87,14 @@ function ReportSuccess({ isOpen }: { isOpen: boolean }) {
 
 export default function ReportCreatePage() {
     const router = useRouter();
-    const [reportId, setReportId] = React.useState<string>("");
-    const [userId, setUserId] = React.useState<string>("");
-    const [title, setTitle] = React.useState<string>("User Harassment Report");
-    const [reason, setReason] = React.useState<string>("");
-    const [description, setDescription] = React.useState<string>("Detailed description of the incident...");
-    const [loading, setLoading] = React.useState(false);
-    const [showSuccessModal, setShowSuccessModal] = React.useState(false);
+    const [formData, setFormData] = useState<ReportSchema>({ 
+        title: '', 
+        reason: '', 
+        description: '' 
+    });
+    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [loading, setLoading] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
     
     const {
         currentUser,
@@ -99,15 +111,30 @@ export default function ReportCreatePage() {
         );
     }
 
-    const handleFormSubmit = async () => {
+    const handleChange = (name: string, value: string) => {
+        setFormData({ ...formData, [name]: value });
+        // Clear error when user starts typing
+        if (errors[name]) {
+            setErrors({ ...errors, [name]: '' });
+        }
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
         try {
+            // Validate the form data
+            reportSchema.parse(formData);
+            console.log('Form submitted:', formData);
+            setErrors({});
+            
+            // Submit to API
             setLoading(true);
             await apiClient.post(
                 "/api/v2/reports",
                 {
-                    title,
-                    reason,
-                    description,
+                    title: formData.title,
+                    reason: formData.reason,
+                    description: formData.description,
                 },
                 { withCredentials: true }
             );
@@ -118,9 +145,18 @@ export default function ReportCreatePage() {
             setTimeout(() => {
                 router.push("/home");
             }, 2000);
-        } catch (error) {
-            console.error("Report submission error:", error);
-            alert("Failed to submit report. Please try again.");
+        } catch (err) {
+            if (err instanceof z.ZodError) {
+                const errorMessages: Record<string, string> = {};
+                err.issues.forEach((error) => {
+                    const field = error.path[0] as string;
+                    errorMessages[field] = error.message;
+                });
+                setErrors(errorMessages);
+            } else {
+                console.error("Report submission error:", err);
+                alert("Failed to submit report. Please try again.");
+            }
         } finally {
             setLoading(false);
         }
@@ -164,7 +200,7 @@ export default function ReportCreatePage() {
                     </CardHeader>
 
                     <CardContent className="p-6">
-                        <form className="space-y-6">
+                        <form onSubmit={handleSubmit} className="space-y-6">
                            
                             {/* Title Input */}
                             <div className="space-y-2">
@@ -172,13 +208,20 @@ export default function ReportCreatePage() {
                                     Report Title *
                                 </Label>
                                 <Input
+                                    name="title"
                                     type="text"
                                     placeholder="Brief title for the report"
-                                    value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
-                                    className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-orange-500 focus:ring-orange-500/20"
+                                    value={formData.title}
+                                    onChange={(e) => handleChange('title', e.target.value)}
+                                    className={`bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-orange-500 focus:ring-orange-500/20 ${
+                                        errors.title ? 'border-red-500' : ''
+                                    }`}
                                     maxLength={100}
                                 />
+                                {errors.title && <p className="text-red-400 text-sm flex items-center gap-1">
+                                    <AlertTriangle className="w-4 h-4" />
+                                    {errors.title}
+                                </p>}
                             </div>
 
                             {/* Reason Selection */}
@@ -186,8 +229,10 @@ export default function ReportCreatePage() {
                                 <Label className="text-orange-300 font-medium">
                                     Reason *
                                 </Label>
-                                <Select value={reason} onValueChange={(value) => setReason(value)}>
-                                    <SelectTrigger className="bg-gray-800/50 border-gray-600 text-white focus:border-orange-500 focus:ring-orange-500/20">
+                                <Select value={formData.reason} onValueChange={(value) => handleChange('reason', value)}>
+                                    <SelectTrigger className={`pb-7 pt-7 bg-gray-800/50 border-gray-600 text-white focus:border-orange-500 focus:ring-orange-500/20 ${
+                                        errors.reason ? 'border-red-500' : ''
+                                    }`}>
                                         <SelectValue placeholder="Select reason" />
                                     </SelectTrigger>
                                     <SelectContent className="bg-gray-800 border-gray-600">
@@ -198,13 +243,17 @@ export default function ReportCreatePage() {
                                                 className="text-white hover:bg-gray-700 focus:bg-gray-700"
                                             >
                                                 <div>
-                                                    <div className="font-medium">{reasonItem.label}</div>
+                                                    <div className="font-medium text-left">{reasonItem.label}</div>
                                                     <div className="text-sm text-gray-400">{reasonItem.description}</div>
                                                 </div>
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
+                                {errors.reason && <p className="text-red-400 text-sm flex items-center gap-1">
+                                    <AlertTriangle className="w-4 h-4" />
+                                    {errors.reason}
+                                </p>}
                             </div>
 
                             {/* Description */}
@@ -213,24 +262,33 @@ export default function ReportCreatePage() {
                                     Description *
                                 </Label>
                                 <Textarea
+                                    name="description"
                                     placeholder="Please provide details about the incident..."
-                                    value={description}
-                                    onChange={(e) => setDescription(e.target.value)}
-                                    className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-orange-500 focus:ring-orange-500/20 min-h-[120px] resize-none"
+                                    value={formData.description}
+                                    onChange={(e) => handleChange('description', e.target.value)}
+                                    className={`bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-orange-500 focus:ring-orange-500/20 min-h-[120px] resize-none ${
+                                        errors.description ? 'border-red-500' : ''
+                                    }`}
                                     maxLength={500}
                                 />
                                 <div className="flex justify-between items-center">
-                                    <div></div>
+                                    {errors.description ? (
+                                        <p className="text-red-400 text-sm flex items-center gap-1">
+                                            <AlertTriangle className="w-4 h-4" />
+                                            {errors.description}
+                                        </p>
+                                    ) : (
+                                        <div></div>
+                                    )}
                                     <span className="text-xs text-gray-400">
-                                        {description.length}/500
+                                        {formData.description.length}/500
                                     </span>
                                 </div>
                             </div>
 
                             {/* Submit Button */}
                             <Button
-                                type="button"
-                                onClick={handleFormSubmit}
+                                type="submit"
                                 disabled={loading}
                                 className="w-full bg-orange-500 hover:bg-orange-600 text-black font-medium py-3 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                             >
