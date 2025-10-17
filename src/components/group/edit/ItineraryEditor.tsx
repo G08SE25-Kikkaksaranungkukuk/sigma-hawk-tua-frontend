@@ -173,25 +173,31 @@ export function ItineraryEditor({ groupId, itinerary, onSave, onCancel }: Itiner
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="start_date" className="text-orange-200/90">Start Date</Label>
-                <Input
-                  id="start_date"
-                  type="date"
-                  value={formData.start_date}
-                  onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                  required
-                  className="bg-[#0b0b0c]/50 border-gray-700/50 text-white focus:border-orange-400/50 focus:ring-orange-400/30"
-                />
+                <div className="relative">
+                  <Input
+                    id="start_date"
+                    type="date"
+                    value={formData.start_date}
+                    onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                    required
+                    className="bg-[#0b0b0c]/50 border-gray-700/50 text-white focus:border-orange-400/50 focus:ring-orange-400/30 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:brightness-0 [&::-webkit-calendar-picker-indicator]:contrast-200 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                    style={{ colorScheme: 'dark' }}
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="end_date" className="text-orange-200/90">End Date</Label>
-                <Input
-                  id="end_date"
-                  type="date"
-                  value={formData.end_date}
-                  onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-                  required
-                  className="bg-[#0b0b0c]/50 border-gray-700/50 text-white focus:border-orange-400/50 focus:ring-orange-400/30"
-                />
+                <div className="relative">
+                  <Input
+                    id="end_date"
+                    type="date"
+                    value={formData.end_date}
+                    onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                    required
+                    className="bg-[#0b0b0c]/50 border-gray-700/50 text-white focus:border-orange-400/50 focus:ring-orange-400/30 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:brightness-0 [&::-webkit-calendar-picker-indicator]:contrast-200 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                    style={{ colorScheme: 'dark' }}
+                  />
+                </div>
               </div>
             </div>
 
