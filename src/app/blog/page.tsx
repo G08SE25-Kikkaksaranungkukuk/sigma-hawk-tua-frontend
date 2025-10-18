@@ -21,7 +21,7 @@ import BlogForm from "@/components/blog/BlogForm";
 import BlogList from "@/components/blog/BlogList";
 import { Plus } from "lucide-react";
 
-// ...existing code...
+
 export default function blogHomePage() {
     const router = useRouter();
     const { groups, loading, error, refreshGroups } = useUserGroups();
@@ -67,4 +67,3 @@ export default function blogHomePage() {
         </div>
     );
 }
-// ...existing code...
