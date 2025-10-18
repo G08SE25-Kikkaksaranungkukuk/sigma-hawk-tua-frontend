@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Search } from 'lucide-react';
 import BlogList from '@/components/blog/BlogList';
+import { apiClient } from '@/lib/api';
 import { FloatingElements } from '@/components/shared';
 
 export default function BlogSearchPage() {
@@ -16,6 +17,9 @@ export default function BlogSearchPage() {
   const [query, setQuery] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   const [filters, setFilters] = useState<{ [key: string]: boolean }>({ travel: true, tips: true, news: true });
+  const [results, setResults] = useState<Array<{ blog_id: string; title: string; description?: string; created_at?: string }>>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Prefill from URL params on mount / when params change
   useEffect(() => {
@@ -39,15 +43,48 @@ export default function BlogSearchPage() {
   };
 
   // Navigate to the same page with updated params (idempotent)
-  const handleSearch = () => {
+  const handleSearch = async () => {
     const activeFilters = Object.keys(filters).filter((k) => filters[k]);
     const params = new URLSearchParams();
     if (query) params.set('q', query);
     if (sortBy) params.set('sort', sortBy);
     if (activeFilters.length) params.set('filters', activeFilters.join(','));
 
-    router.push(`/blog/search?${params.toString()}`);
+    const url = `/blog/search?${params.toString()}`;
+    router.push(url);
+
+    // Also fetch results immediately so UI updates without waiting for navigation
+    await fetchResults({ q: query, sort: sortBy, filters: activeFilters });
   };
+
+  const fetchResults = async (opts?: { q?: string; sort?: string; filters?: string[] }) => {
+    const q = opts?.q ?? searchParams.get('q') ?? '';
+    const sort = opts?.sort ?? searchParams.get('sort') ?? 'newest';
+    const filtersParam = opts?.filters ? opts.filters : (searchParams.get('filters') ? searchParams.get('filters')!.split(',').filter(Boolean) : []);
+
+    setLoading(true);
+    setError(null);
+    try {
+      const params: any = {};
+      if (q) params.q = q;
+      if (sort) params.sort = sort;
+      if (filtersParam && filtersParam.length) params.filters = Array.isArray(filtersParam) ? filtersParam.join(',') : filtersParam;
+
+      const data = await apiClient.get(`/api/v2/blogs/search`, { params });
+      setResults((data as any) || []);
+    } catch (err: any) {
+      setError(err?.message || 'Failed to fetch results');
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Fetch when URL params change so direct links/bookmarks work
+    fetchResults().catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
@@ -110,10 +147,26 @@ export default function BlogSearchPage() {
           </div>
         </div>
 
-        {/* Results (placeholder) */}
+        {/* Results */}
         <div className="max-w-3xl mx-auto">
-          {/* For now show BlogList as placeholder for results; wire to real results later */}
-          <BlogList />
+          {loading && <div className="text-gray-400">Searching...</div>}
+          {error && <div className="text-red-400">{error}</div>}
+          {!loading && !error && results.length === 0 && <div className="text-gray-400">No results found.</div>}
+
+          <div className="space-y-4 mt-5">
+            {results.map((b) => (
+              <article key={b.blog_id} className="p-4 bg-slate-900/60 hover:bg-slate-900/80 rounded-md border border-slate-700">
+                <div className="flex justify-between items-start" onClick={(e)=>{ if(e.target === e.currentTarget) router.push(`/blog/${b.blog_id}`)}}>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">{b.title}</h3>
+                    <div className="text-sm text-gray-400 mt-1">{b.created_at ? new Date(b.created_at).toLocaleString() : ''}</div>
+                  </div>
+                </div>
+
+                <p className="mt-3 text-sm text-gray-300 line-clamp-4">{b.description}</p>
+              </article>
+            ))}
+          </div>
         </div>
       </main>
     </div>
