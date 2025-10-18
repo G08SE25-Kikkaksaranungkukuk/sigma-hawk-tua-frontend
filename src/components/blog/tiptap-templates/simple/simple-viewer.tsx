@@ -80,14 +80,48 @@ const MainToolbarContent = ({
   onHighlighterClick,
   onLinkClick,
   isMobile,
+  likeCount = 0,
+  isLiked = false,
+  onLikeToggleAction,
+  loadingLike = false
 }: {
   onHighlighterClick: () => void
   onLinkClick: () => void
   isMobile: boolean
+  likeCount?: number
+  isLiked?: boolean
+  onLikeToggleAction?: () => Promise<void>
+  loadingLike?: boolean
 }) => {
   return (
     <>
-      <ToolbarGroup className="hidden">
+      <ToolbarGroup className="flex flex-1 items-center justify-center pt-4 pb-4">
+        <button
+          onClick={onLikeToggleAction}
+          disabled={loadingLike}
+          className={`flex items-center gap-3 py-2 px-4 rounded-full transition-all ${
+            isLiked 
+              ? "text-rose-500 hover:text-rose-400 bg-rose-500/10" 
+              : "text-gray-400 hover:text-gray-300 hover:bg-white/5"
+          }`}
+          aria-label={isLiked ? "Unlike" : "Like"}
+        >
+          <div className="flex items-center gap-1.5">
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              viewBox="0 0 24 24" 
+              width="16" 
+              height="16" 
+              fill="currentColor"
+            >
+              <path d="M12 21s-7.5-4.873-10-8.2C-0.2 8.9 3.333 4 7.5 6.5 9.5 7.9 12 10.2 12 10.2s2.5-2.3 4.5-3.7C20.667 4 24.2 8.9 22 12.8 19.5 16.127 12 21 12 21z" />
+            </svg>
+            <span className="text-sm font-medium">Like</span>
+          </div>
+          <span className={`text-sm font-medium border-l pl-3 ${
+            isLiked ? "border-rose-500" : "border-gray-400"
+          }`}>{formatLikeCount(likeCount)}</span>
+        </button>
         <ThemeToggle />
       </ToolbarGroup>
     </>
@@ -123,7 +157,40 @@ const MobileToolbarContent = ({
   </>
 )
 
-export function SimpleViewer({blog_id} : {blog_id? : string}) {
+const formatLikeCount = (count: number): string => {
+    if (count < 1000) return count.toString();
+    
+    const tiers = [
+        { threshold: 1e12, suffix: 'T' },
+        { threshold: 1e9, suffix: 'B' },
+        { threshold: 1e6, suffix: 'M' },
+        { threshold: 1e3, suffix: 'k' }
+    ];
+
+    for (let {threshold, suffix} of tiers) {
+        if (count >= threshold) {
+            const scaled = count / threshold;
+            const decimals = threshold === 1e3 ? 2 : 1;
+            return scaled.toFixed(decimals).replace(/\.?0+$/, '') + suffix;
+        }
+    }
+
+    return count.toString();
+};
+
+export function SimpleViewer({
+  blog_id,
+  likeCount = 0,
+  isLiked = false,
+  onLikeToggleAction,
+  loadingLike = false
+} : {
+  blog_id?: string
+  likeCount?: number
+  isLiked?: boolean
+  onLikeToggleAction?: () => Promise<void>
+  loadingLike?: boolean
+}) {
   const isMobile = useIsMobile()
   const { height } = useWindowSize()
   const [mobileView, setMobileView] = React.useState<
@@ -211,6 +278,10 @@ export function SimpleViewer({blog_id} : {blog_id? : string}) {
               onHighlighterClick={() => setMobileView("highlighter")}
               onLinkClick={() => setMobileView("link")}
               isMobile={isMobile}
+              likeCount={likeCount}
+              isLiked={isLiked}
+              onLikeToggleAction={onLikeToggleAction}
+              loadingLike={loadingLike}
             />
           ) : (
             <MobileToolbarContent

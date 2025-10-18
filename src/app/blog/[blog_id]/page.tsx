@@ -12,6 +12,30 @@ interface LikeInterface{
     count : Number
 }
 
+const formatLikeCount = (count: number): string => {
+    if (count < 1000) return count.toString();
+    
+    const tiers = [
+        { threshold: 1e12, suffix: 'T' },
+        { threshold: 1e9, suffix: 'B' },
+        { threshold: 1e6, suffix: 'M' },
+        { threshold: 1e3, suffix: 'k' }
+    ];
+
+    for (let {threshold, suffix} of tiers) {
+        if (count >= threshold) {
+            const scaled = count / threshold;
+            // For thousands, show two decimal places (1.23k)
+            // For millions and above, show one decimal place (1.2M)
+            const decimals = threshold === 1e3 ? 2 : 1;
+            // Only show decimals if they're non-zero
+            return scaled.toFixed(decimals).replace(/\.?0+$/, '') + suffix;
+        }
+    }
+
+    return count.toString();
+}
+
 export default function blogEditPage() {
     const router = useRouter();
     const params = useParams();
@@ -118,7 +142,13 @@ export default function blogEditPage() {
 
     return (
         <>
-            <SimpleViewer blog_id={blog_id}/>
+            <SimpleViewer 
+                blog_id={blog_id}
+                likeCount={likedCount ?? 0}
+                isLiked={liked}
+                onLikeToggleAction={toggleLike}
+                loadingLike={loadingLike}
+            />
             {/* Floating like button (fixed bottom-right) */}
             <div
                 className="fixed bottom-6 right-6 z-50 flex items-center gap-3"
@@ -142,9 +172,9 @@ export default function blogEditPage() {
 
                 <div
                     className="min-w-[44px] px-3 py-1 rounded-full bg-black/70 text-white text-sm flex items-center justify-center shadow-md"
-                    title={`${likedCount ?? '-'} likes`}
+                    title={`${likedCount ?? 0} likes`}
                 >
-                    {likedCount ?? "-"}
+                    {likedCount !== null ? formatLikeCount(likedCount) : "-"}
                 </div>
             </div>
         </>
