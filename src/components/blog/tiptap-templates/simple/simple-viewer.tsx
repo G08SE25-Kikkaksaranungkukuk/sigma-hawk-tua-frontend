@@ -136,7 +136,7 @@ const MobileToolbarContent = ({
   onBack: () => void
 }) => (
   <>
-    <ToolbarGroup className="hidden">
+    <ToolbarGroup>
       <Button data-style="ghost" onClick={onBack}>
         <ArrowLeftIcon className="tiptap-button-icon" />
         {type === "highlighter" ? (
@@ -248,11 +248,6 @@ export function SimpleViewer({
     }
   },[editor])
 
-  const rect = useCursorVisibility({
-    editor,
-    overlayHeight: toolbarRef.current?.getBoundingClientRect().height ?? 0,
-  })
-
   React.useEffect(() => {
     if (!isMobile && mobileView !== "main") {
       setMobileView("main")
@@ -263,15 +258,8 @@ export function SimpleViewer({
     <div className="simple-editor-wrapper">
       <EditorContext.Provider value={{ editor }}>
         <Toolbar
-          className="hidden border-none"
+          className="border-none"
           ref={toolbarRef}
-          style={{
-            ...(isMobile
-              ? {
-                  bottom: `calc(100% - ${height - rect.y}px)`,
-                }
-              : {}),
-          }}
         >
           {mobileView === "main" ? (
             <MainToolbarContent
@@ -291,11 +279,13 @@ export function SimpleViewer({
           )}
         </Toolbar>
 
-        <EditorContent
-          editor={editor}
-          role="presentation"
-          className="simple-editor-content"
-        />
+        <div>
+          <EditorContent
+            editor={editor}
+            role="presentation"
+            className="simple-editor-content prose-content-only"
+          />
+        </div>
       </EditorContext.Provider>
     </div>
   )
