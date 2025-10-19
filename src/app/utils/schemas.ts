@@ -74,5 +74,20 @@ export const loginSchema = z.object({
     .min(8, "Password is required and must be at least 8 characters")
 });
 
+export const reportSchema = z.object({
+  title: z
+    .string()
+    .min(3, "Title must be at least 3 characters")
+    .max(100, "Title must be less than 100 characters"),
+  reason: z
+    .string()
+    .min(1, "Please select a reason"),
+  description: z
+    .string()
+    .min(10, "Description must be at least 10 characters")
+    .max(500, "Description must be less than 500 characters"),
+});
+
 export type SignUpFormData = z.infer<typeof signUpSchema>;
 export type LoginFormData = z.infer<typeof loginSchema>;
+export type ReportFormData = z.infer<typeof reportSchema>;
