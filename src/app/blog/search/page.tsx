@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Search } from 'lucide-react';
-import BlogList from '@/components/blog/BlogList';
 import { apiClient } from '@/lib/api';
 import { FloatingElements } from '@/components/shared';
 
@@ -16,61 +15,57 @@ export default function BlogSearchPage() {
 
   const [query, setQuery] = useState('');
   const [sortBy, setSortBy] = useState('newest');
-  const [filters, setFilters] = useState<{ [key: string]: boolean }>({ travel: true, tips: true, news: true });
+  // interest ids are 1-based indexes (mirrors blog create page behavior)
+  const [interestIds, setInterestIds] = useState<number[]>([]);
   const [results, setResults] = useState<Array<{ blog_id: string; title: string; description?: string; created_at?: string }>>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Prefill from URL params on mount / when params change
   useEffect(() => {
-    const q = searchParams.get('q') ?? '';
-    const sort = searchParams.get('sort') ?? 'newest';
-    const filtersParam = searchParams.get('filters') ?? '';
+    const keyword = searchParams.get('keyword') ?? '';
+    const sort = searchParams.get('sort_by') ?? 'newest';
+    const interestsParam = searchParams.get('interest_id') ?? '';
 
-    setQuery(q);
+    setQuery(keyword);
     setSortBy(sort);
 
-    const activeFilters = filtersParam.split(',').filter(Boolean);
-    setFilters((prev) => {
-      const next = { ...prev };
-      Object.keys(next).forEach((k) => { next[k] = activeFilters.length ? activeFilters.includes(k) : true; });
-      return next;
-    });
+    const activeInterests = interestsParam.split(',').filter(Boolean).map((s) => Number(s));
+    setInterestIds(activeInterests || []);
   }, [searchParams]);
 
-  const toggleFilter = (key: string) => {
-    setFilters((prev) => ({ ...prev, [key]: !prev[key] }));
+  const toggleInterest = (id: number) => {
+    setInterestIds((prev) => (prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]));
   };
 
   // Navigate to the same page with updated params (idempotent)
   const handleSearch = async () => {
-    const activeFilters = Object.keys(filters).filter((k) => filters[k]);
     const params = new URLSearchParams();
-    if (query) params.set('q', query);
-    if (sortBy) params.set('sort', sortBy);
-    if (activeFilters.length) params.set('filters', activeFilters.join(','));
+    if (query) params.set('keyword', query);
+    if (sortBy) params.set('sort_by', sortBy);
+    if (interestIds.length) params.set('interest_id', interestIds.join(','));
 
     const url = `/blog/search?${params.toString()}`;
     router.push(url);
 
     // Also fetch results immediately so UI updates without waiting for navigation
-    await fetchResults({ q: query, sort: sortBy, filters: activeFilters });
+    await fetchResults({ keyword: query, sort_by: sortBy, interest_id: interestIds });
   };
 
-  const fetchResults = async (opts?: { q?: string; sort?: string; filters?: string[] }) => {
-    const q = opts?.q ?? searchParams.get('q') ?? '';
-    const sort = opts?.sort ?? searchParams.get('sort') ?? 'newest';
-    const filtersParam = opts?.filters ? opts.filters : (searchParams.get('filters') ? searchParams.get('filters')!.split(',').filter(Boolean) : []);
+  const fetchResults = async (opts?: { keyword?: string; sort_by?: string; interest_id?: number[] }) => {
+    const keyword = opts?.keyword ?? searchParams.get('keyword') ?? '';
+    const sort = opts?.sort_by ?? searchParams.get('sort_by') ?? 'newest';
+    const interestsParam = opts?.interest_id ? opts.interest_id : (searchParams.get('interest_id') ? searchParams.get('interest_id')!.split(',').filter(Boolean).map(Number) : []);
 
     setLoading(true);
     setError(null);
     try {
       const params: any = {};
-      if (q) params.q = q;
-      if (sort) params.sort = sort;
-      if (filtersParam && filtersParam.length) params.filters = Array.isArray(filtersParam) ? filtersParam.join(',') : filtersParam;
+      if (keyword) params.keyword = keyword;
+      if (sort) params.sort_by = sort;
+      if (interestsParam && interestsParam.length) params.interest_id = Array.isArray(interestsParam) ? interestsParam.join(',') : interestsParam;
 
-      const data = await apiClient.get(`/api/v2/blogs/search`, { params });
+      const { data } = await apiClient.get(`/api/v1/blog/search`, { params });
       setResults((data as any) || []);
     } catch (err: any) {
       setError(err?.message || 'Failed to fetch results');
@@ -121,29 +116,46 @@ export default function BlogSearchPage() {
                 <SelectContent>
                   <SelectItem value="newest">Newest</SelectItem>
                   <SelectItem value="oldest">Oldest</SelectItem>
-                  <SelectItem value="popular">Most popular</SelectItem>
-                  <SelectItem value="comments">Most commented</SelectItem>
+                  <SelectItem value="most_like">Most liked</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
         </div>
 
-        {/* Filters under search box */}
+        {/* Interests under search box */}
         <div className="max-w-3xl mx-auto mb-8">
-          <div className="flex items-center gap-4 text-sm text-gray-300">
-            <label className="flex items-center gap-2">
-              <input type="checkbox" checked={!!filters.travel} onChange={() => toggleFilter('travel')} />
-              <span>Travel</span>
-            </label>
-            <label className="flex items-center gap-2">
-              <input type="checkbox" checked={!!filters.tips} onChange={() => toggleFilter('tips')} />
-              <span>Tips</span>
-            </label>
-            <label className="flex items-center gap-2">
-              <input type="checkbox" checked={!!filters.news} onChange={() => toggleFilter('news')} />
-              <span>News</span>
-            </label>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { id: 1, label: '🌊 Sea' },
+              { id: 2, label: '⛰️ Mountain' },
+              { id: 3, label: '💧 Waterfall' },
+              { id: 4, label: '🏞️ National Park' },
+              { id: 5, label: '🏝️ Island' },
+              { id: 6, label: '🙏 Temple' },
+              { id: 7, label: '🛍️ Shopping Mall' },
+              { id: 8, label: '🏪 Market' },
+              { id: 9, label: '☕ Cafe' },
+              { id: 10, label: '🏛️ Historical' },
+              { id: 11, label: "🎢 Amusement Park" },
+              { id: 12, label: "🦁 Zoo"},
+              { id: 13, label: "🎉 Festival"},
+              { id: 14, label: "🏛️ Museum"},
+              { id: 15, label: "🍴 Food Street"},
+              { id: 16, label: "🍹 Beach Bar"},
+              { id: 17, label: "🎭 Theatre"},
+            ].map((it) => (
+              <button
+                key={it.id}
+                type="button"
+                onClick={() => toggleInterest(it.id)}
+                className={`px-2 py-1 rounded-full border-2 text-xs font-medium transition-all ${{}.toString()}`}
+              >
+                <span className={`${interestIds.includes(it.id) ? 'bg-orange-500 text-black border-transparent shadow-lg orange-glow px-2 py-1 rounded-full' : 'bg-gray-800/50 text-orange-300 border-orange-500/30 hover:border-orange-500 hover:bg-orange-500/10 px-2 py-1 rounded-full'}`}>
+                  {it.label}
+                </span>
+              </button>
+            ))}
           </div>
         </div>
 
