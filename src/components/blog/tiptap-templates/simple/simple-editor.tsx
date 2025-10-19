@@ -184,7 +184,7 @@ const MobileToolbarContent = ({
   </>
 )
 
-export function SimpleEditor({onUpdate,onInit,mode,blog_id} : {onInit? : (title : string,description : string) => void,onUpdate : (json_config? : string , html_output? : string) => void,mode : "default" | "edit" ,blog_id? : string}) {
+export function SimpleEditor({onUpdate,onInit,mode,blog_id, initialContent} : {onInit? : (title : string,description : string, interest_id: number[]) => void,onUpdate : (json_config? : string , html_output? : string) => void,mode : "default" | "edit" ,blog_id? : string, initialContent?: string}) {
   const isMobile = useIsMobile()
   const { height } = useWindowSize()
   const [mobileView, setMobileView] = React.useState<
@@ -230,23 +230,25 @@ export function SimpleEditor({onUpdate,onInit,mode,blog_id} : {onInit? : (title 
         onError: (error) => console.error("Upload failed:", error),
       }),
     ],
-    content : (mode == "default")? content : ""
+    content : initialContent || ((mode == "default")? content : "")
   })
 
-  React.useMemo(()=>{
-    if(mode == "edit" && editor) {
-      (apiClient.get(`/api/v2/blogs/${blog_id}/manifest`,{
-          withCredentials : true
-      })).then((val : any)=>{
-        console.log(onInit)
-        if(onInit) {
-          onInit(val.title,val.description)
+  React.useMemo(() => {
+    if (mode == "edit" && editor) {
+      (apiClient.get(`/api/v2/blogs/${blog_id}/manifest`, {
+        withCredentials: true,
+      })).then((val: any) => {
+        let interestIds: number[] = [];
+        if (Array.isArray(val.blog_interests)) {
+          interestIds = val.blog_interests.map((bi: any) => bi.interest_id);
         }
-        editor?.commands.setContent(val.html_output)
-      })
+        if (onInit) {
+          onInit(val.title, val.description, interestIds);
+        }
+        editor?.commands.setContent(val.html_output);
+      });
     }
-  },[editor])
-
+  }, [editor]);
   React.useEffect(()=>{
 
     if(editor) {
