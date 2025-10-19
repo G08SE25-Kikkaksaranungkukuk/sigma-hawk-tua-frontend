@@ -8,10 +8,10 @@ import { useState, useEffect } from "react";
 
 interface GroupHeroProps {
   title: string;
-  destination: string;
-  dateRange: string;
-  timezone: string;
-  location: string;
+  destination?: string;
+  dateRange?: string;
+  timezone?: string;
+  location?: string;
   interests: Interest[];
   groupType: string;
   isPublic: boolean;
@@ -134,45 +134,53 @@ export function GroupHero({
 
           {/* Details Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="flex items-center gap-3 p-4 bg-black/20 rounded-xl border border-[rgba(255,102,0,0.15)]">
-              <div className="w-10 h-10 bg-[#ff6600]/20 rounded-lg flex items-center justify-center">
-                <MapPin className="w-5 h-5 text-[#ff6600]" />
+            {destination && (
+              <div className="flex items-center gap-3 p-4 bg-black/20 rounded-xl border border-[rgba(255,102,0,0.15)]">
+                <div className="w-10 h-10 bg-[#ff6600]/20 rounded-lg flex items-center justify-center">
+                  <MapPin className="w-5 h-5 text-[#ff6600]" />
+                </div>
+                <div>
+                  <p className="text-gray-400 text-sm">Destination</p>
+                  <p className="text-white font-medium">{destination}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-gray-400 text-sm">Destination</p>
-                <p className="text-white font-medium">{destination}</p>
-              </div>
-            </div>
+            )}
             
-            <div className="flex items-center gap-3 p-4 bg-black/20 rounded-xl border border-[rgba(255,102,0,0.15)]">
-              <div className="w-10 h-10 bg-[#ff6600]/20 rounded-lg flex items-center justify-center">
-                <Calendar className="w-5 h-5 text-[#ff6600]" />
+            {dateRange && (
+              <div className="flex items-center gap-3 p-4 bg-black/20 rounded-xl border border-[rgba(255,102,0,0.15)]">
+                <div className="w-10 h-10 bg-[#ff6600]/20 rounded-lg flex items-center justify-center">
+                  <Calendar className="w-5 h-5 text-[#ff6600]" />
+                </div>
+                <div>
+                  <p className="text-gray-400 text-sm">Date Range</p>
+                  <p className="text-white font-medium">{dateRange}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-gray-400 text-sm">Date Range</p>
-                <p className="text-white font-medium">{dateRange}</p>
-              </div>
-            </div>
+            )}
             
-            <div className="flex items-center gap-3 p-4 bg-black/20 rounded-xl border border-[rgba(255,102,0,0.15)]">
-              <div className="w-10 h-10 bg-[#ff6600]/20 rounded-lg flex items-center justify-center">
-                <Clock className="w-5 h-5 text-[#ff6600]" />
+            {timezone && (
+              <div className="flex items-center gap-3 p-4 bg-black/20 rounded-xl border border-[rgba(255,102,0,0.15)]">
+                <div className="w-10 h-10 bg-[#ff6600]/20 rounded-lg flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-[#ff6600]" />
+                </div>
+                <div>
+                  <p className="text-gray-400 text-sm">Timezone</p>
+                  <p className="text-white font-medium">{timezone}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-gray-400 text-sm">Timezone</p>
-                <p className="text-white font-medium">{timezone}</p>
-              </div>
-            </div>
+            )}
             
-            <div className="flex items-center gap-3 p-4 bg-black/20 rounded-xl border border-[rgba(255,102,0,0.15)]">
-              <div className="w-10 h-10 bg-[#ff6600]/20 rounded-lg flex items-center justify-center">
-                <Globe className="w-5 h-5 text-[#ff6600]" />
+            {location && (
+              <div className="flex items-center gap-3 p-4 bg-black/20 rounded-xl border border-[rgba(255,102,0,0.15)]">
+                <div className="w-10 h-10 bg-[#ff6600]/20 rounded-lg flex items-center justify-center">
+                  <Globe className="w-5 h-5 text-[#ff6600]" />
+                </div>
+                <div>
+                  <p className="text-gray-400 text-sm">Location</p>
+                  <p className="text-white font-medium">{location}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-gray-400 text-sm">Location</p>
-                <p className="text-white font-medium">{location}</p>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Interests */}
