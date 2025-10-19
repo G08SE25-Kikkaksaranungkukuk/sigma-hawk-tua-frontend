@@ -11,6 +11,7 @@ import { AxiosError } from "axios";
 import TravelInviteModal from "@/components/TravelInviteModal";
 import { groupService } from "@/lib/services/group/group-service";
 import { Member as APIMember } from "@/lib/types";
+import { useRouter } from "next/navigation";
 
 interface MemberWithOwner extends APIMember {
   isOwner?: boolean;
@@ -23,6 +24,8 @@ export function GroupMembers({ groupId, maxMembers }: { groupId: number; maxMemb
   const [loading, setLoading] = useState(true);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [pageUrl, setPageUrl] = useState<string>("");
+
+  const router = useRouter();
 
   // Fetch group members from backend
   useEffect(() => {
@@ -95,6 +98,7 @@ export function GroupMembers({ groupId, maxMembers }: { groupId: number; maxMemb
       setGroupLeaderId(userId);
       
       toast.success("Ownership transferred successfully");
+      router.push(`/group/${groupId}/info`);
     } catch (error) {
       if (error instanceof AxiosError) {
         console.error(error);
@@ -128,7 +132,7 @@ export function GroupMembers({ groupId, maxMembers }: { groupId: number; maxMemb
 
   return (
     <div className="space-y-6">
-      <Card className="bg-[#12131a]/90 backdrop-blur-sm border-gray-800/70 shadow-2xl">
+      <Card className="bg-gray-900/60 backdrop-blur-sm border-orange-500/20 shadow-2xl">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -221,7 +225,7 @@ export function GroupMembers({ groupId, maxMembers }: { groupId: number; maxMemb
       </Card>
 
       {/* Pending Requests */}
-      <Card className="bg-[#12131a]/90 backdrop-blur-sm border-gray-800/70 shadow-2xl">
+      <Card className="bg-gray-900/60 backdrop-blur-sm border-orange-500/20 shadow-2xl">
         <CardHeader>
           <CardTitle className="text-orange-400">Join Requests</CardTitle>
           <CardDescription className="text-orange-200/80">
@@ -266,7 +270,7 @@ function TransferOwnershipDialog({ memberName, onConfirm }: { memberName: string
         <Crown className="h-4 w-4" />
       </Button>
       <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
-        <AlertDialogContent className="bg-[#12131a] border-gray-800 text-white">
+        <AlertDialogContent className="bg-gray-900/90 backdrop-blur-sm border-orange-500/20 text-white">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-orange-400">Transfer Ownership</AlertDialogTitle>
             <AlertDialogDescription className="text-orange-200/70">
@@ -305,7 +309,7 @@ function RemoveMemberDialog({ memberName, onConfirm }: { memberName: string; onC
         <UserMinus className="h-4 w-4" />
       </Button>
       <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
-        <AlertDialogContent className="bg-[#12131a] border-gray-800 text-white">
+        <AlertDialogContent className="bg-gray-900/90 backdrop-blur-sm border-orange-500/20 text-white">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-orange-400">Remove Member</AlertDialogTitle>
             <AlertDialogDescription className="text-orange-200/70">

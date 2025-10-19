@@ -105,7 +105,7 @@ export function GroupBasicInfo({ groupData, setGroupData, onDataChange, profileI
   };
 
   return (
-    <Card className="bg-[#12131a]/90 backdrop-blur-sm border-gray-800/70 shadow-2xl">
+    <Card className="bg-gray-900/60 backdrop-blur-sm border-orange-500/20 shadow-2xl">
       <CardHeader>
         <CardTitle className="text-orange-400">Basic Information</CardTitle>
         <CardDescription className="text-orange-200/80">

@@ -5,8 +5,8 @@ import { Itinerary } from "@/lib/types";
 
 interface ItineraryCardProps {
   itinerary: Itinerary;
-  onEdit: () => void;
-  onDelete: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 export function ItineraryCard({ itinerary, onEdit, onDelete }: ItineraryCardProps) {
@@ -23,7 +23,7 @@ export function ItineraryCard({ itinerary, onEdit, onDelete }: ItineraryCardProp
   };
 
   return (
-    <div className="border border-gray-800/70 bg-[#1a1b23]/50 rounded-xl p-4 hover:border-[#ff6600]/50 transition-colors">
+    <div className="border border-orange-500/20 bg-gray-900/60 backdrop-blur-sm rounded-xl p-4 hover:border-[#ff6600]/50 transition-colors">
       {/* Header with title and actions */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
@@ -32,24 +32,30 @@ export function ItineraryCard({ itinerary, onEdit, onDelete }: ItineraryCardProp
             {itinerary.description}
           </p>
         </div>
-        <div className="flex gap-2 ml-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onEdit}
-            className="text-orange-300 hover:text-white hover:bg-[#ff6600]"
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onDelete}
-            className="text-orange-300 hover:text-white hover:bg-red-600"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
+        {(onEdit || onDelete) && (
+          <div className="flex gap-2 ml-4">
+            {onEdit && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onEdit}
+                className="text-orange-300 hover:text-white hover:bg-[#ff6600]"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            )}
+            {onDelete && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onDelete}
+                className="text-orange-300 hover:text-white hover:bg-red-600"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Itinerary metadata */}

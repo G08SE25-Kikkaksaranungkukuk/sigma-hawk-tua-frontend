@@ -82,7 +82,7 @@ export function GroupHero({
   // 2. Fallback to groupImage prop (static fallback)
   const displayImage = profileImageUrl || groupImage;
   return (
-    <div className="bg-gradient-to-r from-[#12131a] to-[#1a1b24] rounded-3xl border border-[rgba(255,102,0,0.25)] overflow-hidden">
+    <div className="bg-gray-900/60 backdrop-blur-sm rounded-3xl border border-orange-500/20 overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5 pointer-events-none">
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#ff6600] rounded-full blur-3xl transform translate-x-32 -translate-y-32"></div>
