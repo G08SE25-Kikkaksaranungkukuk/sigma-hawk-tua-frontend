@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { Search } from 'lucide-react';
+import { Search, Filter, ChevronDown, ChevronUp } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 import { FloatingElements } from '@/components/shared';
 
@@ -15,6 +15,7 @@ export default function BlogSearchPage() {
 
   const [query, setQuery] = useState('');
   const [sortBy, setSortBy] = useState('newest');
+  const [showFilters, setShowFilters] = useState(true);
   // interest ids are 1-based indexes (mirrors blog create page behavior)
   const [interestIds, setInterestIds] = useState<number[]>([]);
   const [results, setResults] = useState<Array<{ blog_id: string; title: string; description?: string; created_at?: string }>>([]);
@@ -97,65 +98,98 @@ export default function BlogSearchPage() {
               className="!h-10 flex-1"
             />
 
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleSearch}
-              className="h-10 w-10 p-0"
-              aria-label="Execute search"
-            >
-              <Search className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleSearch}
+                className="h-10 w-10 p-0"
+                aria-label="Execute search"
+              >
+                <Search className="w-4 h-4" />
+              </Button>
 
+              {/* Move sort select to after the search button */}
               <div className="w-44">
-              <Select value={sortBy} onValueChange={(val) => setSortBy(val)}>
-                <SelectTrigger className="h-10">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">Newest</SelectItem>
-                  <SelectItem value="oldest">Oldest</SelectItem>
-                  <SelectItem value="most_like">Most liked</SelectItem>
-                </SelectContent>
-              </Select>
+                <Select value={sortBy} onValueChange={(val) => setSortBy(val)}>
+                  <SelectTrigger className="h-10">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest</SelectItem>
+                    <SelectItem value="oldest">Oldest</SelectItem>
+                    <SelectItem value="most_like">Most liked</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowFilters((s) => !s)}
+                className="h-10 px-2"
+                aria-expanded={showFilters}
+                aria-controls="blog-search-filters"
+              >
+                <Filter className="w-4 h-4 mr-2" />
+                <span className="text-sm">Filters</span>
+                <span className="ml-2">
+                  {showFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </span>
+              </Button>
             </div>
           </div>
         </div>
 
-        {/* Interests under search box */}
-        <div className="max-w-3xl mx-auto mb-8">
-          <div className="flex flex-wrap gap-2">
-            {[
-              { id: 1, label: '🌊 Sea' },
-              { id: 2, label: '⛰️ Mountain' },
-              { id: 3, label: '💧 Waterfall' },
-              { id: 4, label: '🏞️ National Park' },
-              { id: 5, label: '🏝️ Island' },
-              { id: 6, label: '🙏 Temple' },
-              { id: 7, label: '🛍️ Shopping Mall' },
-              { id: 8, label: '🏪 Market' },
-              { id: 9, label: '☕ Cafe' },
-              { id: 10, label: '🏛️ Historical' },
-              { id: 11, label: "🎢 Amusement Park" },
-              { id: 12, label: "🦁 Zoo"},
-              { id: 13, label: "🎉 Festival"},
-              { id: 14, label: "🏛️ Museum"},
-              { id: 15, label: "🍴 Food Street"},
-              { id: 16, label: "🍹 Beach Bar"},
-              { id: 17, label: "🎭 Theatre"},
-            ].map((it) => (
-              <button
-                key={it.id}
-                type="button"
-                onClick={() => toggleInterest(it.id)}
-                className={`px-2 py-1 rounded-full border-2 text-xs font-medium transition-all ${{}.toString()}`}
-              >
-                <span className={`${interestIds.includes(it.id) ? 'bg-orange-500 text-black border-transparent shadow-lg orange-glow px-2 py-1 rounded-full' : 'bg-gray-800/50 text-orange-300 border-orange-500/30 hover:border-orange-500 hover:bg-orange-500/10 px-2 py-1 rounded-full'}`}>
-                  {it.label}
-                </span>
-              </button>
-            ))}
+        {/* Filters panel (hidden by default) */}
+        <div className="max-w-3xl mx-auto mb-4">
+          <div
+            id="blog-search-filters"
+            className={`mt-4 p-4 border border-white/10 rounded-md bg-white/5 transition-all w-full ${showFilters ? 'block' : 'hidden'}`}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex-1">
+                <div className="text-sm text-gray-300">Choose interests to filter results</div>
+              </div>
+              <div className="ml-4">
+                <Button size="sm" onClick={() => { setInterestIds([]); setSortBy('newest'); }} variant="outline">Reset</Button>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {[
+                { id: 1, label: '🌊 Sea' },
+                { id: 2, label: '⛰️ Mountain' },
+                { id: 3, label: '💧 Waterfall' },
+                { id: 4, label: '🏞️ National Park' },
+                { id: 5, label: '🏝️ Island' },
+                { id: 6, label: '🙏 Temple' },
+                { id: 7, label: '🛍️ Shopping Mall' },
+                { id: 8, label: '🏪 Market' },
+                { id: 9, label: '☕ Cafe' },
+                { id: 10, label: '🏛️ Historical' },
+                { id: 11, label: "🎢 Amusement Park" },
+                { id: 12, label: "🦁 Zoo"},
+                { id: 13, label: "🎉 Festival"},
+                { id: 14, label: "🏛️ Museum"},
+                { id: 15, label: "🍴 Food Street"},
+                { id: 16, label: "🍹 Beach Bar"},
+                { id: 17, label: "🎭 Theatre"},
+              ].map((it) => (
+                <button
+                  key={it.id}
+                  type="button"
+                  onClick={() => toggleInterest(it.id)}
+                  className="px-2 py-1 rounded-full border-2 text-xs font-medium transition-all"
+                >
+                  <span className={`${interestIds.includes(it.id) ? 'bg-orange-500 text-black border-transparent shadow-lg orange-glow px-2 py-1 rounded-full' : 'bg-gray-800/50 text-orange-300 border-orange-500/30 hover:border-orange-500 hover:bg-orange-500/10 px-2 py-1 rounded-full'}`}>
+                    {it.label}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
