@@ -24,7 +24,7 @@ import BlogForm from "@/components/blog/BlogForm";
 import BlogList from "@/components/blog/BlogList";
 import { Plus } from "lucide-react";
 
-// ...existing code...
+
 export default function blogHomePage() {
     const router = useRouter();
     const [query, setQuery] = useState('');
@@ -118,4 +118,3 @@ export default function blogHomePage() {
         </div>
     );
 }
-// ...existing code...

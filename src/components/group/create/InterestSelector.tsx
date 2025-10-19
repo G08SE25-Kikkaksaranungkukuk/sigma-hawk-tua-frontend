@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Interest } from '@/lib/types/home';
+import { Interest } from '@/lib/types/api';
 import { groupService } from '@/lib/services/group/group-service';
 import { InterestsPill } from '@/components/ui/interests-pill';
 
@@ -17,7 +17,6 @@ export function InterestSelector({ selectedInterestKeys, onInterestKeysChange }:
       try {
         setLoading(true);
         const response = await groupService.getInterests();
-        
         // Normalize the response - handle both array and object formats
         let interests: Interest[] = [];
         if (Array.isArray(response)) {

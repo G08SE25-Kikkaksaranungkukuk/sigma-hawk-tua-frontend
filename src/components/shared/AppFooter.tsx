@@ -110,10 +110,10 @@ export const AppFooter: React.FC = () => {
                 Contact Us
               </a>
               <a
-                href="/signup/privacyPolicy"
+                href="/report"
                 className="block text-orange-300/80 hover:text-orange-400 text-sm transition-colors"
               >
-                Privacy Policy
+                Report a Problem
               </a>
             </div>
           </div>

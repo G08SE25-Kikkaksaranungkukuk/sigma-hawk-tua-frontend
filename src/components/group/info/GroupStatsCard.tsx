@@ -42,7 +42,7 @@ export function GroupStatsCard({
 
   const handleManageGroup = () => {
     if (userRole === 'host') {
-      router.push(`/group/${groupId}/manage`);
+      router.push(`/group/${groupId}/edit`);
     } else if (userRole === 'member' || userRole === 'visitor') {
       router.push(`/group/${groupId}/info`);
     }
