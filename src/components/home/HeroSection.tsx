@@ -94,20 +94,20 @@ export default function HeroSection() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Button size="lg" className="group px-8 py-6 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300">
+            {/* <Button size="lg" className="group px-8 py-6 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300">
               <BookOpen className="w-5 h-5 mr-2" />
               Start Exploring
               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
-            </Button>
+            </Button> */}
           </motion.div>
           
           <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Button variant="outline" size="lg" className="px-8 py-6 rounded-full border-2 border-orange-500 text-orange-500 hover:bg-orange-500/10 transition-all duration-300">
+            {/* <Button variant="outline" size="lg" className="px-8 py-6 rounded-full border-2 border-orange-500 text-orange-500 hover:bg-orange-500/10 transition-all duration-300">
               View Gallery
-            </Button>
+            </Button> */}
           </motion.div>
         </motion.div>
       </div>

@@ -149,12 +149,12 @@ export function ItineraryPage({ groupId, onComplete, groupData }: ItineraryPageP
 
         {/* Group Info Badge */}
         <div className="flex items-center justify-center gap-6 text-sm mb-12">
-          <div className="flex items-center gap-2 px-4 py-2 bg-[#12131a] rounded-full border border-gray-800/50">
+          <div className="flex items-center gap-2 px-4 py-2 bg-gray-900/60 backdrop-blur-sm rounded-full border border-orange-500/20">
             <MapPin className="w-4 h-4 text-[#ff6600]" />
             <span className="text-[#e8eaee]">{groupData.destination || 'Destination not set'}</span>
           </div>
           {groupData.startDate && groupData.endDate && (
-            <div className="flex items-center gap-2 px-4 py-2 bg-[#12131a] rounded-full border border-gray-800/50">
+            <div className="flex items-center gap-2 px-4 py-2 bg-gray-900/60 backdrop-blur-sm rounded-full border border-orange-500/20">
               <Calendar className="w-4 h-4 text-[#ff6600]" />
               <span className="text-[#e8eaee]">
                 {formatDate(groupData.startDate)} → {formatDate(groupData.endDate)}
@@ -187,7 +187,7 @@ export function ItineraryPage({ groupId, onComplete, groupData }: ItineraryPageP
               )}
 
               {/* Create New Itinerary Button */}
-              <div className="bg-[#12131a] rounded-3xl p-8 border border-gray-800/50">
+              <div className="bg-gray-900/60 backdrop-blur-sm rounded-3xl p-8 border border-orange-500/20">
                 <div className="text-center">
                   <div className="w-16 h-16 rounded-2xl bg-[#ff6600]/10 flex items-center justify-center mx-auto mb-4">
                     <Plus className="w-8 h-8 text-[#ff6600]" />
@@ -212,7 +212,7 @@ export function ItineraryPage({ groupId, onComplete, groupData }: ItineraryPageP
 
               {/* Complete Creation Button */}
               {itineraries.length > 0 && (
-                <div className="bg-[#12131a] rounded-3xl p-8 border border-gray-800/50">
+                <div className="bg-gray-900/60 backdrop-blur-sm rounded-3xl p-8 border border-orange-500/20">
                   <div className="space-y-4">
                     <div className="h-px bg-gradient-to-r from-transparent via-[#ff6600]/30 to-transparent"></div>
                     
@@ -237,7 +237,7 @@ export function ItineraryPage({ groupId, onComplete, groupData }: ItineraryPageP
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={deletingId !== null} onOpenChange={(open) => !open && setDeletingId(null)}>
-        <AlertDialogContent className="bg-[#1a1b23] border-gray-800">
+        <AlertDialogContent className="bg-gray-900/90 backdrop-blur-sm border-orange-500/20">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-[#e8eaee]">Delete Itinerary</AlertDialogTitle>
             <AlertDialogDescription className="text-[#9aa3b2]">

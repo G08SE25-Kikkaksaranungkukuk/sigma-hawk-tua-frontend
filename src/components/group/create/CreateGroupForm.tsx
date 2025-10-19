@@ -100,7 +100,7 @@ export function CreateGroupForm({ groupData, updateGroupData, onSubmit, onCancel
   };
 
   return (
-    <div className="bg-[#12131a]/90 backdrop-blur-sm rounded-3xl p-8 border border-gray-800/70 shadow-2xl">
+    <div className="bg-gray-900/60 backdrop-blur-sm rounded-3xl p-8 border border-orange-500/20 shadow-2xl">
       <div className="space-y-6">
         {/* Form Header */}
         <div>

@@ -1,6 +1,13 @@
+'use client';
+
+import { useState, useEffect } from "react";
 import { ExpandableSection } from "./ExpandableSection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Interest, Member } from "@/lib/types";
+import { Interest, Member, ItineraryResponse } from "@/lib/types";
+import { ItineraryCard } from "@/components/group/Itinerary/ItineraryCard";
+import { groupService } from "@/lib/services/group/group-service";
+import { CalendarDays, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export interface GroupInfoProps {
   group_id: number
@@ -14,10 +21,29 @@ export interface GroupInfoProps {
   updated_at: string
 }
 
-
 export function GroupInfoCard({ groupInfo }: { groupInfo: GroupInfoProps }) {
+  const [itineraries, setItineraries] = useState<ItineraryResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchItineraries();
+  }, [groupInfo.group_id]);
+
+  const fetchItineraries = async () => {
+    try {
+      setLoading(true);
+      const data = await groupService.getItineraries(groupInfo.group_id.toString());
+      setItineraries(data);
+    } catch (error) {
+      console.error("Error fetching itineraries:", error);
+      toast.error("Failed to load itineraries");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <Card className="bg-[#12131a] border-[rgba(255,102,0,0.25)] rounded-2xl">
+    <Card className="bg-gray-900/60 backdrop-blur-sm border-orange-500/20 rounded-2xl">
       <CardHeader>
         <CardTitle className="text-white text-xl">Trip Details</CardTitle>
       </CardHeader>
@@ -32,105 +58,28 @@ export function GroupInfoCard({ groupInfo }: { groupInfo: GroupInfoProps }) {
           </ExpandableSection>
           
           <ExpandableSection title="Itinerary">
-            <div className="space-y-6">
-              <div className="relative pl-6">
-                <div className="absolute left-0 top-2 w-3 h-3 bg-[#ff6600] rounded-full"></div>
-                <div className="absolute left-1.5 top-5 w-0.5 h-full bg-[#ff6600]/30"></div>
-                <h4 className="text-white mb-2 font-medium">Day 1: Bangkok Exploration</h4>
-                <p className="text-sm text-gray-300">
-                  Arrival, Grand Palace tour, Wat Pho temple visit, evening river cruise
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-orange-400" />
+              </div>
+            ) : itineraries.length === 0 ? (
+              <div className="text-center py-8 text-orange-200/70">
+                <CalendarDays className="mx-auto h-12 w-12 text-orange-400/50 mb-4" />
+                <p className="text-sm">No itineraries yet</p>
+                <p className="text-xs text-orange-200/50 mt-2">
+                  The group host can add itineraries from the edit page
                 </p>
               </div>
-              <div className="relative pl-6">
-                <div className="absolute left-0 top-2 w-3 h-3 bg-[#ff6600] rounded-full"></div>
-                <div className="absolute left-1.5 top-5 w-0.5 h-full bg-[#ff6600]/30"></div>
-                <h4 className="text-white mb-2 font-medium">Day 2: Bangkok Markets & Street Food</h4>
-                <p className="text-sm text-gray-300">
-                  Chatuchak Weekend Market, cooking class, street food tour in Chinatown
-                </p>
+            ) : (
+              <div className="space-y-4">
+                {itineraries.map((itinerary) => (
+                  <ItineraryCard
+                    key={itinerary.itinerary_id}
+                    itinerary={itinerary}
+                  />
+                ))}
               </div>
-              <div className="relative pl-6">
-                <div className="absolute left-0 top-2 w-3 h-3 bg-[#ff6600] rounded-full"></div>
-                <div className="absolute left-1.5 top-5 w-0.5 h-full bg-[#ff6600]/30"></div>
-                <h4 className="text-white mb-2 font-medium">Day 3: Travel to Chiang Mai</h4>
-                <p className="text-sm text-gray-300">
-                  Morning flight, check-in, explore Old City, evening at Night Bazaar
-                </p>
-              </div>
-              <div className="relative pl-6">
-                <div className="absolute left-0 top-2 w-3 h-3 bg-[#ff6600] rounded-full"></div>
-                <div className="absolute left-1.5 top-5 w-0.5 h-full bg-[#ff6600]/30"></div>
-                <h4 className="text-white mb-2 font-medium">Day 4: Temples & Lantern Preparation</h4>
-                <p className="text-sm text-gray-300">
-                  Doi Suthep temple, lantern making workshop, traditional dinner
-                </p>
-              </div>
-              <div className="relative pl-6">
-                <div className="absolute left-0 top-2 w-3 h-3 bg-[#ff6600] rounded-full"></div>
-                <h4 className="text-white mb-2 font-medium">Day 5: Yi Peng Lantern Festival</h4>
-                <p className="text-sm text-gray-300">
-                  Festival celebrations, lantern release ceremony, farewell dinner
-                </p>
-              </div>
-            </div>
-          </ExpandableSection>
-          
-          <ExpandableSection title="Requirements">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-[#ff6600] rounded-full mt-2 flex-shrink-0"></div>
-                  <p className="text-sm">Valid passport with at least 6 months remaining</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-[#ff6600] rounded-full mt-2 flex-shrink-0"></div>
-                  <p className="text-sm">Travel insurance required</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-[#ff6600] rounded-full mt-2 flex-shrink-0"></div>
-                  <p className="text-sm">Moderate fitness level for temple climbing</p>
-                </div>
-              </div>
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-[#ff6600] rounded-full mt-2 flex-shrink-0"></div>
-                  <p className="text-sm">Respectful clothing for temple visits</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-[#ff6600] rounded-full mt-2 flex-shrink-0"></div>
-                  <p className="text-sm">Basic English communication skills</p>
-                </div>
-              </div>
-            </div>
-          </ExpandableSection>
-          
-          <ExpandableSection title="House Rules">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-[#ff6600] rounded-full mt-2 flex-shrink-0"></div>
-                  <p className="text-sm">Be respectful of local customs and traditions</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-[#ff6600] rounded-full mt-2 flex-shrink-0"></div>
-                  <p className="text-sm">Stay with the group during activities</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-[#ff6600] rounded-full mt-2 flex-shrink-0"></div>
-                  <p className="text-sm">No illegal substances or excessive drinking</p>
-                </div>
-              </div>
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-[#ff6600] rounded-full mt-2 flex-shrink-0"></div>
-                  <p className="text-sm">Contribute positively to group dynamics</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-[#ff6600] rounded-full mt-2 flex-shrink-0"></div>
-                  <p className="text-sm">Report any issues to the host immediately</p>
-                </div>
-              </div>
-            </div>
+            )}
           </ExpandableSection>
         </div>
       </CardContent>

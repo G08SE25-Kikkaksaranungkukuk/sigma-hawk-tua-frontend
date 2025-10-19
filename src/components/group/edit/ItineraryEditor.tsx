@@ -152,7 +152,7 @@ export function ItineraryEditor({ groupId, itinerary, onSave, onCancel }: Itiner
 
       <form id="itinerary-form" onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Info Card */}
-        <Card className="bg-[#12131a]/90 backdrop-blur-sm border-gray-800/70">
+        <Card className="bg-gray-900/60 backdrop-blur-sm border-orange-500/20">
           <CardHeader>
             <CardTitle className="text-orange-400">Basic Information</CardTitle>
             <CardDescription className="text-orange-200/60">Set the title, dates, and description</CardDescription>
@@ -224,7 +224,7 @@ export function ItineraryEditor({ groupId, itinerary, onSave, onCancel }: Itiner
 
         {/* Map Preview Card */}
         {places.length > 0 && (
-          <Card className="bg-[#12131a]/90 backdrop-blur-sm border-gray-800/70">
+          <Card className="bg-gray-900/60 backdrop-blur-sm border-orange-500/20">
             <CardHeader>
               <CardTitle className="text-orange-400">Map Preview</CardTitle>
               <CardDescription className="text-orange-200/60">
@@ -238,7 +238,7 @@ export function ItineraryEditor({ groupId, itinerary, onSave, onCancel }: Itiner
         )}
 
         {/* Places Card */}
-        <Card className="bg-[#12131a]/90 backdrop-blur-sm border-gray-800/70">
+        <Card className="bg-gray-900/60 backdrop-blur-sm border-orange-500/20">
           <CardHeader>
             <div>
               <CardTitle className="text-orange-400">Places</CardTitle>

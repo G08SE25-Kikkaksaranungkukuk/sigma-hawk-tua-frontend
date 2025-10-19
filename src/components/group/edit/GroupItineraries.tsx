@@ -92,7 +92,7 @@ export function GroupItineraries({ groupId }: { groupId: number }) {
   // Show list view
   return (
     <div className="space-y-6">
-      <Card className="bg-[#12131a]/90 backdrop-blur-sm border-gray-800/70 shadow-2xl">
+      <Card className="bg-gray-900/60 backdrop-blur-sm border-orange-500/20 shadow-2xl">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <div>
             <CardTitle className="text-orange-400">Group Itineraries</CardTitle>
@@ -136,7 +136,7 @@ export function GroupItineraries({ groupId }: { groupId: number }) {
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={deletingId !== null} onOpenChange={(open) => !open && setDeletingId(null)}>
-        <AlertDialogContent className="bg-[#1a1b23] border-gray-800">
+        <AlertDialogContent className="bg-gray-900/90 backdrop-blur-sm border-orange-500/20">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-orange-300">Delete Itinerary</AlertDialogTitle>
             <AlertDialogDescription className="text-orange-200/70">
