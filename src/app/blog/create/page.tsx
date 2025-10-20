@@ -7,29 +7,29 @@ import { Input } from "@/components/ui/input";
 import React, { useState, useEffect } from "react";
 import { apiClient } from "@/lib/api";
 
-const interestsList = [
-    { id: "SEA", label: "🌊 Sea", color: "blue" },
-    { id: "MOUNTAIN", label: "⛰️ Mountain", color: "green" },
-    { id: "WATERFALL", label: "💧 Waterfall", color: "sky" },
-    { id: "NATIONAL_PARK", label: "🏞️ National Park", color: "teal" },
-    { id: "ISLAND", label: "🏝️ Island", color: "cyan" },
-    { id: "TEMPLE", label: "🙏 Temple", color: "indigo" },
-    { id: "SHOPPING_MALL", label: "🛍️ Shopping Mall", color: "violet" },
-    { id: "MARKET", label: "🏪 Market", color: "orange" },
-    { id: "CAFE", label: "☕ Cafe", color: "amber" },
-    { id: "HISTORICAL", label: "🏛️ Historical", color: "yellow" },
-    { id: "AMUSEMENT_PARK", label: "🎢 Amusement Park", color: "pink" },
-    { id: "ZOO", label: "🦁 Zoo", color: "emerald" },
-    { id: "FESTIVAL", label: "🎉 Festival", color: "red" },
-    { id: "MUSEUM", label: "🏛️ Museum", color: "purple" },
-    { id: "FOOD_STREET", label: "🍴 Food Street", color: "rose" },
-    { id: "BEACH_BAR", label: "🍹 Beach Bar", color: "cyan" },
-    { id: "THEATRE", label: "🎭 Theatre", color: "slate" },
-];
+// Interests will be fetched from backend
+type Interest = {
+    id: number | string;
+    label: string;
+    color?: string;
+    emoji?: string;
+};
 
 const DRAFT_KEY = "blogCreationDraft";
 
 export default function BlogCreatePage() {
+    const [interestsList, setInterestsList] = useState<Interest[]>([]);
+    // Fetch interests from backend
+    useEffect(() => {
+        fetch('/api/interest')
+            .then((res) => res.json())
+            .then((data) => {
+                if (data?.data?.interests) {
+                    setInterestsList(data.data.interests);
+                }
+            })
+            .catch(() => setInterestsList([]));
+    }, []);
     const router = useRouter();
     const [json_config, set_json_config] = useState<string | undefined>();
     const [html_output, set_html_output] = useState<string | undefined>();
@@ -130,18 +130,18 @@ export default function BlogCreatePage() {
                 {/* Start of the Tagging System Element */}
                 <div className="p-4 border border-white/10 rounded-md bg-white/5">
                     <div className="flex flex-wrap gap-2">
-                        {interestsList.map((interest, index) => (
+                        {interestsList.map((interest) => (
                             <button
                                 key={interest.id}
                                 type="button"
-                                onClick={() => toggleTag(index + 1)}
+                                onClick={() => toggleTag(Number(interest.id))}
                                 className={`px-2 py-1 rounded-full border-2 text-xs font-medium transition-all chip-bounce ${
-                                    tags.includes(index + 1)
+                                    tags.includes(Number(interest.id))
                                         ? `bg-orange-500 text-black border-transparent shadow-lg orange-glow`
                                         : "bg-gray-800/50 text-orange-300 border-orange-500/30 hover:border-orange-500 hover:bg-orange-500/10"
                                 }`}
                             >
-                                {interest.label}
+                                {interest.emoji ? `${interest.emoji} ` : ''}{interest.label}
                             </button>
                         ))}
                     </div>

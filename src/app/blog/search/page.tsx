@@ -9,6 +9,13 @@ import { Search, Filter, ChevronDown, ChevronUp, HeartIcon } from 'lucide-react'
 import { apiClient } from '@/lib/api';
 import { FloatingElements } from '@/components/shared';
 
+type Interest = {
+  id: number | string;
+  label: string;
+  color?: string;
+  emoji?: string;
+};
+
 export default function BlogSearchPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -21,6 +28,19 @@ export default function BlogSearchPage() {
   const [results, setResults] = useState<Array<{ blog_id: string; title: string; description?: string; created_at?: string; likes?: any[]; }>>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [interestsList, setInterestsList] = useState<Interest[]>([]);
+
+  // Fetch interests from backend
+  useEffect(() => {
+    fetch('/api/interest')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.data?.interests) {
+          setInterestsList(data.data.interests);
+        }
+      })
+      .catch(() => setInterestsList([]));
+  }, []);
 
   // Prefill from URL params on mount / when params change
   useEffect(() => {
@@ -98,48 +118,21 @@ export default function BlogSearchPage() {
               className="!h-10 flex-1"
             />
 
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleSearch}
-                className="h-10 w-10 p-0"
-                aria-label="Execute search"
-              >
-                <Search className="w-4 h-4" />
-              </Button>
-
-              {/* Move sort select to after the search button */}
-              <div className="w-44">
-                <Select value={sortBy} onValueChange={(val) => setSortBy(val)}>
-                  <SelectTrigger className="h-10">
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="newest">Newest</SelectItem>
-                    <SelectItem value="oldest">Oldest</SelectItem>
-                    <SelectItem value="most_like">Most liked</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowFilters((s) => !s)}
-                className="h-10 px-2"
-                aria-expanded={showFilters}
-                aria-controls="blog-search-filters"
-              >
-                <Filter className="w-4 h-4 mr-2" />
-                <span className="text-sm">Filters</span>
-                <span className="ml-2">
-                  {showFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                </span>
-              </Button>
-            </div>
+            {/* Interest pills are only rendered in the filters panel below */}
+            <Button
+              aria-expanded={showFilters}
+              aria-controls="blog-search-filters"
+              variant="outline"
+              size="sm"
+              className="ml-4 flex items-center"
+              onClick={() => setShowFilters((prev) => !prev)}
+            >
+              <Filter className="w-4 h-4 mr-2" />
+              <span className="text-sm">Filters</span>
+              <span className="ml-2">
+                {showFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </span>
+            </Button>
           </div>
         </div>
 
@@ -159,34 +152,18 @@ export default function BlogSearchPage() {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {[
-                { id: 1, label: '🌊 Sea' },
-                { id: 2, label: '⛰️ Mountain' },
-                { id: 3, label: '💧 Waterfall' },
-                { id: 4, label: '🏞️ National Park' },
-                { id: 5, label: '🏝️ Island' },
-                { id: 6, label: '🙏 Temple' },
-                { id: 7, label: '🛍️ Shopping Mall' },
-                { id: 8, label: '🏪 Market' },
-                { id: 9, label: '☕ Cafe' },
-                { id: 10, label: '🏛️ Historical' },
-                { id: 11, label: "🎢 Amusement Park" },
-                { id: 12, label: "🦁 Zoo"},
-                { id: 13, label: "🎉 Festival"},
-                { id: 14, label: "🏛️ Museum"},
-                { id: 15, label: "🍴 Food Street"},
-                { id: 16, label: "🍹 Beach Bar"},
-                { id: 17, label: "🎭 Theatre"},
-              ].map((it) => (
+              {interestsList.map((interest) => (
                 <button
-                  key={it.id}
+                  key={interest.id}
                   type="button"
-                  onClick={() => toggleInterest(it.id)}
-                  className="px-2 py-1 rounded-full border-2 text-xs font-medium transition-all"
+                  onClick={() => toggleInterest(Number(interest.id))}
+                  className={`px-2 py-1 rounded-full border-2 text-xs font-medium transition-all
+                    ${interestIds.includes(Number(interest.id))
+                      ? 'bg-orange-500 text-black border-transparent shadow-lg orange-glow'
+                      : 'bg-gray-800/50 text-orange-300 border-orange-500/30 hover:border-orange-500 hover:bg-orange-500/10'}
+                  `}
                 >
-                  <span className={`${interestIds.includes(it.id) ? 'bg-orange-500 text-black border-transparent shadow-lg orange-glow px-2 py-1 rounded-full' : 'bg-gray-800/50 text-orange-300 border-orange-500/30 hover:border-orange-500 hover:bg-orange-500/10 px-2 py-1 rounded-full'}`}>
-                    {it.label}
-                  </span>
+                  {interest.emoji ? `${interest.emoji} ` : ''}{interest.label}
                 </button>
               ))}
             </div>
