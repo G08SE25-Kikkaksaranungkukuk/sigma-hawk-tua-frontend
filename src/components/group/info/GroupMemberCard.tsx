@@ -19,7 +19,7 @@ interface GroupMembersCardProps {
 
 export function GroupMembersCard({ members, totalMembers, maxMembers }: GroupMembersCardProps) {
   return (
-    <Card className="bg-[#12131a] border-[rgba(255,102,0,0.25)] rounded-2xl overflow-hidden">
+    <Card className="bg-gray-900/60 backdrop-blur-sm border-orange-500/20 rounded-2xl overflow-hidden">
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center gap-2 text-white">
           <Users className="w-5 h-5 text-[#ff6600]" />

@@ -42,7 +42,7 @@ export function GroupStatsCard({
 
   const handleManageGroup = () => {
     if (userRole === 'host') {
-      router.push(`/group/${groupId}/manage`);
+      router.push(`/group/${groupId}/edit`);
     } else if (userRole === 'member' || userRole === 'visitor') {
       router.push(`/group/${groupId}/info`);
     }
@@ -93,7 +93,7 @@ export function GroupStatsCard({
   const memberProgress = (members.current / members.max) * 100;
 
   return (
-    <Card className="bg-[#12131a] border-[rgba(255,102,0,0.25)] rounded-2xl">
+    <Card className="bg-gray-900/60 backdrop-blur-sm border-orange-500/20 rounded-2xl">
       <CardHeader className="pb-4">
         <CardTitle className="text-white flex items-center gap-2">
           <Users className="w-5 h-5 text-[#ff6600]" />

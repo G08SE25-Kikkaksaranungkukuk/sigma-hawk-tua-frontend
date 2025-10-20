@@ -3,4 +3,5 @@ export interface Interest {
   key: string;
   color: string;
   emoji: string;
+  label: string;
 }

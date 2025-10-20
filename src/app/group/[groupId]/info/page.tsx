@@ -117,10 +117,6 @@ export default function GroupInfoPage({ params }: { params: Promise<{ groupId?: 
 
   const groupData = {
     title: groupInfo.group_name,
-    destination: "Bangkok & Chiang Mai, Thailand",
-    dateRange: "Nov 15-20, 2024",
-    timezone: "GMT+7 (ICT)",
-    location: "Thailand",
     interests: groupInfo.interests as Interest[],
     groupType: "Public Group",
     isPublic: true
