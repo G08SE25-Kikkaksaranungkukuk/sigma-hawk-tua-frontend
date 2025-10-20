@@ -1,146 +1,173 @@
 import { BentoBlogCard } from "./BentoBlogCard";
+import { blogService } from "@/lib/services/blog/blogService";
+import { Blog } from "@/lib/types/api";
+import { useEffect, useState } from "react";
 
-const blogPosts = [
-  {
-    id: 1,
-    title: "Building Modern Web Applications with React and TypeScript",
-    excerpt: "Discover the best practices for building scalable and maintainable web applications using React, TypeScript, and modern development tools. Learn how to structure your project for long-term success and create applications that scale.",
-    image: "https://images.unsplash.com/photo-1593720213681-e9a8778330a7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3ZWIlMjBkZXZlbG9wbWVudCUyMGNvZGluZ3xlbnwxfHx8fDE3NTkwNzQ4ODV8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    category: "Development",
-    author: "Sarah Chen",
-    date: "Sep 25, 2025",
-    readTime: "8 min read"
-  },
-  {
-    id: 2,
-    title: "The Future of AI in Software Development",
-    excerpt: "Explore how artificial intelligence is revolutionizing the way we write code, test applications, and deploy software. From code generation to automated testing, AI is changing everything we know about development.",
-    image: "https://images.unsplash.com/photo-1625314887424-9f190599bd56?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhcnRpZmljaWFsJTIwaW50ZWxsaWdlbmNlJTIwcm9ib3R8ZW58MXx8fHwxNzU5MDMzNzk5fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    category: "AI",
-    author: "Marcus Rodriguez",
-    date: "Sep 22, 2025",
-    readTime: "12 min read"
-  },
-  {
-    id: 3,
-    title: "Designing Intuitive User Interfaces: A Complete Guide",
-    excerpt: "Learn the principles of good UI design and how to create interfaces that users love. From color theory to typography, spacing, and interaction design patterns.",
-    image: "https://images.unsplash.com/photo-1618761714954-0b8cd0026356?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkZXNpZ24lMjB1aSUyMGludGVyZmFjZXxlbnwxfHx8fDE3NTkwNzUwMTN8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    category: "Design",
-    author: "Emma Thompson",
-    date: "Sep 20, 2025",
-    readTime: "10 min read"
-  },
-  {
-    id: 4,
-    title: "Building a Successful Tech Startup: Lessons Learned",
-    excerpt: "Insights from entrepreneurs who have built successful tech companies. Learn about common pitfalls, funding strategies, and how to build a team that can execute your vision.",
-    image: "https://images.unsplash.com/photo-1702468049239-49fd1cf99d20?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdGFydXAlMjBidXNpbmVzcyUyMHRlYW18ZW58MXx8fHwxNzU5MDAxODI4fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    category: "Business",
-    author: "David Park",
-    date: "Sep 18, 2025",
-    readTime: "15 min read"
-  },
-  {
-    id: 5,
-    title: "Mobile App Development: Native vs Cross-Platform",
-    excerpt: "A comprehensive comparison of native development versus cross-platform solutions. Understand the pros and cons of each approach and when to choose which strategy.",
-    image: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2JpbGUlMjBhcHAlMjBkZXZlbG9wbWVudHxlbnwxfHx8fDE3NTkwMjEzNzJ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    category: "Mobile",
-    author: "Lisa Wang",
-    date: "Sep 15, 2025",
-    readTime: "7 min read"
-  },
-  {
-    id: 6,
-    title: "Remote Work: Building Productive Development Teams",
-    excerpt: "Best practices for managing remote development teams, tools that enhance collaboration, and strategies for maintaining team culture in a distributed environment.",
-    image: "https://images.unsplash.com/photo-1505495142263-9357db572571?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0ZWNobm9sb2d5JTIwYmxvZyUyMHdvcmtzcGFjZXxlbnwxfHx8fDE3NTkwNzUwMTJ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    category: "Remote Work",
-    author: "James Mitchell",
-    date: "Sep 12, 2025",
-    readTime: "9 min read"
-  }
-];
-
-// Smart layout function based on content properties
-const getLayoutSize = (post: typeof blogPosts[0], index: number) => {
-  // First post is always featured
-  if (index === 0) return { size: "featured", orientation: "horizontal" };
-  
-  // Determine size based on content characteristics
-  const readTimeMinutes = parseInt(post.readTime);
-  const isLongContent = readTimeMinutes >= 12;
-  const isMediumContent = readTimeMinutes >= 8;
-  
-  // Priority categories that should be larger
-  const priorityCategories = ["AI", "Development", "Business"];
-  const isPriority = priorityCategories.includes(post.category);
-  
-  // Recent posts (within last 5 days) get priority
-  const postDate = new Date(post.date);
-  const now = new Date();
-  const daysDiff = Math.floor((now.getTime() - postDate.getTime()) / (1000 * 3600 * 24));
-  const isRecent = daysDiff <= 5;
-  
-  // Decision logic
-  if (isLongContent || (isPriority && isRecent)) {
-    return { size: "large", orientation: "vertical" };
-  } else if (isMediumContent || isPriority || isRecent) {
-    return { size: "medium", orientation: "vertical" };
-  } else {
-    return { size: "small", orientation: "vertical" };
+// Helper function to extract image URL from json_config
+const extractImageFromJsonConfig = (jsonConfig: string): string | null => {
+  try {
+    const config = JSON.parse(jsonConfig);
+    const findImage = (content: any[]): string | null => {
+      for (const node of content) {
+        if (node.type === 'image' && node.attrs?.src) {
+          return node.attrs.src;
+        }
+        if (node.content) {
+          const found = findImage(node.content);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+    return findImage(config.content || []);
+  } catch {
+    return null;
   }
 };
 
-// Alternative: Predefined pattern for consistent visual balance
-const bentoLayoutPattern = [
-  { size: "featured", orientation: "horizontal" }, // First post - always featured
-  { size: "medium", orientation: "vertical" },     // Second post
-  { size: "medium", orientation: "vertical" },     // Third post
-  { size: "small", orientation: "vertical" },      // Fourth post
-  { size: "small", orientation: "vertical" },      // Fifth post
-  { size: "large", orientation: "vertical" },      // Sixth post
-];
+// Helper function to calculate read time based on content
+const calculateReadTime = (htmlOutput: string): string => {
+  const text = htmlOutput.replace(/<[^>]*>/g, '');
+  const wordCount = text.split(/\s+/).filter(word => word.length > 0).length;
+  const readTime = Math.max(1, Math.ceil(wordCount / 200)); // Average reading speed: 200 words/min
+  return `${readTime} min read`;
+};
 
-// Choose which approach to use
-const USE_SMART_LAYOUT = true; // Set to true for content-based sizing
+// Transform Blog API data to the format expected by BentoBlogCard
+const transformBlogData = (blog: Blog) => {
+  const imageUrl = extractImageFromJsonConfig(blog.json_config);
+  const category = blog.blog_interests.length > 0 
+    ? blog.blog_interests[0].interest_name || "General" 
+    : "General";
+  
+  return {
+    id: blog.blog_id,
+    title: blog.title,
+    excerpt: blog.description,
+    image: imageUrl || "https://images.unsplash.com/photo-1579547621113-e4bb2a19bdd6?w=1080", // Fallback image
+    category: category,
+    author: `User ${blog.user_id}`, // You might want to fetch user details separately
+    date: new Date(blog.created_at).toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    }),
+    readTime: calculateReadTime(blog.html_output)
+  };
+};
+
+// Repeating Bento layout pattern for neat alignment
+const getLayoutPattern = (index: number): { size: "small" | "medium" | "large" | "featured", orientation: "horizontal" | "vertical" } => {
+  // First post is always featured
+  if (index === 0) return { size: "featured", orientation: "horizontal" };
+  
+  // Define a repeating pattern that tiles nicely in the grid
+  // Pattern repeats every 8 posts after the featured one
+  const patterns = [
+    { size: "medium", orientation: "vertical" },   // Post 1
+    { size: "medium", orientation: "vertical" },   // Post 2
+    { size: "small", orientation: "vertical" },    // Post 3
+    { size: "small", orientation: "vertical" },    // Post 4
+    { size: "large", orientation: "vertical" },    // Post 5
+    { size: "small", orientation: "vertical" },    // Post 6
+    { size: "medium", orientation: "vertical" },   // Post 7
+    { size: "medium", orientation: "vertical" },   // Post 8
+  ] as const;
+  
+  // Use modulo to repeat the pattern
+  const patternIndex = (index - 1) % patterns.length;
+  return patterns[patternIndex];
+};
 
 export function BlogSection() {
+  const [blogs, setBlogs] = useState<Blog[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        setLoading(true);
+        const data = await blogService.getAllBlogs();
+        setBlogs(data);
+        setError(null);
+      } catch (err) {
+        console.error("Failed to fetch blogs:", err);
+        setError("Failed to load blog posts. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBlogs();
+  }, []);
+
+  // Transform blogs to the format expected by BentoBlogCard
+  const blogPosts = blogs.map(transformBlogData);
+
+  if (loading) {
+    return (
+      <section className="py-16 px-4 max-w-7xl mx-auto bg-transparent">
+        <div className="text-center mb-12">
+          <h2 className="mb-4 text-4xl font-bold text-orange-500">Latest Blog Posts</h2>
+          <p className="text-gray-300 max-w-2xl mx-auto">
+            Loading blog posts...
+          </p>
+        </div>
+        <div className="flex justify-center items-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="py-16 px-4 max-w-7xl mx-auto bg-transparent">
+        <div className="text-center mb-12">
+          <h2 className="mb-4 text-4xl font-bold text-orange-500">Latest Blog Posts</h2>
+          <p className="text-red-400 max-w-2xl mx-auto">{error}</p>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-16 px-4 max-w-7xl mx-auto bg-transparent">
       <div className="text-center mb-12">
         <h2 className="mb-4 text-4xl font-bold text-orange-500">Latest Blog Posts</h2>
         <p className="text-gray-300 max-w-2xl mx-auto">
-          Stay updated with the latest insights, tutorials, and trends in technology, 
-          design, and business from our expert team.
+          Stay inspired with the latest travel stories, destination guides, and adventure tips from our passionate explorers.
         </p>
       </div>
       
       {/* Bento Grid Layout */}
       <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 auto-rows-[minmax(250px,auto)] gap-4">
         {blogPosts.map((post, index) => {
-          // Use smart layout or predefined pattern
-          const layout = USE_SMART_LAYOUT 
-            ? getLayoutSize(post, index)
-            : bentoLayoutPattern[index] || { size: "medium", orientation: "vertical" };
+          const layout = getLayoutPattern(index);
           
           return (
             <BentoBlogCard 
               key={post.id} 
               post={post} 
-              size={layout.size as "small" | "medium" | "large" | "featured"}
-              orientation={layout.orientation as "horizontal" | "vertical"}
+              size={layout.size}
+              orientation={layout.orientation}
             />
           );
         })}
       </div>
       
-      <div className="text-center mt-12">
+      {blogPosts.length === 0 && !loading && (
+        <div className="text-center py-12">
+          <p className="text-gray-400">No blog posts available yet.</p>
+        </div>
+      )}
+      
+      {/* <div className="text-center mt-12">
         <button className="bg-orange-600 text-white px-8 py-3 rounded-lg hover:bg-orange-700 transition-all duration-300 hover:scale-105 hover:shadow-lg">
           View All Posts
         </button>
-      </div>
+      </div> */}
     </section>
   );
 }

@@ -177,10 +177,16 @@ export default function blogHomePage() {
                 <section className="mt-8">
                     <div className="flex flex-row justify-between">
                         <h2 className="text-2xl font-semibold text-white mb-4">Your Blogs</h2>
-                    <a href="/blog/create" className="bg-orange-500 hover:bg-orange-600 rounded-md px-6 flex flex-row items-center justify-center gap-1 text-sm font-bold">
-                        <Plus></Plus>
-                        Create Blog
-                    </a>
+                    <div className="flex gap-3">
+                        <a href="/blogfeed" className="bg-gray-700 hover:bg-gray-600 rounded-md px-6 flex flex-row items-center justify-center gap-1 text-sm font-bold text-white transition-colors">
+                            <Search className="w-4 h-4" />
+                            Blog Feed
+                        </a>
+                        <a href="/blog/create" className="bg-orange-500 hover:bg-orange-600 rounded-md px-6 flex flex-row items-center justify-center gap-1 text-sm font-bold transition-colors">
+                            <Plus className="w-4 h-4" />
+                            Create Blog
+                        </a>
+                    </div>
                     </div>
                     <BlogList currentUser={currentUser}/>
                 </section>

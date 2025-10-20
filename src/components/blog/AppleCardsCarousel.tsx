@@ -14,40 +14,40 @@ interface FeatureCard {
 const featuredCards: FeatureCard[] = [
   {
     id: 1,
-    title: "Master React & TypeScript",
-    description: "Build production-ready applications with the latest React patterns and TypeScript best practices.",
-    image: "https://images.unsplash.com/photo-1558301204-e3226482a77b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9ncmFtbWluZyUyMGNvdXJzZXxlbnwxfHx8fDE3NTkwMTAzNTl8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    category: "Course",
+    title: "Hidden Gems of Southeast Asia",
+    description: "Discover breathtaking destinations off the beaten path, from secret beaches to mountain villages that few travelers know about.",
+    image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=1080&q=80",
+    category: "Adventure",
     featured: true
   },
   {
     id: 2,
-    title: "Tech Innovation Summit 2025",
-    description: "Join industry leaders and innovators as they share insights on the future of technology.",
-    image: "https://images.unsplash.com/photo-1560439514-0fc9d2cd5e1b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0ZWNoJTIwZXZlbnQlMjBzcGVha2Vyc3xlbnwxfHx8fDE3NTkwNzU0NjZ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    category: "Event",
+    title: "European Train Adventures",
+    description: "Experience the romance of rail travel across Europe's most scenic routes, connecting historic cities and stunning landscapes.",
+    image: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1080&q=80",
+    category: "Europe",
     featured: true
   },
   {
     id: 3,
-    title: "Design Systems Masterclass",
-    description: "Create scalable design systems that improve consistency and developer productivity.",
-    image: "https://images.unsplash.com/photo-1742440711276-679934f5b988?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjcmVhdGl2ZSUyMHdvcmtzcGFjZSUyMGRlc2lnbnxlbnwxfHx8fDE3NTkwMTA4ODV8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    category: "Workshop"
+    title: "Street Food Around the World",
+    description: "A culinary journey through bustling markets and food stalls, tasting authentic flavors from Bangkok to Mexico City.",
+    image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=1080&q=80",
+    category: "Food & Culture"
   },
   {
     id: 4,
-    title: "AI & Machine Learning Bootcamp",
-    description: "Dive deep into artificial intelligence and machine learning with hands-on projects.",
-    image: "https://images.unsplash.com/photo-1523961131990-5ea7c61b2107?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkaWdpdGFsJTIwaW5ub3ZhdGlvbnxlbnwxfHx8fDE3NTkwNzU0NjF8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    category: "Bootcamp"
+    title: "Solo Travel Guide 2025",
+    description: "Essential tips and inspiring stories for those brave enough to explore the world on their own terms.",
+    image: "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1080&q=80",
+    category: "Solo Travel"
   },
   {
     id: 5,
-    title: "Remote Team Leadership",
-    description: "Learn effective strategies for leading and managing distributed development teams.",
-    image: "https://images.unsplash.com/photo-1588912914074-b93851ff14b8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxvbmxpbmUlMjBsZWFybmluZyUyMHBsYXRmb3JtfGVufDF8fHx8MTc1OTAyNDgwN3ww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    category: "Leadership"
+    title: "Island Paradise Escapes",
+    description: "From tropical hideaways to remote archipelagos, explore the world's most stunning island destinations.",
+    image: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1080&q=80",
+    category: "Beach & Islands"
   }
 ];
 
@@ -84,9 +84,9 @@ export function AppleCardsCarousel() {
     <section className="py-20 px-4 bg-transparent">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="mb-4 text-4xl font-bold text-orange-500">Featured Content</h2>
+          <h2 className="mb-4 text-4xl font-bold text-orange-500">Featured Travel Stories</h2>
           <p className="text-gray-300 max-w-2xl mx-auto">
-            Discover our handpicked selection of courses, events, and resources designed to accelerate your tech journey.
+            Embark on extraordinary journeys through our handpicked collection of travel adventures, destination guides, and wanderlust-inspiring stories.
           </p>
         </div>
 
@@ -137,7 +137,7 @@ export function AppleCardsCarousel() {
                       </p>
                       
                       <button className="group bg-white text-black px-6 py-3 rounded-full hover:bg-gray-100 transition-all duration-300 flex items-center gap-2">
-                        Learn More
+                        Explore Journey
                         <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                       </button>
                     </div>
