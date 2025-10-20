@@ -1,6 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { Input } from '@/components/ui/input';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { Search, Filter, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { AppIntro, AppStats, YourGroupsSection } from "@/components/home";
 import { useUserGroups, useGroupSearch } from "@/lib/hooks/home";
@@ -24,6 +27,15 @@ import { Plus } from "lucide-react";
 
 export default function blogHomePage() {
     const router = useRouter();
+    const [query, setQuery] = useState('');
+    const [sortBy, setSortBy] = useState('newest');
+    const [filters, setFilters] = useState<{ [key: string]: boolean }>({ travel: true, tips: true, news: true });
+    const [showFilters, setShowFilters] = useState(false);
+    const [interestIds, setInterestIds] = useState<number[]>([]);
+
+    const toggleInterest = (id: number) => {
+        setInterestIds((prev) => (prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]));
+    };
     const { groups, loading, error, refreshGroups } = useUserGroups();
     const {
         currentUser,
@@ -49,6 +61,115 @@ export default function blogHomePage() {
             <FloatingElements />
             
             <div className="relative z-10 max-w-6xl mx-auto px-8 pb-8">
+
+                {/* Centered search group (navigates to /blog/search) */}
+                <div className="w-full py-6">
+                    <div className="max-w-3xl mx-auto flex items-center gap-3">
+                        <Input
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            placeholder="Search posts, tags, or authors..."
+                            aria-label="Search blog"
+                            className="!h-10 flex-1"
+                        />
+
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-10 w-10 p-0"
+                            aria-label="Execute search"
+                            onClick={() => {
+                                const params = new URLSearchParams();
+                                if (query) params.set('keyword', query);
+                                if (sortBy) params.set('sort_by', sortBy);
+                                if (interestIds.length) params.set('interest_id', interestIds.join(','));
+                                router.push(`/blog/search?${params.toString()}`);
+                            }}
+                        >
+                            <Search className="w-4 h-4 text-white" />
+                        </Button>
+
+                        <div className="w-44">
+                            <Select value={sortBy} onValueChange={(val) => setSortBy(val)}>
+                                <SelectTrigger className="h-10">
+                                    <SelectValue placeholder="Sort by" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="newest">Newest</SelectItem>
+                                    <SelectItem value="oldest">Oldest</SelectItem>
+                                    <SelectItem value="most_like">Most like</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setShowFilters((s) => !s)}
+                                className="h-10 px-3"
+                                aria-expanded={showFilters}
+                                aria-controls="blog-home-filters"
+                            >
+                                <Filter className="w-4 h-4 mr-2" />
+                                <span className="text-sm">Filters</span>
+                                <span className="ml-2">{showFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}</span>
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Filters panel under the search box */}
+                <div className="max-w-3xl mx-auto mb-4">
+                    <div
+                        id="blog-home-filters"
+                        className={`mt-4 p-4 border border-white/10 rounded-md bg-white/5 transition-all w-full ${showFilters ? 'block' : 'hidden'}`}
+                    >
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex-1">
+                                <div className="text-sm text-gray-300">Filter posts by interest</div>
+                            </div>
+                            <div className="ml-4">
+                                <Button size="sm" onClick={() => { setInterestIds([]); setSortBy('newest'); }} variant="outline">Reset</Button>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                            {[
+                                { id: 1, label: '🌊 Sea' },
+                                { id: 2, label: '⛰️ Mountain' },
+                                { id: 3, label: '💧 Waterfall' },
+                                { id: 4, label: '🏞️ National Park' },
+                                { id: 5, label: '🏝️ Island' },
+                                { id: 6, label: '🙏 Temple' },
+                                { id: 7, label: '🛍️ Shopping Mall' },
+                                { id: 8, label: '🏪 Market' },
+                                { id: 9, label: '☕ Cafe' },
+                                { id: 10, label: '🏛️ Historical' },
+                                { id: 11, label: "🎢 Amusement Park" },
+                                { id: 12, label: "🦁 Zoo"},
+                                { id: 13, label: "🎉 Festival"},
+                                { id: 14, label: "🏛️ Museum"},
+                                { id: 15, label: "🍴 Food Street"},
+                                { id: 16, label: "🍹 Beach Bar"},
+                                { id: 17, label: "🎭 Theatre"},
+                            ].map((it) => (
+                                <button
+                                    key={it.id}
+                                    type="button"
+                                    onClick={() => toggleInterest(it.id)}
+                                    className="px-2 py-1 rounded-full border-2 text-xs font-medium transition-all"
+                                >
+                                    <span className={`${interestIds.includes(it.id) ? 'bg-orange-500 text-black border-transparent shadow-lg orange-glow px-2 py-1 rounded-full' : 'bg-gray-800/50 text-orange-300 border-orange-500/30 hover:border-orange-500 hover:bg-orange-500/10 px-2 py-1 rounded-full'}`}>
+                                        {it.label}
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
 
                 {/* Blog creation for writers */}
 
