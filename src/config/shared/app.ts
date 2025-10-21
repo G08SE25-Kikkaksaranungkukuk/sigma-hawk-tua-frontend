@@ -13,6 +13,6 @@ export const APP_CONFIG = {
     { value: '1M+', label: 'Matches' },
   ],
   NAV_LINKS: [
-    { label: 'Blog', href: '/blog' },
+    { label: 'Blog', href: '/blogfeed' },
   ],
 } as const;
