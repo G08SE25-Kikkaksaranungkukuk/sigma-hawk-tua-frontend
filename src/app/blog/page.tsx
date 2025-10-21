@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Input } from '@/components/ui/input';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { Search, Filter, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, Filter, ChevronDown, ChevronUp, ArrowLeft } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { AppIntro, AppStats, YourGroupsSection } from "@/components/home";
 import { useUserGroups, useGroupSearch } from "@/lib/hooks/home";
@@ -61,6 +61,17 @@ export default function blogHomePage() {
             <FloatingElements />
             
             <div className="relative z-10 max-w-6xl mx-auto px-8 pb-8">
+
+                {/* Back to Blog Feed Button */}
+                <div className="pt-6 pb-4">
+                    <button
+                        onClick={() => router.push('/blogfeed')}
+                        className="flex items-center gap-2 text-orange-300 hover:text-orange-400 transition-colors group"
+                    >
+                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                        <span className="text-sm font-medium">Back to Blog Feed</span>
+                    </button>
+                </div>
 
                 {/* Centered search group (navigates to /blog/search) */}
                 <div className="w-full py-6">
@@ -177,10 +188,16 @@ export default function blogHomePage() {
                 <section className="mt-8">
                     <div className="flex flex-row justify-between">
                         <h2 className="text-2xl font-semibold text-white mb-4">Your Blogs</h2>
-                    <a href="/blog/create" className="bg-orange-500 hover:bg-orange-600 rounded-md px-6 flex flex-row items-center justify-center gap-1 text-sm font-bold">
-                        <Plus></Plus>
-                        Create Blog
-                    </a>
+                    <div className="flex gap-3">
+                        <a href="/blogfeed" className="bg-gray-700 hover:bg-gray-600 rounded-md px-6 flex flex-row items-center justify-center gap-1 text-sm font-bold text-white transition-colors">
+                            <Search className="w-4 h-4" />
+                            Blog Feed
+                        </a>
+                        <a href="/blog/create" className="bg-orange-500 hover:bg-orange-600 rounded-md px-6 flex flex-row items-center justify-center gap-1 text-sm font-bold transition-colors">
+                            <Plus className="w-4 h-4" />
+                            Create Blog
+                        </a>
+                    </div>
                     </div>
                     <BlogList currentUser={currentUser}/>
                 </section>

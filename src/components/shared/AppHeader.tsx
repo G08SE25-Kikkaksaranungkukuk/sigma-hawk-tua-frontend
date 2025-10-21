@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { Button } from '../ui/button';
-import { Plane, Menu, Home, Users, User, Search } from 'lucide-react';
+import { Plane, Menu, Home, Users, User, Search, PenTool } from 'lucide-react';
 import { APP_CONFIG } from '../../config/shared';
 import { ProfileDropdown } from './ProfileDropdown';
 import { useCurrentUser } from '../../lib/hooks/user/useCurrentUser';
@@ -43,7 +43,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   // Track hover state for enhanced interactions
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
-  // Enhanced navigation items with proper routes and icons
+  // Enhanced navigation items with proper routes and icons - Fixed 3 main sections
   const navigationItems = [
     {
       label: 'Home',
@@ -57,13 +57,12 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
       icon: Search,
       isActive: pathname.startsWith('/group'),
     },
-    // Add any additional nav items from APP_CONFIG
-    ...APP_CONFIG.NAV_LINKS.map((link) => ({
-      label: link.label,
-      href: link.href || '#',
-      icon: Users, // Default icon
-      isActive: pathname === link.href,
-    })),
+    {
+      label: 'Blog',
+      href: '/blogfeed',
+      icon: PenTool,
+      isActive: pathname.startsWith('/blog') || pathname.startsWith('/blogfeed'),
+    },
   ];
 
   // Trigger refresh when triggerRefresh prop changes
@@ -122,6 +121,11 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
       if (pathname.includes('/create')) return 'Create Group';
       if (pathname.includes('/manage')) return 'Manage Group';
       return 'Groups';
+    }
+    if (pathname.startsWith('/blog') || pathname.startsWith('/blogfeed')) {
+      if (pathname.includes('/create')) return 'Create Blog';
+      if (pathname === '/blogfeed') return 'Blog Feed';
+      return 'Blog';
     }
     if (pathname.startsWith('/profile')) {
       if (pathname.includes('/edit')) return 'Edit Profile';
