@@ -102,7 +102,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black min-h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black min-h-screen overflow-x-hidden`}
       >
         <div className="flex flex-col min-h-screen">
           {showHeader && !loading && (
@@ -117,7 +117,7 @@ export default function RootLayout({
               triggerRefresh={triggerRefresh}
             />
           )}
-          <main className="flex-1 relative">
+          <main className={`flex-1 relative ${showHeader && !loading ? 'pt-20' : ''}`}>
             {children}
           </main>
           {showHeader && !loading && <AppFooter />}

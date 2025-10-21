@@ -2,11 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { CreateGroupRequest, Interest } from '@/lib/types';
-import { GroupPreviewCard } from '@/components/group/info/GroupPreviewCard';
-import { CreateGroupForm } from '@/components/group/info/CreateGroupForm';
+import { CreateGroupRequest, Itinerary } from '@/lib/types';
+import { GroupPreviewCard } from '@/components/group/create/GroupPreviewCard';
+import { CreateGroupForm } from '@/components/group/create/CreateGroupForm';
+import { ItineraryPage } from '@/components/group/create/ItineraryPage';
+import { StepIndicator } from '@/components/group/create/StepIndicator';
 import { groupService } from '@/lib/services/group/group-service';
 import { SuccessModal } from '@/components/shared/SuccessModal';
+import { FloatingElements } from '@/components/shared';
 
 // Success Modal Component
 interface GroupCreateSuccessProps {
@@ -26,14 +29,16 @@ function GroupCreateSuccess({ isOpen }: GroupCreateSuccessProps) {
 export default function App() {
   const router = useRouter();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
+  const [createdGroupId, setCreatedGroupId] = useState<number | null>(null);
   
   const [groupData, setGroupData] = useState<CreateGroupRequest>({
-    group_name: 'Bangkok → Chiang Mai Adventure',
-    description: 'Join us for an amazing cultural journey through Thailand. We\'ll explore ancient temples, taste incredible street food, and experience the famous Yi Peng lantern festival. Perfect for travelers who love food, culture, and making new friends!',
-    destination: 'Chiang Mai, Thailand',
+    group_name: '',
+    description: '',
+    destination: '',
     max_members: 8,
-    start_date: new Date('2025-11-12'),
-    end_date: new Date('2025-11-16'),
+    start_date: undefined,
+    end_date: undefined,
     interest_fields: [],
     profile: undefined,
     profile_url: undefined
@@ -43,37 +48,48 @@ export default function App() {
     setGroupData(prev => ({ ...prev, ...updates }));
   };
 
-  // Handle group creation
-  const handleCreateGroup = async (formData: CreateGroupRequest) => {
-    try {      
-      // The formData already contains the File object in the profile field
-      // Build CreateGroupRequest for backend
+  // Handle proceeding to step 2 (itinerary page)
+  const handleProceedToItinerary = async (formData: CreateGroupRequest) => {
+    setGroupData(formData);
+    
+    // Create the group first, then proceed to itineraries
+    try {
       const createGroupRequest = {
         group_name: formData.group_name,
         description: formData.description,
+        destination: formData.destination,
         interest_fields: formData.interest_fields,
-        profile: formData.profile, // This is now a File object
+        profile: formData.profile,
         max_members: formData.max_members,
       };
-      console.log("Creating group with data:", createGroupRequest);
       
       const response = await groupService.createGroup(createGroupRequest);
-      
-      setShowSuccessModal(true);
-
-      // Redirect after a short delay
-      const groupId = (response as any)?.group_id;
-      setTimeout(() => {
-        if (groupId) {
-          router.push(`/group/${groupId}/info`);
-        } else {
-          router.push("/home");
-        }
-      }, 2000);
+      setCreatedGroupId(response.group_id);
+      setCurrentStep(2);
     } catch (error) {
       console.error("Failed to create group:", error);
-      throw error; // Re-throw to let CreateGroupForm handle the error display
+      alert('Failed to create group. Please try again.');
     }
+  };
+
+  // Handle going back to step 1
+  const handleBackToDetails = () => {
+    setCurrentStep(1);
+  };
+
+  // Handle completing itinerary step
+  const handleCompleteItineraries = async () => {
+    // Group and itineraries have already been created via API
+    // Just show success and redirect
+    setShowSuccessModal(true);
+
+    setTimeout(() => {
+      if (createdGroupId) {
+        router.push(`/group/${createdGroupId}/info`);
+      } else {
+        router.push("/home");
+      }
+    }, 2000);
   };
 
   // Handle cancel
@@ -81,33 +97,64 @@ export default function App() {
     router.push('/home');
   };
 
+  // Prepare group data for itinerary page
+  const getGroupDataForItinerary = () => {
+    const formatDate = (date: Date | undefined | string) => {
+      if (!date) return '';
+      if (date instanceof Date) return date.toISOString().split('T')[0];
+      return date;
+    };
+
+    return {
+      title: groupData.group_name,
+      destination: groupData.destination,
+      startDate: formatDate(groupData.start_date),
+      endDate: formatDate(groupData.end_date),
+    };
+  };
+
   return (
     <div className="min-h-screen bg-[#0b0b0c] text-white p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl text-orange-400 mb-2">Create New Group</h1>
-          <p className="text-orange-200/80">Set up your travel group and find perfect companions</p>
-        </div>
-
-        {/* Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Column - Preview Card */}
-          <div className="space-y-6">
-            <GroupPreviewCard groupData={groupData} />
+      <FloatingElements />
+      
+      {currentStep === 1 ? (
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl text-orange-400 mb-2">Create New Group</h1>
+            <p className="text-orange-200/80">Set up your travel group and find perfect companions</p>
           </div>
 
-          {/* Right Column - Form */}
-          <div className="space-y-6">
-            <CreateGroupForm 
-              groupData={groupData} 
-              updateGroupData={updateGroupData}
-              onSubmit={handleCreateGroup}
-              onCancel={handleCancel}
-            />
+          {/* Step Indicator */}
+          <div className="mb-8">
+            <StepIndicator currentStep={1} />
+          </div>
+
+          {/* Two Column Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Left Column - Preview Card */}
+            <div className="space-y-6">
+              <GroupPreviewCard groupData={groupData} />
+            </div>
+
+            {/* Right Column - Form */}
+            <div className="space-y-6">
+              <CreateGroupForm 
+                groupData={groupData} 
+                updateGroupData={updateGroupData}
+                onSubmit={handleProceedToItinerary}
+                onCancel={handleCancel}
+              />
+            </div>
           </div>
         </div>
-      </div>
+      ) : createdGroupId ? (
+        <ItineraryPage
+          groupId={createdGroupId}
+          onComplete={handleCompleteItineraries}
+          groupData={getGroupDataForItinerary()}
+        />
+      ) : null}
 
       {/* Success Popup */}
       <GroupCreateSuccess isOpen={showSuccessModal} />

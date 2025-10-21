@@ -1,30 +1,20 @@
 "use client";
+
 import { useRouter } from "next/navigation";
-import { Button } from "../../components/ui/button";
-import { AppIntro, AppStats, YourGroupsSection } from "../../components/home";
-import { useUserGroups, useGroupSearch } from "../../lib/hooks/home";
-import { useCurrentUser } from "../../lib/hooks/user";
-import { Group } from "../../lib/types/home";
-import {
-    Heart,
-    Users,
-    Search,
-    Plus,
-    MapPin,
-    Camera,
-    Globe,
-    Bell,
-    Settings,
-    User,
-    Menu,
-} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { AppIntro, AppStats, YourGroupsSection } from "@/components/home";
+import { useUserGroups, useGroupSearch } from "@/lib/hooks/home";
+import { useCurrentUser } from "@/lib/hooks/user";
+import { FloatingElements }  from "@/components/shared"
+import HeroSection from "@/components/home/HeroSection";
+
 import {
     handleProfileClick,
     handleCreateGroup,
     handleViewGroup,
     handleLogout,
     handleSearchGroups,
-} from "../../components/home/homeHandlers";
+} from "@/components/home/homeHandlers";
 
 export default function homePage() {
     const router = useRouter();
@@ -47,23 +37,9 @@ export default function homePage() {
 
     return (
         <div className="min-h-screen bg-black relative overflow-hidden">
-            {/* Floating decorative elements */}
-            <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute top-20 left-10 w-16 h-16 bg-orange-500/20 rounded-full float"></div>
-                <div className="absolute top-40 right-20 w-12 h-12 bg-orange-400/30 rounded-full float-delayed"></div>
-                <div className="absolute bottom-40 left-20 w-20 h-20 bg-orange-600/20 rounded-full float-delayed-2"></div>
-                <div className="absolute bottom-20 right-10 w-14 h-14 bg-orange-300/25 rounded-full float"></div>
-                <div className="absolute top-1/3 right-1/4 w-8 h-8 bg-orange-500/15 rounded-full float-delayed"></div>
-
-                {/* Floating icons */}
-                <div className="absolute top-32 right-32 text-orange-500/30 float-delayed">
-                    <Heart className="w-8 h-8" />
-                </div>
-                <div className="absolute top-1/3 right-16 text-orange-500/30 float">
-                    <Globe className="w-5 h-5" />
-                </div>
-            </div>
-
+            
+            <FloatingElements />
+            <HeroSection />
             {/* App Introduction */}
             <AppIntro />
 

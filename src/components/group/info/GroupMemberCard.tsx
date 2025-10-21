@@ -8,7 +8,6 @@ interface Member {
   name: string;
   avatar: string;
   joinDate: string;
-  location: string;
   isHost?: boolean;
 }
 
@@ -20,7 +19,7 @@ interface GroupMembersCardProps {
 
 export function GroupMembersCard({ members, totalMembers, maxMembers }: GroupMembersCardProps) {
   return (
-    <Card className="bg-[#12131a] border-[rgba(255,102,0,0.25)] rounded-2xl overflow-hidden">
+    <Card className="bg-gray-900/60 backdrop-blur-sm border-orange-500/20 rounded-2xl overflow-hidden">
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center gap-2 text-white">
           <Users className="w-5 h-5 text-[#ff6600]" />
@@ -63,10 +62,6 @@ export function GroupMembersCard({ members, totalMembers, maxMembers }: GroupMem
                   )}
                 </div>
                 <div className="flex items-center gap-4 mt-1">
-                  <div className="flex items-center gap-1 text-gray-400 text-sm">
-                    <MapPin className="w-3 h-3" />
-                    <span className="truncate">{member.location}</span>
-                  </div>
                   <div className="flex items-center gap-1 text-gray-400 text-sm">
                     <Calendar className="w-3 h-3" />
                     <span>Joined {member.joinDate}</span>

@@ -64,7 +64,7 @@ export default function ConfirmationDialog({
 
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8080/user/delete", {
+      const res = await fetch("http://localhost:8080/api/v1/user/delete", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
