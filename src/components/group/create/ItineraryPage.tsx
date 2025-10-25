@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Plus, Calendar, MapPin, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { StepIndicator } from '@/components/group/create/StepIndicator';
-import { Itinerary } from '@/lib/types';
+import { Itinerary, Place } from '@/lib/types';
 import { ItineraryCard } from '@/components/group/Itinerary/ItineraryCard';
 import { ItineraryEditor } from '@/components/group/edit/ItineraryEditor';
 import { toast } from 'sonner';
 import { groupService } from '@/lib/services/group/group-service';
+import { placeService } from '@/lib/services/place/placeService';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,6 +18,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
+// Extended Itinerary type with fetched places
+interface ItineraryWithPlaces extends Itinerary {
+  places?: Place[];
+}
 
 interface ItineraryPageProps {
   groupId: number;
@@ -30,9 +36,9 @@ interface ItineraryPageProps {
 }
 
 export function ItineraryPage({ groupId, onComplete, groupData }: ItineraryPageProps) {
-  const [itineraries, setItineraries] = useState<Itinerary[]>([]);
+  const [itineraries, setItineraries] = useState<ItineraryWithPlaces[]>([]);
   const [isEditing, setIsEditing] = useState(false);
-  const [editingItinerary, setEditingItinerary] = useState<Itinerary | undefined>(undefined);
+  const [editingItinerary, setEditingItinerary] = useState<ItineraryWithPlaces | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
@@ -41,7 +47,37 @@ export function ItineraryPage({ groupId, onComplete, groupData }: ItineraryPageP
     try {
       setIsLoading(true);
       const data = await groupService.getItineraries(groupId.toString());
-      setItineraries(data);
+      
+      // Fetch place details for each itinerary
+      const itinerariesWithPlaces = await Promise.all(
+        data.map(async (itinerary) => {
+          if (!itinerary.place_links || itinerary.place_links.length === 0) {
+            return { ...itinerary, places: [] };
+          }
+
+          // Fetch details for each business ID
+          const placesPromises = itinerary.place_links.map(async (businessId) => {
+            try {
+              const place = await placeService.getBusinessDetails(businessId);
+              return place;
+            } catch (error) {
+              console.error(`Error fetching place ${businessId}:`, error);
+              return null;
+            }
+          });
+
+          const places = await Promise.all(placesPromises);
+          // Filter out null values (failed requests)
+          const validPlaces = places.filter((place): place is Place => place !== null);
+
+          return {
+            ...itinerary,
+            places: validPlaces
+          };
+        })
+      );
+
+      setItineraries(itinerariesWithPlaces);
     } catch (error) {
       console.error("Error fetching itineraries:", error);
       toast.error("Failed to load itineraries");
@@ -65,7 +101,7 @@ export function ItineraryPage({ groupId, onComplete, groupData }: ItineraryPageP
     setIsEditing(false);
   };
 
-  const handleEditItinerary = (itinerary: Itinerary) => {
+  const handleEditItinerary = (itinerary: ItineraryWithPlaces) => {
     setEditingItinerary(itinerary);
     setIsEditing(true);
   };
