@@ -243,7 +243,7 @@ export function ItineraryEditor({ groupId, itinerary, onSave, onCancel }: Itiner
             <div>
               <CardTitle className="text-orange-400">Places</CardTitle>
               <CardDescription className="text-orange-200/60">
-                Add Google Maps links for places to visit (placeholder for Google API fetch)
+                Add Google Maps links for places to visit
               </CardDescription>
             </div>
           </CardHeader>

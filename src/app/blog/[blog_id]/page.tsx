@@ -2,6 +2,7 @@
 
 import { useRouter, useParams } from "next/navigation";
 import React from "react";
+import { ArrowLeft } from "lucide-react";
 import { apiClient } from "@/lib/api";
 import { SimpleEditor } from "@/components/blog/tiptap-templates/simple/simple-editor";
 import { SimpleViewer } from "@/components/blog/tiptap-templates/simple/simple-viewer";
@@ -22,7 +23,7 @@ const formatLikeCount = (count: number): string => {
         { threshold: 1e3, suffix: 'k' }
     ];
 
-    for (let {threshold, suffix} of tiers) {
+    for (const {threshold, suffix} of tiers) {
         if (count >= threshold) {
             const scaled = count / threshold;
             // For thousands, show two decimal places (1.23k)
@@ -142,6 +143,17 @@ export default function blogEditPage() {
 
     return (
         <>
+            {/* Back to Blog Feed Button */}
+                <div className="pt-6 pb-4">
+                    <button
+                        onClick={() => router.push('/blogfeed')}
+                        className="flex items-center gap-2 text-orange-300 hover:text-orange-400 transition-colors group ml-10"
+                    >
+                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                        <span className="text-sm font-medium">Back to Blog Feed</span>
+                    </button>
+                </div>
+
             <SimpleViewer 
                 blog_id={blog_id}
                 likeCount={likedCount ?? 0}

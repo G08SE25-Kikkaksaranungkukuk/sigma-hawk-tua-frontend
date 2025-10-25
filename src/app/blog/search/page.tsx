@@ -11,7 +11,7 @@ import {
     SelectContent,
     SelectItem,
 } from "@/components/ui/select"
-import { Search, Filter, ChevronDown, ChevronUp, HeartIcon } from "lucide-react"
+import { Search, Filter, ChevronDown, ChevronUp, HeartIcon, ArrowLeft, Plus } from "lucide-react"
 import { apiClient } from "@/lib/api"
 import { FloatingElements } from "@/components/shared"
 
@@ -127,6 +127,17 @@ export default function BlogSearchPage() {
             <FloatingElements />
 
             <main className="relative z-10 max-w-6xl mx-auto px-8 pt-12 pb-12">
+                {/* Back to Blog Feed Button */}
+                <div className="pb-4 mb-6">
+                    <button
+                        onClick={() => router.push('/blogfeed')}
+                        className="flex items-center gap-2 text-orange-300 hover:text-orange-400 transition-colors group"
+                    >
+                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                        <span className="text-sm font-medium">Back to Blog Feed</span>
+                    </button>
+                </div>
+
                 {/* Centered search group */}
                 <div className="w-full mb-6">
                     <div className="max-w-3xl mx-auto flex items-center gap-3">
@@ -383,6 +394,23 @@ export default function BlogSearchPage() {
                         ))}
                     </div>
                 </div>
+
+                {/* Blog navigation section */}
+                <section className="mt-12 pt-8 border-t border-gray-800">
+                    <div className="flex flex-row justify-between items-center">
+                        <h2 className="text-2xl font-semibold text-white mb-4">Quick Actions</h2>
+                        <div className="flex gap-3">
+                            <a href="/blog" className="bg-gray-700 hover:bg-gray-600 rounded-md px-6 py-3 flex flex-row items-center justify-center gap-2 text-sm font-bold text-white transition-colors">
+                                <Search className="w-4 h-4" />
+                                Your Blogs
+                            </a>
+                            <a href="/blog/create" className="bg-orange-500 hover:bg-orange-600 rounded-md px-6 py-3 flex flex-row items-center justify-center gap-2 text-sm font-bold transition-colors">
+                                <Plus className="w-4 h-4" />
+                                Create Blog
+                            </a>
+                        </div>
+                    </div>
+                </section>
             </main>
         </div>
     )
