@@ -6,7 +6,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { Search, Filter, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { AppIntro, AppStats, YourGroupsSection } from "@/components/home";
-import { useUserGroups, useGroupSearch } from "@/lib/hooks/home";
+import { useUserGroups } from "@/lib/hooks/home";
 import { useCurrentUser } from "@/lib/hooks/user";
 import { FloatingElements }  from "@/components/shared"
 import HeroSection from "@/components/home/HeroSection";
@@ -42,7 +42,6 @@ export default function blogHomePage() {
         loading: userLoading,
         error: userError,
     } = useCurrentUser();
-    const { searchGroups } = useGroupSearch();
 
     const [refreshBlogs, setRefreshBlogs] = useState(0);
 
