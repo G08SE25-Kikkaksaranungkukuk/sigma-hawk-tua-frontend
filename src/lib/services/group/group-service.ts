@@ -161,7 +161,7 @@ export const groupService = {
   },
 
   updateItinerary: async (groupId: string, itinerary: ItineraryResponse): Promise<ItineraryResponse> => {
-    const response = await apiClient.patch<ItineraryResponse, ItineraryResponse>(`/api/v2/groups/${groupId}/itineraries/${itinerary.itinerary_id}`, itinerary, {
+    const response = await apiClient.put<ItineraryResponse, ItineraryResponse>(`/api/v2/itineraries/${itinerary.itinerary_id}`, itinerary, {
       withCredentials: true,
     });
     return response;
