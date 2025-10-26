@@ -1,11 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Calendar, MapPin, Clock, Pencil, Trash2, Star } from "lucide-react";
 import { format } from "date-fns";
-import { Itinerary } from "@/lib/types";
+import { Itinerary, Place } from "@/lib/types";
 import { PlacePreviewCard } from "@/components/group/place/PlacePreviewCard";
 
+interface ItineraryWithPlaces extends Itinerary {
+  places?: Place[];
+}
+
 interface ItineraryCardProps {
-  itinerary: Itinerary;
+  itinerary: ItineraryWithPlaces;
   onEdit?: () => void;
   onDelete?: () => void;
 }
@@ -89,7 +93,7 @@ export function ItineraryCard({ itinerary, onEdit, onDelete }: ItineraryCardProp
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {places.slice(0, 4).map((place, index) => (
+            {places.slice(0, 4).map((place: Place, index: number) => (
               <div key={index} className="relative">
                 <PlacePreviewCard place={place} />
                 <div className="absolute bottom-2 left-2 bg-[#ff6600]/90 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">

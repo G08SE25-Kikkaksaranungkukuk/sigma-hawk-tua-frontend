@@ -1,5 +1,4 @@
-import { Button } from "@/components/ui/button";
-import { Crown, Trash2, Users } from "lucide-react";
+import { Crown, Trash2 } from "lucide-react";
 
 interface Member {
     user_id: number
@@ -22,7 +21,7 @@ interface Props {
 
 
 // Helper to calculate age from birthdate string or Date
-function getAge(birthDate: Date | string): number | null {
+function getAge(birthDate: Date | string | undefined): number | null {
   if (!birthDate) return null;
   const date = typeof birthDate === 'string' ? new Date(birthDate) : birthDate;
   if (isNaN(date.getTime())) return null;

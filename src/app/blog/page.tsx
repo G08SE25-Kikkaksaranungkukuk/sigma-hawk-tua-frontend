@@ -24,6 +24,8 @@ import BlogForm from "@/components/blog/BlogForm";
 import BlogList from "@/components/blog/BlogList";
 import { Plus } from "lucide-react";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
 
 export default function blogHomePage() {
     const router = useRouter();
