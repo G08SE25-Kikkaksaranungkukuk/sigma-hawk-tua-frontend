@@ -97,7 +97,7 @@ export function GroupItineraries({ groupId }: { groupId: number }) {
 
   const handleDeleteItinerary = async (id: number) => {
     try {
-      await groupService.deleteItinerary(groupId.toString(), id);
+      await groupService.deleteItinerary(String(groupId), id);
       toast.success("Itinerary deleted successfully");
       // Refetch itineraries after delete
       await fetchItineraries();
