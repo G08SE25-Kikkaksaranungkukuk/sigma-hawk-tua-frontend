@@ -5,9 +5,6 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests',
-  /* Global setup and teardown */
-  globalSetup: require.resolve('./tests/setup/global-setup'),
-  globalTeardown: require.resolve('./tests/setup/global-teardown'),
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */

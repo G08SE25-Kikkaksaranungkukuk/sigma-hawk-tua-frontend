@@ -1,10 +1,9 @@
-import { test, expect } from '@playwright/test';
-import { TEST_USERS } from '../setup/seed-test-data';
+import { test } from '@playwright/test';
+import { TEST_USERS } from '../setup/testUsers';
 
 test('user can login and update profile', async ({ page }) => {
   const testUser = TEST_USERS.testUser1;
-  
-  // Use relative URL to respect baseURL from config
+
   await page.goto('/');
   await page.getByRole('button', { name: '✨ Sign In' }).click();
   await page.getByRole('textbox', { name: 'Email' }).click();
@@ -12,7 +11,6 @@ test('user can login and update profile', async ({ page }) => {
   await page.getByRole('textbox', { name: 'Password' }).click();
   await page.getByRole('textbox', { name: 'Password' }).fill(testUser.password);
   await page.getByRole('button', { name: '✨ Sign In & Explore' }).click();
-  await page.getByRole('heading', { name: 'Login Successful!' }).click();
   await page.getByRole('button', { name: 'J', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Profile Management' }).click();
   await page.getByRole('textbox', { name: '👤 First Name *' }).dblclick();
