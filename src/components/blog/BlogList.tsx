@@ -89,7 +89,7 @@ export default function BlogList({ currentUser, refreshSignal = 0, onDeleted }: 
             {currentBlogs.map((b) => (
                 <article
                     key={b.blog_id}
-                    className="p-4 bg-slate-900/60 hover:bg-slate-900/80 rounded-md border border-slate-700"
+                    className="p-4 bg-slate-900/60 hover:bg-slate-900/80 rounded-md border border-slate-700 cursor-pointer"
                 >
                     <div
                         className="flex justify-between items-start"
