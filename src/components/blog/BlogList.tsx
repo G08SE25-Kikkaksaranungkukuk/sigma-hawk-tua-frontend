@@ -6,6 +6,7 @@ import axios from "axios";
 import { HeartIcon, Pencil, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Pagination from "./Pagination";
 
 type Blog = {
     blog_id: string;
@@ -26,6 +27,9 @@ export default function BlogList({ currentUser, refreshSignal = 0, onDeleted }: 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter()
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
 
     useEffect(() => {
         if (!currentUser) {
@@ -75,6 +79,11 @@ export default function BlogList({ currentUser, refreshSignal = 0, onDeleted }: 
     if (error) return <div className="text-red-400">{error}</div>;
     if (blogs.length === 0) return <div className="text-gray-400">You haven't written any blogs yet.</div>;
 
+     // Pagination logic
+    const totalPages = Math.ceil(blogs.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const currentBlogs = blogs.slice(startIndex, startIndex + itemsPerPage);
+
     return (
         <div className="space-y-4 mt-5">
             {blogs.map((b) => (
@@ -120,6 +129,14 @@ export default function BlogList({ currentUser, refreshSignal = 0, onDeleted }: 
                     <p className="mt-3 text-sm text-gray-300 line-clamp-4">{b.description}</p>
                 </article>
             ))}
+
+            {/* Pagination Section */}
+            <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={(p) => setCurrentPage(p)}
+            />
+            
         </div>
     );
 }
