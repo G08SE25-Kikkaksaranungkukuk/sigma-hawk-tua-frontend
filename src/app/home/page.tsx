@@ -3,8 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { AppIntro, AppStats, YourGroupsSection } from "@/components/home";
-import { useUserGroups, useGroupSearch } from "@/lib/hooks/home";
-import { useCurrentUser } from "@/lib/hooks/user";
+import { useCurrentUser, useUserGroups } from "@/lib/hooks";
 import { FloatingElements }  from "@/components/shared"
 import HeroSection from "@/components/home/HeroSection";
 
@@ -24,7 +23,6 @@ export default function homePage() {
         loading: userLoading,
         error: userError,
     } = useCurrentUser();
-    const { searchGroups } = useGroupSearch();
 
     // Show loading state while fetching user data
     if (userLoading) {

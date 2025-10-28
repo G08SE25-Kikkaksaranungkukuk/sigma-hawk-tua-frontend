@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -15,7 +15,10 @@ import { Search, Filter, ChevronDown, ChevronUp, HeartIcon } from "lucide-react"
 import { apiClient } from "@/lib/api"
 import { FloatingElements } from "@/components/shared"
 
-export default function BlogSearchPage() {
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic'
+
+function BlogSearchPageContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
 
@@ -385,5 +388,13 @@ export default function BlogSearchPage() {
                 </div>
             </main>
         </div>
+    )
+}
+
+export default function BlogSearchPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-gray-900 via-[#0a0a0a] to-gray-900 flex items-center justify-center text-orange-300">Loading...</div>}>
+            <BlogSearchPageContent />
+        </Suspense>
     )
 }

@@ -6,7 +6,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { Search, Filter, ChevronDown, ChevronUp, ArrowLeft } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { AppIntro, AppStats, YourGroupsSection } from "@/components/home";
-import { useUserGroups, useGroupSearch } from "@/lib/hooks/home";
+import { useUserGroups } from "@/lib/hooks/home";
 import { useCurrentUser } from "@/lib/hooks/user";
 import { FloatingElements }  from "@/components/shared"
 import HeroSection from "@/components/home/HeroSection";
@@ -24,6 +24,8 @@ import BlogForm from "@/components/blog/BlogForm";
 import BlogList from "@/components/blog/BlogList";
 import { Plus } from "lucide-react";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
 
 export default function blogHomePage() {
     const router = useRouter();
@@ -42,7 +44,6 @@ export default function blogHomePage() {
         loading: userLoading,
         error: userError,
     } = useCurrentUser();
-    const { searchGroups } = useGroupSearch();
 
     const [refreshBlogs, setRefreshBlogs] = useState(0);
 
