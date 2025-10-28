@@ -64,7 +64,18 @@ export default function BlogList({ currentUser, refreshSignal = 0, onDeleted }: 
         if (!confirm("Delete this blog?")) return;
         try {
             await apiClient.delete(`/api/v2/blogs/${id}`, { withCredentials: true });
-            setBlogs((s) => s.filter((b) => b.blog_id !== id));
+            setBlogs((prevBlogs) => {
+                const updatedBlogs = prevBlogs.filter((b) => b.blog_id !== id);
+                // Adjust currentPage if needed
+                const newTotalPages = Math.max(1, Math.ceil(updatedBlogs.length / itemsPerPage));
+                setCurrentPage((prevPage) => {
+                    // If no blogs left, reset to page 1
+                    if (updatedBlogs.length === 0) return 1;
+                    // If current page is now out of bounds, set to last valid page
+                    return prevPage > newTotalPages ? newTotalPages : prevPage;
+                });
+                return updatedBlogs;
+            });
             onDeleted?.();
         } catch (err: any) {
             alert(err.message || "Failed to delete");
