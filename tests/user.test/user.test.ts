@@ -1,8 +1,8 @@
 import { test } from '@playwright/test';
-import { TEST_USERS } from '../setup/testUsers';
+import { TEST_USERS_DATA } from '../setup/db-seeding';
 
 test('user can login and update profile', async ({ page }) => {
-  const testUser = TEST_USERS.testUser1;
+  const testUser = TEST_USERS_DATA.testUser1;
 
   await page.goto('/');
   await page.getByRole('button', { name: '✨ Sign In' }).click();
