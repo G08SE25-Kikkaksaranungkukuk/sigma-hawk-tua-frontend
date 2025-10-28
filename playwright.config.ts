@@ -5,6 +5,9 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests',
+  /* Global setup and teardown */
+  globalSetup: require.resolve('./tests/setup/global-setup'),
+  globalTeardown: require.resolve('./tests/setup/global-teardown'),
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -36,11 +39,12 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'],
-        headless: false,
+      use: { 
+        ...devices['Desktop Chrome'],
+        headless: process.env.CI ? true : false, // Headless in CI, headed locally
         viewport: { width: 1280, height: 720 },
         launchOptions: {
-          slowMo: 1000,
+          slowMo: process.env.CI ? 0 : 1000, // No slowMo in CI
         },
        },
     },
