@@ -79,6 +79,7 @@
             "zod": "*"
       },
       "devDependencies": {
+            "@playwright/test": "^1.56.1",
             "@types/aos": "^3.0.7",
             "@types/lodash.throttle": "^4.1.9",
             "@types/node": "^20.10.0",
@@ -98,6 +99,12 @@
             "dev": "next dev --turbopack",
             "build": "next build --turbopack",
             "start": "next start",
-            "lint": "eslint"
+            "lint": "eslint",
+            "gen" : "pnpx playwright codegen http://localhost:3000",
+            "test": "playwright test",
+            "test:ui": "playwright test --ui",
+            "test:headed": "playwright test --headed",
+            "test:debug": "playwright test --debug",
+            "test:report": "playwright show-report"
       }
 }
