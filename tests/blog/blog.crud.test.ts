@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { delay } from 'framer-motion';
 import { browser } from 'process';
 
 test.describe.serial('Test Blog functionality',()=>{
@@ -7,10 +8,12 @@ test.describe.serial('Test Blog functionality',()=>{
     await page.goto('http://localhost:3000/');
     await page.getByRole('button', { name: '✨ Sign In' }).click();
     await page.getByRole('textbox', { name: 'Email' }).click();
-    await page.getByRole('textbox', { name: 'Email' }).fill('jotest11@gmail.com');
+    await page.waitForTimeout(2000);
+    await page.getByRole('textbox', { name: 'Email' }).fill('jirapat.dkk@gmail.com');
     await page.getByRole('textbox', { name: 'Password' }).click();
-    await page.getByRole('textbox', { name: 'Password' }).fill('TestPass123!');
+    await page.getByRole('textbox', { name: 'Password' }).fill('Letmein@2547');
     await page.getByRole('button', { name: '✨ Sign In & Explore' }).click();
+    await page.waitForTimeout(3000);
   })
 
   test('Can Create Blog', async ({ page }) => {
@@ -39,8 +42,9 @@ test.describe.serial('Test Blog functionality',()=>{
   
   test('Can Edit Blog', async ({ page }) => {
     await page.goto('http://localhost:3000/blog');
-    await page.getByRole('button', { name: 'Edit' }).click();
+    await page.getByRole('button', { name: 'Edit' }).first().click();
     await page.getByRole('textbox', { name: 'Title' }).click();
+    await page.waitForTimeout(1000);
     await page.getByRole('textbox', { name: 'Title' }).fill('FLAG1-edited');
     await page.getByRole('textbox', { name: 'Description' }).click();
     await page.getByRole('textbox', { name: 'Description' }).fill('FLAG2-edited');
