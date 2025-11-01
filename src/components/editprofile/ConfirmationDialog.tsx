@@ -64,7 +64,7 @@ export default function ConfirmationDialog({
         setLoading(true)
         try {
             const res = await fetch(
-                `${process.env.NEXT_PUBLIC_BASE_API_URL}/api/v1/user/delete`,
+                `${process.env.NEXT_PUBLIC_BASE_API_URL}api/v1/user/delete`,
                 {
                     method: "POST",
                     headers: {
