@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ImageWithFallback } from "@/components/ImageWithFallback";
 import { Calendar, Clock, User, ArrowUpRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface BlogPost {
   id: number;
@@ -21,6 +22,8 @@ interface BentoBlogCardProps {
 }
 
 export function BentoBlogCard({ post, size = "medium", orientation = "vertical" }: BentoBlogCardProps) {
+  const router = useRouter();
+  
   const sizeClasses = {
     small: "col-span-1 row-span-1 min-h-[250px]",
     medium: "col-span-1 md:col-span-2 row-span-2 min-h-[400px]",
@@ -28,8 +31,15 @@ export function BentoBlogCard({ post, size = "medium", orientation = "vertical" 
     featured: "col-span-1 md:col-span-4 lg:col-span-6 row-span-1 min-h-[400px]"
   };
 
+  const handleClick = () => {
+    router.push(`/blog/${post.id}`);
+  };
+
   return (
-    <Card className={`group cursor-pointer overflow-hidden border border-white/10 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-black/30 backdrop-blur-lg hover:bg-black/50 ${sizeClasses[size]} relative`}>
+    <Card 
+      onClick={handleClick}
+      className={`group cursor-pointer overflow-hidden border border-white/10 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-black/30 backdrop-blur-lg hover:bg-black/50 ${sizeClasses[size]} relative`}
+    >
       {/* Background Image */}
       <ImageWithFallback
         src={post.image}
