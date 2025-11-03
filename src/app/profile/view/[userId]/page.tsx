@@ -1,33 +1,40 @@
-"use client";
+"use client"
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
-import { apiClient } from "@/lib/api";
-import { userService } from "@/lib/services/user";
-import { tokenService } from "@/lib/services/user/tokenService";
+import React, { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { ArrowLeft } from "lucide-react"
+import { apiClient } from "@/lib/api"
+import { userService } from "@/lib/services/user"
+import { tokenService } from "@/lib/services/user/tokenService"
 import {
     interestOptions,
     travel_style_options,
-} from "@/components/editprofile/constants";
+} from "@/components/editprofile/constants"
 
-export default function UserProfileView() {
-    const router = useRouter();
-    const [formData, setFormData] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+export default function UserProfileView({
+    params,
+}: {
+    params: Promise<{ userId: string }>
+}) {
+    const router = useRouter()
+    const [formData, setFormData] = useState<any>(null)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+
+    // Get the userId from URL parameters (actually contains email)
+    const { userId } = React.use(params)
+    const userEmail = decodeURIComponent(userId) // Decode the email from URL
 
     useEffect(() => {
         const fetchUserAndProfile = async () => {
-            setLoading(true);
-            setError(null);
+            setLoading(true)
+            setError(null)
             try {
-                const token = await tokenService.getAuthToken();
-                console.log("Fetching current user...");
-                const profile = await userService.getUserProfile("");
+                console.log("Fetching user profile for email:", userEmail)
+                const profile = await userService.getUserProfile(userEmail)
 
-                console.log("Profile image URL:", profile.profileImage);
-                console.log("Profile data:", profile.interests);
+                console.log("Profile image URL:", profile.profileImage)
+                console.log("Profile data:", profile.interests)
                 setFormData({
                     firstName: profile.firstName,
                     lastName: profile.lastName,
@@ -39,50 +46,53 @@ export default function UserProfileView() {
                         profile.interests?.map((interestKey: string) => {
                             const interest = interestOptions.find(
                                 (opt) => opt.key === interestKey
-                            );
+                            )
                             return {
                                 label: interest?.label || interestKey,
                                 color: interest?.color || "#666666",
                                 emoji: interest?.emoji || "",
-                            };
+                            }
                         }) || [],
                     travelStyle:
                         profile.travelStyle?.map((styleKey: string) => {
                             const style = travel_style_options.find(
                                 (opt) => opt.key === styleKey
-                            );
+                            )
                             return {
                                 label: style?.label || styleKey,
                                 color: style?.color || "#666666",
                                 emoji: style?.emoji || "",
-                            };
+                            }
                         }) || [],
                     scoreRating: profile.social_credit || 0,
                     reviews: [], // Add mapping if reviews are available in backend
-                });
+                })
             } catch (err: any) {
-                console.error("Error fetching user or profile:", err);
-                setError("Failed to load user profile");
+                console.error("Error fetching user or profile:", err)
+                setError("Failed to load user profile")
             } finally {
-                setLoading(false);
+                setLoading(false)
             }
-        };
-        fetchUserAndProfile();
-    }, []);
+        }
+
+        if (userEmail) {
+            fetchUserAndProfile()
+        }
+    }, [userEmail])
 
     if (loading) {
         return (
             <div className="text-orange-400 text-center mt-10">
                 Loading profile...
             </div>
-        );
+        )
     }
     if (error || !formData) {
         return (
             <div className="text-red-500 text-center mt-10">
                 {error || "No profile data found."}
             </div>
-        );
+        )
     }
 
     const fullName = [
@@ -91,7 +101,7 @@ export default function UserProfileView() {
         formData.lastName,
     ]
         .filter(Boolean)
-        .join(" ");
+        .join(" ")
 
     return (
         <div className="flex items-center justify-center p-4 min-h-[80vh] bg-black relative overflow-hidden">
@@ -107,7 +117,7 @@ export default function UserProfileView() {
             <div className="max-w-md w-full bg-gray-900/80 border border-orange-500/20 rounded-xl shadow-2xl p-6 relative z-10">
                 {/* Back button */}
                 <button
-                    onClick={() => router.push("/home")}
+                    onClick={() => router.back()}
                     className="absolute top-4 left-4 z-20 flex items-center gap-2 px-3 py-2 bg-gray-800/80 hover:bg-gray-700/80 border border-orange-500/30 rounded-lg text-orange-300 hover:text-orange-200 transition-all duration-200"
                 >
                     <ArrowLeft className="w-4 h-4" />
@@ -244,5 +254,5 @@ export default function UserProfileView() {
                 </div>
             </div>
         </div>
-    );
+    )
 }
