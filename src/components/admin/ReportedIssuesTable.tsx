@@ -24,35 +24,42 @@ interface ReportedIssuesTableProps {
   searchQuery: string;
   statusFilter: string;
   tagFilter: string;
+  // Optional pre-fetched reports (when the parent fetches them)
+  initialReports?: Report[];
+  initialLoading?: boolean;
 }
 
 export function ReportedIssuesTable({
   searchQuery,
   statusFilter,
   tagFilter,
+  initialReports,
+  initialLoading,
 }: ReportedIssuesTableProps) {
-  const [reports, setReports] = useState<Report[]>([]);
+  const [reports, setReports] = useState<Report[]>(initialReports ?? []);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState<boolean>(initialLoading ?? true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch reports from API
+  // If parent passed initialReports, use them and skip internal fetching.
   useEffect(() => {
+    if (initialReports) {
+      setReports(initialReports);
+      setIsLoading(initialLoading ?? false);
+      return;
+    }
+
     const fetchReports = async () => {
       try {
         setIsLoading(true);
         setError(null);
-        
-        // TODO: Uncomment when API is ready
-        // const response = await reportService.getReports({
-        //   search: searchQuery || undefined,
-        //   status: statusFilter as 'all' | 'resolved' | 'unresolved',
-        //   tag: tagFilter !== 'all' ? tagFilter : undefined,
-        // });
-        // setReports(response.reports);
-        
-        // Temporary: Show empty state until API is implemented
+        const response = await reportService.getReports({
+          search: searchQuery || undefined,
+          status: statusFilter as 'all' | 'resolved' | 'unresolved',
+          tag: tagFilter !== 'all' ? tagFilter : undefined,
+        });
+        setReports(response.reports);
         setReports([]);
       } catch (err) {
         console.error('Failed to fetch reports:', err);
@@ -63,7 +70,7 @@ export function ReportedIssuesTable({
     };
 
     fetchReports();
-  }, [searchQuery, statusFilter, tagFilter]);
+  }, [searchQuery, statusFilter, tagFilter, initialReports, initialLoading]);
 
   // Filter reports based on search and filters
   const filteredReports = reports.filter((report) => {

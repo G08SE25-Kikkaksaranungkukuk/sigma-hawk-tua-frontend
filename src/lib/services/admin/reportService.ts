@@ -1,113 +1,131 @@
 import { apiClient } from '@/lib/api';
+import { tokenService } from '@/lib/services/user/tokenService';
 import type {
-  Report,
-  ReportTag,
-  GetReportsParams,
-  GetReportsResponse,
-  UpdateReportStatusRequest,
-  CreateReportRequest,
-  GetReportTagsResponse,
+	GetReportsParams,
+	UpdateReportStatusRequest,
+	CreateReportRequest,
 } from '@/lib/types/admin';
 
 /**
- * Report Service
- * Handles all API calls related to reports and report management
+ * Frontend ReportService
+ * Provides static helpers to call the backend reports API and returns
+ * uniform response shapes similar to the provided service reference.
  */
 export class ReportService {
-  private static readonly BASE_PATH = '/api/reports';
+	private static readonly BASE_PATH = '/api/v2/reports';
 
-  /**
-   * Get all reports with optional filtering
-   * @param params - Query parameters for filtering reports
-   * @returns Promise with paginated reports
-   */
-  static async getReports(params?: GetReportsParams): Promise<GetReportsResponse> {
-    // TODO: Implement API call to fetch reports
-    // const queryParams = new URLSearchParams();
-    // if (params?.search) queryParams.append('search', params.search);
-    // if (params?.status && params.status !== 'all') queryParams.append('status', params.status);
-    // if (params?.tag && params.tag !== 'all') queryParams.append('tag', params.tag);
-    // if (params?.page) queryParams.append('page', params.page.toString());
-    // if (params?.limit) queryParams.append('limit', params.limit.toString());
-    // 
-    // const response = await apiClient.get<GetReportsResponse>(
-    //   `${this.BASE_PATH}?${queryParams.toString()}`
-    // );
-    // return response.data;
-    
-    throw new Error('getReports not implemented yet');
-  }
+	private static async getAuthHeaders() {
+		const token = await tokenService.getAuthToken();
+		return token ? { Authorization: `Bearer ${token}` } : {};
+	}
 
-  /**
-   * Get a single report by ID
-   * @param reportId - The ID of the report to fetch
-   * @returns Promise with the report data
-   */
-  static async getReportById(reportId: number): Promise<Report> {
-    // TODO: Implement API call to fetch a single report
-    // const response = await apiClient.get<Report>(`${this.BASE_PATH}/${reportId}`);
-    // return response.data;
-    
-    throw new Error('getReportById not implemented yet');
-  }
+	static async getReports(params?: GetReportsParams): Promise<any> {
+		try {
+			const query: Record<string, unknown> = {};
+			if (params) {
+				if (params.search) query.search = params.search;
+				if (params.status && params.status !== 'all') query.status = params.status;
+				if (params.tag && params.tag !== 'all') query.tag = params.tag;
+				if (params.page) query.page = params.page;
+				if (params.limit) query.limit = params.limit;
+			}
 
-  /**
-   * Update report resolution status
-   * @param reportId - The ID of the report to update
-   * @param data - The updated status data
-   * @returns Promise with the updated report
-   */
-  static async updateReportStatus(
-    reportId: number,
-    data: UpdateReportStatusRequest
-  ): Promise<Report> {
-    // TODO: Implement API call to update report status
-    // const response = await apiClient.patch<Report>(
-    //   `${this.BASE_PATH}/${reportId}/status`,
-    //   data
-    // );
-    // return response.data;
-    
-    throw new Error('updateReportStatus not implemented yet');
-  }
+			const headers = await this.getAuthHeaders();
+			const response: any = await apiClient.get(this.BASE_PATH, { params: query, headers });
 
-  /**
-   * Create a new report
-   * @param data - The report data to create
-   * @returns Promise with the created report
-   */
-  static async createReport(data: CreateReportRequest): Promise<Report> {
-    // TODO: Implement API call to create a new report
-    // const response = await apiClient.post<Report>(this.BASE_PATH, data);
-    // return response.data;
-    
-    throw new Error('createReport not implemented yet');
-  }
+			return {
+				success: true,
+				reports: response?.reports ?? [],
+				pagination: response?.pagination ?? undefined,
+			};
+		} catch (error) {
+			console.error('reportService.getReports error', error);
+			return { success: false, reports: [], pagination: undefined };
+		}
+	}
 
-  /**
-   * Delete a report
-   * @param reportId - The ID of the report to delete
-   * @returns Promise with success status
-   */
-  static async deleteReport(reportId: number): Promise<void> {
-    // TODO: Implement API call to delete a report
-    // await apiClient.delete(`${this.BASE_PATH}/${reportId}`);
-    
-    throw new Error('deleteReport not implemented yet');
-  }
+	static async getReportById(reportId: number): Promise<any> {
+		try {
+			const headers = await this.getAuthHeaders();
+			const response: any = await apiClient.get(`${this.BASE_PATH}/${reportId}`, { headers });
+			return { success: true, report: response?.report ?? response };
+		} catch (error) {
+			console.error('reportService.getReportById error', error);
+			return { success: false, message: 'Failed to fetch report' };
+		}
+	}
 
-  /**
-   * Get all available report tags
-   * @returns Promise with all report tags
-   */
-  static async getReportTags(): Promise<ReportTag[]> {
-    // TODO: Implement API call to fetch report tags
-    // const response = await apiClient.get<GetReportTagsResponse>('/api/report-tags');
-    // return response.data.tags;
-    
-    throw new Error('getReportTags not implemented yet');
-  }
+	static async updateReportStatus(reportId: number, data: UpdateReportStatusRequest): Promise<any> {
+		try {
+			const headers = await this.getAuthHeaders();
+			const response: any = await apiClient.patch(`${this.BASE_PATH}/${reportId}/status`, data, { headers });
+			return { success: true, report: response };
+		} catch (error) {
+			console.error('reportService.updateReportStatus error', error);
+			return { success: false, message: 'Failed to update report status' };
+		}
+	}
+
+	static async createReport(user_id: number, data: CreateReportRequest): Promise<any> {
+		try {
+			const headers = await this.getAuthHeaders();
+			const body = { ...data, user_id };
+			const response: any = await apiClient.post(this.BASE_PATH, body, { headers });
+			return { success: true, message: 'Report created successfully', report: response };
+		} catch (error) {
+			console.error('reportService.createReport error', error);
+			return { success: false, message: 'Failed to create report' };
+		}
+	}
+
+	static async deleteReport(reportId: number): Promise<any> {
+		try {
+			const headers = await this.getAuthHeaders();
+			await apiClient.delete(`${this.BASE_PATH}/${reportId}`, { headers });
+			return { success: true, message: 'Report deleted successfully' };
+		} catch (error) {
+			console.error('reportService.deleteReport error', error);
+			return { success: false, message: 'Failed to delete report' };
+		}
+	}
+
+	static async getReportTags(): Promise<any> {
+		try {
+			const response: any = await apiClient.get('/api/report-tags');
+			return { success: true, tags: response?.tags ?? [] };
+		} catch (error) {
+			console.error('reportService.getReportTags error', error);
+			return { success: false, tags: [] };
+		}
+	}
+
+	static async getAllReportsAdmin(page: number = 1, limit: number = 10) {
+		try {
+			const headers = await this.getAuthHeaders();
+			const response: any = await apiClient.get(this.BASE_PATH, { params: { page, limit }, headers });
+			return {
+				success: true,
+				reports: response?.reports ?? [],
+				pagination: response?.pagination ?? { current_page: page, total_pages: 1, total_records: response?.total ?? 0, per_page: limit },
+			};
+		} catch (error) {
+			console.error('reportService.getAllReportsAdmin error', error);
+			return { success: false, reports: [], pagination: undefined, message: 'Failed to fetch all reports' };
+		}
+	}
+
+	static async getReportStats(): Promise<any> {
+		try {
+			const headers = await this.getAuthHeaders();
+			const response: any = await apiClient.get(`${this.BASE_PATH}/stats`, { headers });
+			return { success: true, stats: response ?? { total_reports: 0 } };
+		} catch (error) {
+			console.error('reportService.getReportStats error', error);
+			return { success: false, stats: { total_reports: 0 } };
+		}
+	}
 }
 
-// Export singleton instance for convenience
+// Export class as before (static methods) for compatibility
 export const reportService = ReportService;
+

@@ -5,11 +5,67 @@ import { ReportedIssuesTable } from '@/components/admin/ReportedIssuesTable';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Filter } from 'lucide-react';
+import { useEffect } from 'react';
+import { tokenService } from '@/lib/services/user/tokenService';
 
 export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [tagFilter, setTagFilter] = useState('all');
+  const [reports, setReports] = useState<any[] | null>(null);
+  const [isLoadingReports, setIsLoadingReports] = useState(true);
+  const [reportsError, setReportsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const fetchReports = async () => {
+      try {
+        setIsLoadingReports(true);
+        setReportsError(null);
+        const token = await tokenService.getAuthToken();
+        if (!token) {
+          throw new Error('Not authenticated: access token missing');
+        }
+
+        const res = await fetch('http://localhost:8080/api/v2/reports', {
+          signal: controller.signal,
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+        const json = await res.json();
+
+        // Expecting shape { success, data: { reports: [...] } }
+        const rawReports = json?.data?.reports ?? [];
+
+        // Map backend report items into the Report type expected by the table.
+        // The backend example doesn't include `reason`/tags, so default to empty array.
+        const mapped = rawReports.map((r: any) => ({
+          report_id: r.report_id,
+          user_id: r.user_id,
+          title: r.title,
+          description: r.description,
+          created_at: r.created_at,
+          is_resolved: !!r.is_resolved,
+          reason: r.reason ?? [],
+        }));
+
+        setReports(mapped);
+      } catch (err) {
+        if ((err as any).name === 'AbortError') return;
+        console.error('Failed to fetch reports', err);
+        setReportsError(err instanceof Error ? err.message : 'Failed to fetch reports');
+        setReports([]);
+      } finally {
+        setIsLoadingReports(false);
+      }
+    };
+
+    fetchReports();
+    return () => controller.abort();
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#0a0b0f]">
@@ -75,6 +131,8 @@ export default function App() {
           searchQuery={searchQuery}
           statusFilter={statusFilter}
           tagFilter={tagFilter}
+          initialReports={reports ?? undefined}
+          initialLoading={isLoadingReports}
         />
       </div>
     </div>
