@@ -1,10 +1,10 @@
 // User service for handling user-related API calls
 // This service will be used to fetch user data from the database
-import { UserProfile, UpdateUserProfile } from "../../types/user";
-import { tokenService } from "./tokenService";
-import { apiClient } from "@/lib/api";
+import { UserProfile, UpdateUserProfile } from "../../types/user"
+import { tokenService } from "./tokenService"
+import { apiClient } from "@/lib/api"
 class UserService {
-    private baseUrl = process.env.NEXT_PUBLIC_BASE_API_URL;
+    private baseUrl = process.env.NEXT_PUBLIC_BASE_API_URL
 
     /*
     Get current authenticated user data
@@ -13,22 +13,22 @@ class UserService {
     async getCurrentUser(): Promise<UserProfile> {
         try {
             // Get token from cookies or localStorage (fallback)
-            const token = await tokenService.getAuthToken();
+            const token = await tokenService.getAuthToken()
 
             if (!token) {
-                throw new Error("No authentication token found");
+                throw new Error("No authentication token found")
             }
 
             // Decode JWT token to get user data
-            const userDataFromToken = await tokenService.decodeTokenData(token);
+            const userDataFromToken = await tokenService.decodeTokenData(token)
 
             if (userDataFromToken) {
-                return userDataFromToken;
+                return userDataFromToken
             }
 
-            throw new Error("Unable to retrieve user data");
+            throw new Error("Unable to retrieve user data")
         } catch (error) {
-            throw new Error("Failed to fetch current user data");
+            throw new Error("Failed to fetch current user data")
         }
     }
 
@@ -40,7 +40,7 @@ class UserService {
         // Add timestamp to bust browser cache
         const profileImageUrl = backendData.profile_url
             ? `http://localhost:6969/${backendData.profile_url}?t=${Date.now()}`
-            : undefined;
+            : undefined
 
         return {
             firstName: backendData.first_name || "",
@@ -59,29 +59,38 @@ class UserService {
             profileImage: profileImageUrl,
             createdAt: backendData.created_at,
             updatedAt: backendData.updated_at,
-        };
+        }
     }
 
     /*
     Fetch user profile data from database
   */
-    async getUserProfile(userId: string): Promise<UserProfile> {
+    async getUserProfile(command: string): Promise<UserProfile> {
+        console.log("getUserProfile called with command:", command)
+        let user: UserProfile | null = null
+        let userEmail: string = ""
         try {
-            const token = await tokenService.getAuthToken();
+            const token = await tokenService.getAuthToken()
 
             if (!token) {
-                throw new Error("No authentication token found");
+                throw new Error("No authentication token found")
             }
 
-            const user = await tokenService.decodeTokenData(token);
-
-            if (!user || !user.email) {
-                throw new Error("Unable to get user email from token");
+            user = await tokenService.decodeTokenData(token)
+            // if(user?.email)
+            if (command === "current-user" || command === "") {
+                userEmail = user ? user.email : ""
+            } else {
+                userEmail = command
+            }
+            console.log("Determined userEmail for profile fetch:", userEmail)
+            if (!userEmail) {
+                throw new Error("Unable to get user email")
             }
 
             const response = await apiClient.post<UserProfile, UserProfile>(
                 `${this.baseUrl}api/v1/user/`,
-                { email: user.email },
+                { email: userEmail },
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -89,14 +98,14 @@ class UserService {
                     },
                     withCredentials: true,
                 }
-            );
+            )
 
-            console.log("User profile response data:", response);
-            const userData = response;
-            return this.transformUserData(userData);
+            console.log("User profile response data:", response)
+            const userData = response
+            return this.transformUserData(userData)
         } catch (error) {
-            console.error("Error fetching user profile:", error);
-            throw new Error("Failed to fetch user profile");
+            console.error("Error fetching user profile:", error)
+            throw new Error("Failed to fetch user profile")
         }
     }
 
@@ -109,16 +118,16 @@ class UserService {
         profileData: UpdateUserProfile
     ): Promise<UserProfile> {
         try {
-            const token = await tokenService.getAuthToken();
+            const token = await tokenService.getAuthToken()
 
             if (!token) {
-                throw new Error("No authentication token found");
+                throw new Error("No authentication token found")
             }
 
-            const user = await tokenService.decodeTokenData(token);
+            const user = await tokenService.decodeTokenData(token)
 
             if (!user || !user.email) {
-                throw new Error("Unable to get user email from token");
+                throw new Error("Unable to get user email from token")
             }
 
             const payload = {
@@ -131,23 +140,23 @@ class UserService {
                     interests: profileData.interests,
                     travel_styles: profileData.travelStyle,
                 },
-            };
+            }
 
-            const profileImageFile = profileData.profileImage;
+            const profileImageFile = profileData.profileImage
             if (profileImageFile) {
                 console.log("File object details:", {
                     name: profileImageFile.name,
                     size: profileImageFile.size,
                     type: profileImageFile.type,
                     lastModified: profileImageFile.lastModified,
-                });
+                })
 
                 // Create FormData object for multipart upload
-                const formData = new FormData();
-                formData.append("profile", profileImageFile);
+                const formData = new FormData()
+                formData.append("profile", profileImageFile)
                 // formData.append("email", user.email);
 
-                console.log("Uploading profile image with fetch...");
+                console.log("Uploading profile image with fetch...")
 
                 // Use fetch instead of apiClient for file upload to avoid Content-Type conflicts
                 const response_img = await fetch(
@@ -161,16 +170,14 @@ class UserService {
                         },
                         credentials: "include",
                     }
-                );
+                )
 
                 if (!response_img.ok) {
-                    throw new Error(
-                        `Upload failed: ${response_img.statusText}`
-                    );
+                    throw new Error(`Upload failed: ${response_img.statusText}`)
                 }
 
-                const uploadResult = await response_img.json();
-                console.log("Profile image upload response:", uploadResult);
+                const uploadResult = await response_img.json()
+                console.log("Profile image upload response:", uploadResult)
             }
             const response = await apiClient.patch(
                 `${this.baseUrl}api/v1/user/`,
@@ -182,15 +189,14 @@ class UserService {
                     },
                     withCredentials: true,
                 }
-            );
-            console.log("Update profile response data:", response);
-            return this.transformUserData(response);
+            )
+            console.log("Update profile response data:", response)
+            return this.transformUserData(response)
         } catch (error) {
-            console.error("Error updating user profile:", error);
-            throw new Error("Failed to update user profile");
+            console.error("Error updating user profile:", error)
+            throw new Error("Failed to update user profile")
         }
     }
-    
 }
 
-export const userService = new UserService();
+export const userService = new UserService()
