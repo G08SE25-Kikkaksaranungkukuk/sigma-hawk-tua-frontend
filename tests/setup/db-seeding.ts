@@ -1,3 +1,4 @@
+import { Interest } from "@/lib/types/api/interest"
 import axios from "axios"
 
 const API_BASE_URL = process.env.TEST_API_URL || "http://localhost:8080/api/v1"
@@ -13,6 +14,27 @@ export interface TestUser {
     phone: string
     email: string
     password: string
+}
+export interface Member {
+    user_id: number
+    first_name: string
+    last_name: string
+    profile_url?: string | null
+    email: string
+    birth_date?: Date
+}
+export interface TestGroup {
+    group_id: number
+    group_name: string
+    group_leader_id: number
+    description: string
+    profile_url?: string | null
+    max_members: number
+    created_at: string
+    updated_at: string
+    leader: Member
+    members: Member[]
+    interests: Interest[]
 }
 
 export const TEST_USERS_DATA: Record<string, TestUser> = {
@@ -40,6 +62,20 @@ export const TEST_USERS_DATA: Record<string, TestUser> = {
     },
 }
 
+export const TEST_GROUP_DATA = {
+    testGroup1: {
+        group_name: "test1",
+        description: "A group for testing purposes",
+        destination: "Testland",
+        max_members: 10,
+        profile: "",
+        profile_url: "", // For preview purposes
+        start_date: new Date("2023-01-01"),
+        end_date: new Date("2023-12-31"),
+        interest_fields: ["SEA"],
+    },
+}
+
 /**
  * Seeds the database with test users before tests run
  */
@@ -51,7 +87,7 @@ export async function seedTestUsers() {
         existing: [] as string[],
         failed: [] as string[],
     }
-
+    var groupId: number | undefined
     for (const [key, user] of Object.entries(TEST_USERS_DATA)) {
         try {
             const response = await axios.post(
@@ -100,26 +136,120 @@ export async function seedTestUsers() {
                 )
             }
         }
-    }
+        const axiosInstance = axios.create({
+            withCredentials: true,
+            timeout: 10000,
+            validateStatus: (status) => status < 500,
+        })
 
-    console.log(`\n📊 Seeding Summary:`)
-    console.log(`   Created: ${results.created.length}`)
-    console.log(`   Already exists: ${results.existing.length}`)
-    console.log(`   Failed: ${results.failed.length}\n`)
-
-    if (
-        results.failed.length > 0 &&
-        results.created.length === 0 &&
-        results.existing.length === 0
-    ) {
-        throw new Error(
-            "Failed to seed any test users. Check backend connection."
+        const loginResponse = await axiosInstance.post(
+            `${API_BASE_URL}/auth/login`,
+            {
+                email: user.email,
+                password: user.password,
+            }
         )
+        if (loginResponse.status === 200) {
+            console.log(`✅ Login successful for: ${user.email}`)
+        } else if (loginResponse.status !== 200) {
+            console.error(
+                `❌ Failed to log in user ${user.email}:`,
+                loginResponse.status
+            )
+            continue
+        }
+        for (const [key, group] of Object.entries(TEST_GROUP_DATA)) {
+            try {
+                const formData = new FormData()
+
+                // Append text fields
+                formData.append("group_name", group.group_name)
+                if (group.description) {
+                    formData.append("description", group.description)
+                }
+                if (group.max_members) {
+                    formData.append("max_members", group.max_members.toString())
+                }
+
+                // Append interest fields as JSON string or individual entries
+                if (group.interest_fields && group.interest_fields.length > 0) {
+                    group.interest_fields.forEach((interest, index) => {
+                        formData.append(`interest_fields[${index}]`, interest)
+                    })
+                }
+
+                // Append file if provided
+                if (group.profile) {
+                    formData.append("profile", group.profile)
+                }
+
+                // Append file if provided
+                if (group.profile) {
+                    formData.append("profile", group.profile)
+                }
+                const createGroupResponse = await axiosInstance.post(
+                    `${API_BASE_URL}/api/v1/group`,
+                    formData,
+                    {
+                        withCredentials: true,
+                        headers: {
+                            "Content-Type": "multipart/form-data",
+                        },
+                    }
+                )
+                if (
+                    createGroupResponse.status === 200 ||
+                    createGroupResponse.status === 201
+                ) {
+                    groupId = createGroupResponse.data.id
+                    console.log(
+                        `✅ Created test group: ${group.group_name} for user: ${user.email}`
+                    )
+                } else {
+                    console.log(
+                        `❌ Failed to create test group: ${group.group_name} for user: ${user.email} - Status: ${createGroupResponse.status}`
+                    )
+                }
+                const joinGroupResponse = await axiosInstance.put(
+                    `${API_BASE_URL}/api/v1/group/${groupId}/member`,
+                    {},
+                    { withCredentials: true }
+                )
+                if (
+                    joinGroupResponse.status === 200 ||
+                    joinGroupResponse.status === 201
+                ) {
+                    console.log(
+                        `✅ User: ${user.email} joined group: ${group.group_name}`
+                    )
+                } else {
+                    console.log(
+                        `❌ Failed to add user: ${user.email} to group: ${group.group_name} - Status: ${joinGroupResponse.status}`
+                    )
+                }
+            } catch (error) {
+                console.error("❌ Failed to create test group:", error)
+            }
+
+            console.log(`\n📊 Seeding Summary:`)
+            console.log(`   Created: ${results.created.length}`)
+            console.log(`   Already exists: ${results.existing.length}`)
+            console.log(`   Failed: ${results.failed.length}\n`)
+
+            if (
+                results.failed.length > 0 &&
+                results.created.length === 0 &&
+                results.existing.length === 0
+            ) {
+                throw new Error(
+                    "Failed to seed any test users. Check backend connection."
+                )
+            }
+
+            console.log("✅ Test data seeding completed\n")
+        }
     }
-
-    console.log("✅ Test data seeding completed\n")
 }
-
 /**
  * Cleans up test users after tests complete
  * Note: This requires a DELETE endpoint on your backend

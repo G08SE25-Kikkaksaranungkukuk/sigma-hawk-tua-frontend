@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test"
-import { TEST_USERS_DATA } from "../setup/db-seeding"
+import { TEST_USERS_DATA, TestGroup } from "../setup/db-seeding"
 
 test("user can login", async ({ page }) => {
     const testUser = TEST_USERS_DATA.testUser1
@@ -144,4 +144,27 @@ test("user can delete account", async ({ page }) => {
         dialog.dismiss().catch(() => {})
     })
     await page.getByRole("button", { name: "Delete Account" }).click()
+})
+
+test("user can view other user's profile", async ({ page }) => {
+    const testUser = TEST_USERS_DATA.testUser1
+    await page.goto("/")
+    await page.getByRole("button", { name: "✨ Sign In" }).click()
+    await page.getByRole("textbox", { name: "Email" }).click()
+    await page.getByRole("textbox", { name: "Email" }).fill(testUser.email)
+    await page.getByRole("textbox", { name: "Password" }).click()
+    await page
+        .getByRole("textbox", { name: "Password" })
+        .fill(testUser.password)
+    await page.getByRole("button", { name: "✨ Sign In & Explore" }).click()
+    await expect(page.getByText("TTebawr🏖️Sea & Beach🏞️")).toBeVisible()
+    await expect(page.getByRole("button", { name: "View" })).toBeVisible()
+    await page
+        .locator("div")
+        .filter({ hasText: /^test AAHostJoined Nov 2025$/ })
+        .first()
+        .click()
+    await expect(
+        page.getByRole("heading", { name: "test ewfgethbefb AA" })
+    ).toBeVisible()
 })
