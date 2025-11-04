@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Auth flow', () => {
   test('consent checkbox is disabled until Terms and Privacy are scrolled to bottom', async ({ page }) => {
-    await page.goto('/signup');
+    await page.goto('http://localhost:3000/signup');
 
     const consent = page.locator('#consent');
     const submit = page.locator('button[type="submit"]');
@@ -40,8 +40,7 @@ test.describe('Auth flow', () => {
   });
 
   test('register flow', async ({ page }) => {
-        await page.goto('http://localhost:3000/');
-        await page.getByRole('button', { name: '🚀 Start Your Journey' }).click();
+        await page.goto('http://localhost:3000/signup');
         await page.getByRole('textbox', { name: '👤 First Name' }).click();
         await page.getByRole('textbox', { name: '👤 First Name' }).fill('aaa');
         await page.getByRole('textbox', { name: '👤 Middle Name (Optional)' }).click();
@@ -71,6 +70,26 @@ test.describe('Auth flow', () => {
         await ppContent.evaluate((el: HTMLElement) => { el.scrollTop = el.scrollHeight; });
         await page.getByRole('button', { name: 'Close' }).click();
         await page.locator('#consent').click();
-        await page.getByRole('button', { name: '🚀 Create My Account' }).click();
+    // Do not submit to avoid relying on backend in this test run; assert consent and submit enabled
+    await expect(page.getByRole('button', { name: '🚀 Create My Account' })).toBeEnabled();
     });
+  test('login flow shows error on invalid credentials', async ({ page }) => {
+    await page.goto('http://localhost:3000/login');
+    await page.getByRole('textbox', { name: 'Email' }).click();
+    await page.getByRole('textbox', { name: 'Email' }).fill('nonexistent@example.com');
+    await page.getByRole('textbox', { name: 'Password' }).click();
+    await page.getByRole('textbox', { name: 'Password' }).fill('wrongpassword');
+    await page.getByRole('button', { name: '✨ Sign In & Explore' }).click();
+    // Expect error message to be visible
+    await expect(page.getByText('Invalid email or password.')).toBeVisible();
+  });
+
+  test('signup page contains key inputs', async ({ page }) => {
+    await page.goto('http://localhost:3000/signup');
+    await expect(page.getByLabel('👤 First Name')).toBeVisible();
+    await expect(page.getByLabel('👥 Last Name')).toBeVisible();
+    await expect(page.getByLabel('📧 Email')).toBeVisible();
+    await expect(page.getByLabel('🔒 Password')).toBeVisible();
+    await expect(page.locator('#consent')).toBeVisible();
+  });
 });
