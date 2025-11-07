@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ReportedIssuesTable } from '@/components/admin/ReportedIssuesTable';
+import { ReportedIssuesTable } from './ReportedIssuesTable';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Filter } from 'lucide-react';
@@ -36,21 +36,114 @@ export default function App() {
         });
         if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
         const json = await res.json();
+        // Fetch report reasons/tags so we can map reason labels to canonical report_tag objects
+        let reasonsMap: Record<string, any> = {};
+        try {
+          const reasonsRes = await fetch('http://localhost:8080/api/v2/reports/reasons', {
+            signal: controller.signal,
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          if (reasonsRes.ok) {
+            const reasonsJson = await reasonsRes.json();
+            const rawTags: any[] = Array.isArray(reasonsJson?.data?.reasons)
+              ? reasonsJson.data.reasons
+              : Array.isArray(reasonsJson?.reasons)
+              ? reasonsJson.reasons
+              : Array.isArray(reasonsJson?.data)
+              ? reasonsJson.data
+              : Array.isArray(reasonsJson)
+              ? reasonsJson
+              : [];
 
-        // Expecting shape { success, data: { reports: [...] } }
-        const rawReports = json?.data?.reports ?? [];
+            // Build lookup by key and label
+            rawTags.forEach((t) => {
+              if (!t) return;
+              const key = t.key ?? t.label ?? String(t.id ?? '');
+              if (key) reasonsMap[String(key).toUpperCase()] = t;
+              if (t.label) reasonsMap[String(t.label).toUpperCase()] = t;
+            });
+          }
+        } catch (err) {
+          // Non-fatal: continue without canonical tags
+          console.warn('Failed to fetch report reasons/tags', err);
+        }
+
+        // Backend may return several shapes. Normalize to an array of report objects.
+        let rawReports: any[] = [];
+        if (Array.isArray(json?.data?.reports)) rawReports = json.data.reports;
+        else if (Array.isArray(json?.reports)) rawReports = json.reports;
+        else if (Array.isArray(json?.data)) rawReports = json.data;
+        else if (Array.isArray(json)) rawReports = json;
 
         // Map backend report items into the Report type expected by the table.
-        // The backend example doesn't include `reason`/tags, so default to empty array.
-        const mapped = rawReports.map((r: any) => ({
-          report_id: r.report_id,
-          user_id: r.user_id,
-          title: r.title,
-          description: r.description,
-          created_at: r.created_at,
-          is_resolved: !!r.is_resolved,
-          reason: r.reason ?? [],
-        }));
+        const mapped = rawReports.map((r: any) => {
+          // normalize common id fields
+          const reportId = r.report_id ?? r.id ?? r.reportId;
+          const userId = r.user_id ?? r.userId ?? r.user?.id ?? r.user;
+
+          // normalize reason/tags: backend may send [{ emoji, label }] or nested report_reason objects
+          const rawReasons = Array.isArray(r.reason)
+            ? r.reason
+            : Array.isArray(r.reasons)
+            ? r.reasons
+            : [];
+
+          const reasonArr = rawReasons.map((rr: any, idx: number) => {
+            // If already has report_tag shape, try to use it
+            if (rr.report_tag) return rr;
+
+            // Try to match rr to a canonical tag from reasonsMap (by label or key)
+            const lookupKey = (rr.label ?? rr.key ?? rr.report_tag?.label ?? String(rr)).toString().toUpperCase();
+            const matchedTag = reasonsMap[lookupKey];
+
+            if (matchedTag) {
+              return {
+                id: rr.id ?? matchedTag.id ?? idx + 1,
+                report_id: reportId,
+                report_tag_id: matchedTag.id ?? 0,
+                created_at: rr.created_at ?? rr.createdAt ?? undefined,
+                report_tag: {
+                  id: matchedTag.id ?? 0,
+                  key: matchedTag.key ?? matchedTag.label ?? String(matchedTag.id ?? ''),
+                  label: matchedTag.label ?? matchedTag.key ?? String(matchedTag.id ?? ''),
+                  emoji: matchedTag.emoji ?? (rr.emoji ?? ''),
+                  description: matchedTag.description ?? rr.description ?? undefined,
+                },
+              };
+            }
+
+            // Fallback: construct a lightweight report_reason with embedded report_tag from rr
+            const tagLabel = rr.label ?? rr.key ?? rr.report_tag?.label ?? String(rr);
+            const tagEmoji = rr.emoji ?? rr.report_tag?.emoji ?? '';
+
+            return {
+              id: rr.id ?? idx + 1,
+              report_id: reportId,
+              report_tag_id: 0,
+              created_at: rr.created_at ?? rr.createdAt ?? undefined,
+              report_tag: {
+                id: 0,
+                key: tagLabel,
+                label: tagLabel,
+                emoji: tagEmoji,
+                description: rr.description ?? undefined,
+              },
+            };
+          });
+
+          return {
+            report_id: reportId,
+            user_id: userId,
+            title: r.title ?? r.subject ?? r.name,
+            description: r.description ?? r.body ?? r.details,
+            created_at: r.created_at ?? r.createdAt ?? r.created,
+            is_resolved: !!(r.is_resolved ?? r.isResolved ?? r.resolved),
+            reason: reasonArr,
+          };
+        });
 
         setReports(mapped);
       } catch (err) {
