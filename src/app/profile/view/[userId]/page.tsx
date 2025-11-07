@@ -3,9 +3,9 @@
 import React, { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
-import { apiClient } from "@/lib/api"
 import { userService } from "@/lib/services/user"
 import { tokenService } from "@/lib/services/user/tokenService"
+import UserRatingCard from "@/components/profile/UserRatingCard"
 import {
     interestOptions,
     travel_style_options,
@@ -20,6 +20,8 @@ export default function UserProfileView({
     const [formData, setFormData] = useState<any>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [viewedUserId, setViewedUserId] = useState<number | null>(null)
+    const [isOwnProfile, setIsOwnProfile] = useState(false)
 
     // Get the userId from URL parameters (actually contains email)
     const { userId } = React.use(params)
@@ -32,6 +34,21 @@ export default function UserProfileView({
             try {
                 console.log("Fetching user profile for email:", userEmail)
                 const profile = await userService.getUserProfile(userEmail)
+
+                // Get current user to check if it's their own profile
+                const currentUser = await userService.getCurrentUser()
+                const isOwn = currentUser.email === profile.email
+                setIsOwnProfile(isOwn)
+
+                // Extract user_id from token or profile response
+                const token = await tokenService.getAuthToken()
+                if (token) {
+                    const parts = token.split(".")
+                    if (parts.length === 3) {
+                        const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")))
+                        setViewedUserId(payload.user_id || payload.userId || null)
+                    }
+                }
 
                 console.log("Profile image URL:", profile.profileImage)
                 console.log("Profile data:", profile.interests)
@@ -219,6 +236,15 @@ export default function UserProfileView({
                                 </span>
                             </div>
                         </div>
+                        
+                        {/* User Rating Card - Only show if we have a valid user ID */}
+                        {viewedUserId && (
+                            <UserRatingCard 
+                                userId={viewedUserId} 
+                                isOwnProfile={isOwnProfile}
+                            />
+                        )}
+                        
                         <div>
                             <span className="text-orange-300 font-semibold">
                                 📝 User Reviews
