@@ -110,7 +110,7 @@ export default function ReportCreatePage() {
                     : Array.isArray(json)
                     ? json
                     : [];
-                if (mounted) setReportTags(raw);
+                if (mounted) setReportTags(raw.map((t) => ({ ...t, emoji: (function(s){ try { if (/\\u[0-9a-fA-F]{4}/.test(s)) return JSON.parse('"'+String(s).replace(/"/g,'\\"')+'"'); } catch(e){} return s; })(t?.emoji ?? '') } )));
             } catch (err) {
                 console.warn('Failed to fetch report tags', err);
             } finally {

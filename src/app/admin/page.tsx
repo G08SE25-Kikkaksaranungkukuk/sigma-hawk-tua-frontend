@@ -9,6 +9,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import NotFound from '@/app/not-found';
 import { tokenService } from '@/lib/services/user/tokenService';
+import { reportService } from '@/lib/services/report';
 
 export default function App() {
   const router = useRouter();
@@ -35,21 +36,36 @@ export default function App() {
       return null;
     }
   };
+  // Decode escaped unicode sequences like "\\uD83D\\uDCBE" into real emoji characters
+  const decodeEmojiString = (s: any): string => {
+    if (!s && s !== 0) return '';
+    if (typeof s !== 'string') return String(s);
+    try {
+      // If string contains literal backslash-u sequences, JSON.parse will decode them
+      if (/\\u[0-9a-fA-F]{4}/.test(s)) {
+        return JSON.parse('"' + s.replace(/"/g, '\\"') + '"');
+      }
+    } catch (e) {
+      // ignore and fallback
+    }
+    return s;
+  };
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [tagFilter, setTagFilter] = useState('all');
+  const [reportTags, setReportTags] = useState<any[]>([]);
   const [reports, setReports] = useState<any[] | null>(null);
   const [isLoadingReports, setIsLoadingReports] = useState(true);
   const [reportsError, setReportsError] = useState<string | null>(null);
 
   useEffect(() => {
     // First, check authorization. If isAuthorized is null we are still checking.
-    const checkAuthAndFetch = async () => {
+  const checkAuthAndFetch = async () => {
       // If we've already checked and found not authorized, skip.
       if (isAuthorized === false) return;
 
       const controller = new AbortController();
-      const fetchReports = async () => {
+      const fetchReports = async (canonicalTags: any[] = []) => {
         try {
           setIsLoadingReports(true);
           setReportsError(null);
@@ -67,39 +83,19 @@ export default function App() {
           });
           if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
           const json = await res.json();
-        // Fetch report reasons/tags so we can map reason labels to canonical report_tag objects
+          console.log(json);
+        // Build lookup by key and label using canonicalTags (passed in) or fallback to state
         let reasonsMap: Record<string, any> = {};
         try {
-          const reasonsRes = await fetch('http://localhost:8080/api/v2/reports/reasons', {
-            signal: controller.signal,
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
+          const rawTags: any[] = Array.isArray(canonicalTags) && canonicalTags.length ? canonicalTags : reportTags;
+          (rawTags || []).forEach((t) => {
+            if (!t) return;
+            const key = t.key ?? t.label ?? String(t.id ?? '');
+            if (key) reasonsMap[String(key).toUpperCase()] = t;
+            if (t.label) reasonsMap[String(t.label).toUpperCase()] = t;
           });
-          if (reasonsRes.ok) {
-            const reasonsJson = await reasonsRes.json();
-            const rawTags: any[] = Array.isArray(reasonsJson?.data?.reasons)
-              ? reasonsJson.data.reasons
-              : Array.isArray(reasonsJson?.reasons)
-              ? reasonsJson.reasons
-              : Array.isArray(reasonsJson?.data)
-              ? reasonsJson.data
-              : Array.isArray(reasonsJson)
-              ? reasonsJson
-              : [];
-
-            // Build lookup by key and label
-            rawTags.forEach((t) => {
-              if (!t) return;
-              const key = t.key ?? t.label ?? String(t.id ?? '');
-              if (key) reasonsMap[String(key).toUpperCase()] = t;
-              if (t.label) reasonsMap[String(t.label).toUpperCase()] = t;
-            });
-          }
         } catch (err) {
-          // Non-fatal: continue without canonical tags
-          console.warn('Failed to fetch report reasons/tags', err);
+          console.warn('Failed to build report reasons map', err);
         }
 
         // Backend may return several shapes. Normalize to an array of report objects.
@@ -116,15 +112,41 @@ export default function App() {
           const userId = r.user_id ?? r.userId ?? r.user?.id ?? r.user;
 
           // normalize reason/tags: backend may send [{ emoji, label }] or nested report_reason objects
-          const rawReasons = Array.isArray(r.reason)
+          let rawReasons = Array.isArray(r.reason)
             ? r.reason
             : Array.isArray(r.reasons)
             ? r.reasons
             : [];
 
+          // Some backend responses embed a single report_tag on the report object
+          // instead of an array under `reason`/`reasons`. Normalize that shape.
+          if ((!rawReasons || rawReasons.length === 0) && (r.report_tag || r.reportTag || r.reportTagId || r.report_tag_id)) {
+            const embedded = r.report_tag ?? r.reportTag ?? undefined;
+            if (embedded) rawReasons = [ { report_tag: embedded } ];
+            else if (r.reportTagId || r.report_tag_id) {
+              // minimal placeholder when only id is present
+              rawReasons = [ { report_tag: { id: r.reportTagId ?? r.report_tag_id, key: String(r.reportTagId ?? r.report_tag_id), label: String(r.reportTagId ?? r.report_tag_id) } } ];
+            }
+          }
+
           const reasonArr = rawReasons.map((rr: any, idx: number) => {
-            // If already has report_tag shape, try to use it
-            if (rr.report_tag) return rr;
+            // If already has report_tag shape, normalize and use it
+            if (rr.report_tag) {
+              const existing = rr.report_tag;
+              return {
+                id: rr.id ?? existing.id ?? idx + 1,
+                report_id: reportId,
+                report_tag_id: existing.id ?? 0,
+                created_at: rr.created_at ?? existing.created_at ?? existing.createdAt ?? undefined,
+                report_tag: {
+                  id: existing.id ?? 0,
+                  key: existing.key ?? existing.label ?? String(existing.id ?? ''),
+                  label: existing.label ?? existing.key ?? String(existing.id ?? ''),
+                  emoji: decodeEmojiString(existing.emoji ?? ''),
+                  description: existing.description ?? existing.desc ?? undefined,
+                },
+              };
+            }
 
             // Try to match rr to a canonical tag from reasonsMap (by label or key)
             const lookupKey = (rr.label ?? rr.key ?? rr.report_tag?.label ?? String(rr)).toString().toUpperCase();
@@ -140,7 +162,7 @@ export default function App() {
                   id: matchedTag.id ?? 0,
                   key: matchedTag.key ?? matchedTag.label ?? String(matchedTag.id ?? ''),
                   label: matchedTag.label ?? matchedTag.key ?? String(matchedTag.id ?? ''),
-                  emoji: matchedTag.emoji ?? (rr.emoji ?? ''),
+                  emoji: decodeEmojiString(matchedTag.emoji ?? (rr.emoji ?? '')),
                   description: matchedTag.description ?? rr.description ?? undefined,
                 },
               };
@@ -205,8 +227,57 @@ export default function App() {
             return;
           }
           setIsAuthorized(true);
-          // now actually fetch
-          await fetchReports();
+          // fetch canonical report tags from backend
+          try {
+            let canonical: any[] = [];
+            try {
+              const tagsRes = await reportService.getReasons();
+              canonical = (tagsRes?.reasons ?? []).map((t: any) => ({
+                ...t,
+                emoji: decodeEmojiString(t?.emoji ?? ''),
+              }));
+            } catch (err) {
+              console.warn('reportService.getReasons() failed', err);
+            }
+
+            // Fallback: if no tags returned, try direct fetch to backend base URL
+            if (!canonical || canonical.length === 0) {
+              try {
+                const baseUrl = (process.env.NEXT_PUBLIC_BASE_API_URL || 'http://localhost:8080').replace(/\/$/, '');
+                const token = await tokenService.getAuthToken();
+                const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+                if (token) headers.Authorization = `Bearer ${token}`;
+                const reasonsRes = await fetch(`${baseUrl}/api/v2/reports/reasons`, { headers });
+                    if (reasonsRes.ok) {
+                      const reasonsJson = await reasonsRes.json();
+                      canonical = Array.isArray(reasonsJson?.data?.reasons)
+                        ? reasonsJson.data.reasons
+                        : Array.isArray(reasonsJson?.reasons)
+                        ? reasonsJson.reasons
+                        : Array.isArray(reasonsJson?.data)
+                        ? reasonsJson.data
+                        : Array.isArray(reasonsJson)
+                        ? reasonsJson
+                        : [];
+                      // decode emoji fields if they are escaped sequences
+                      canonical = canonical.map((t: any) => ({
+                        ...t,
+                        emoji: decodeEmojiString(t?.emoji ?? ''),
+                      }));
+                    }
+              } catch (err) {
+                console.warn('Direct fetch fallback for report tags failed', err);
+              }
+            }
+
+            setReportTags(canonical);
+            // now actually fetch reports with canonical tags
+            await fetchReports(canonical);
+          } catch (err) {
+            // if tags fetch fails, still attempt to fetch reports without canonical tags
+            console.warn('Failed to load canonical report tags, continuing without them', err);
+            await fetchReports([]);
+          }
         } catch (e) {
           console.error('Auth check failed', e);
           setIsAuthorized(false);
@@ -282,14 +353,13 @@ export default function App() {
               </SelectTrigger>
               <SelectContent className="bg-gray-900 border-gray-700">
                 <SelectItem value="all">All Tags</SelectItem>
-                <SelectItem value="BUG">🐛 Bug/Error</SelectItem>
-                <SelectItem value="PERFORMANCE">⚡ Performance</SelectItem>
-                <SelectItem value="UI_UX">🎨 UI/UX</SelectItem>
-                <SelectItem value="DATA_LOSS">💾 Data Loss</SelectItem>
-                <SelectItem value="LOGIN_AUTH">🔐 Login/Auth</SelectItem>
-                <SelectItem value="NETWORK">📡 Network</SelectItem>
-                <SelectItem value="FEATURE_REQUEST">✨ Feature Request</SelectItem>
-                <SelectItem value="OTHER">❓ Other</SelectItem>
+                {reportTags && reportTags.length > 0
+                  ? reportTags.map((tag) => (
+                      <SelectItem key={tag.id ?? tag.key} value={tag.key ?? String(tag.id)}>
+                        {(tag.emoji ? `${tag.emoji} ` : '') + (tag.label ?? tag.key)}
+                      </SelectItem>
+                    ))
+                  : null}
               </SelectContent>
             </Select>
           </div>
