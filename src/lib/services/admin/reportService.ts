@@ -23,12 +23,16 @@ export class ReportService {
 		try {
 			const query: Record<string, unknown> = {};
 			if (params) {
-				if (params.search) query.search = params.search;
-				if (params.status && params.status !== 'all') query.status = params.status;
-				if (params.tag && params.tag !== 'all') query.tag = params.tag;
-				if (params.page) query.page = params.page;
-				if (params.limit) query.limit = params.limit;
+				const p = params as any;
+				if (p.id) query.id = p.id;
+				if (p.title) query.title = p.title;
+				if (p.reason) query.reason = p.reason;
+				if (p.is_resolved !== undefined) query.is_resolved = p.is_resolved;
+				if (p.page) query.page = p.page;
+				if (p.limit) query.limit = p.limit;
 			}
+
+			console.log('getReports request params:', query);
 
 			const headers = await this.getAuthHeaders();
 			const response: any = await apiClient.get(this.BASE_PATH, { params: query, headers });

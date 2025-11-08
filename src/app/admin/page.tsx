@@ -72,11 +72,20 @@ export default function App() {
           setReportsError(null);
           // Use the adminReportService which wraps apiClient and respects NEXT_PUBLIC_BASE_API_URL
           const params: any = {};
-          if (statusFilter && statusFilter !== 'all') params.status = statusFilter;
-          if (tagFilter && tagFilter !== 'all') params.tag = tagFilter;
-          if (searchQuery) params.search = searchQuery;
           params.page = currentPage;
           params.limit = 10;
+          if (statusFilter && statusFilter !== 'all') {
+            params.is_resolved = statusFilter === 'resolved';
+          }
+          if (tagFilter && tagFilter !== 'all') params.reason = tagFilter;
+          if (searchQuery) {
+            const num = parseInt(searchQuery);
+            if (!isNaN(num)) {
+              params.id = num;
+            } else {
+              params.title = searchQuery;
+            }
+          }
 
           const response = await adminReportService.getReports(params as any);
           const json = { data: { reports: response.reports ?? [] }, pagination: response.pagination };
