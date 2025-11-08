@@ -66,6 +66,21 @@ export class ReportService {
 		}
 	}
 
+	/**
+	 * Update a report via PUT /api/v2/reports/:id
+	 * Accepts a partial report payload (e.g., { is_resolved: true })
+	 */
+	static async updateReport(reportId: number, data: Record<string, unknown>): Promise<any> {
+		try {
+			const headers = await this.getAuthHeaders();
+			const response: any = await apiClient.put(`${this.BASE_PATH}/${reportId}`, data, { headers });
+			return { success: true, report: response };
+		} catch (error) {
+			console.error('reportService.updateReport error', error);
+			return { success: false, message: 'Failed to update report' };
+		}
+	}
+
 	static async createReport(user_id: number, data: CreateReportRequest): Promise<any> {
 		try {
 			const headers = await this.getAuthHeaders();

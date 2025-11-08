@@ -9,7 +9,8 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import NotFound from '@/app/not-found';
 import { tokenService } from '@/lib/services/user/tokenService';
-import { reportService } from '@/lib/services/report';
+import { reportService as reportClientService } from '@/lib/services/report';
+import { reportService as adminReportService } from '@/lib/services/admin/reportService';
 
 export default function App() {
   const router = useRouter();
@@ -69,21 +70,14 @@ export default function App() {
         try {
           setIsLoadingReports(true);
           setReportsError(null);
-          const token = await tokenService.getAuthToken();
-          if (!token) {
-            throw new Error('Not authenticated: access token missing');
-          }
+          // Use the adminReportService which wraps apiClient and respects NEXT_PUBLIC_BASE_API_URL
+          const params: any = {};
+          if (statusFilter && statusFilter !== 'all') params.status = statusFilter;
+          if (tagFilter && tagFilter !== 'all') params.tag = tagFilter;
+          if (searchQuery) params.search = searchQuery;
 
-          const res = await fetch('http://localhost:8080/api/v2/reports', {
-            signal: controller.signal,
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          });
-          if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-          const json = await res.json();
-          console.log(json);
+          const response = await adminReportService.getReports(params as any);
+          const json = { data: { reports: response.reports ?? [] }, pagination: response.pagination };
         // Build lookup by key and label using canonicalTags (passed in) or fallback to state
         let reasonsMap: Record<string, any> = {};
         try {
@@ -98,12 +92,13 @@ export default function App() {
           console.warn('Failed to build report reasons map', err);
         }
 
-        // Backend may return several shapes. Normalize to an array of report objects.
-        let rawReports: any[] = [];
-        if (Array.isArray(json?.data?.reports)) rawReports = json.data.reports;
-        else if (Array.isArray(json?.reports)) rawReports = json.reports;
-        else if (Array.isArray(json?.data)) rawReports = json.data;
-        else if (Array.isArray(json)) rawReports = json;
+  // Backend may return several shapes. Normalize to an array of report objects.
+  const anyJson: any = json as any;
+  let rawReports: any[] = [];
+  if (Array.isArray(anyJson?.data?.reports)) rawReports = anyJson.data.reports;
+  else if (Array.isArray(anyJson?.reports)) rawReports = anyJson.reports;
+  else if (Array.isArray(anyJson?.data)) rawReports = anyJson.data;
+  else if (Array.isArray(anyJson)) rawReports = anyJson;
 
         // Map backend report items into the Report type expected by the table.
         const mapped = rawReports.map((r: any) => {
@@ -231,7 +226,7 @@ export default function App() {
           try {
             let canonical: any[] = [];
             try {
-              const tagsRes = await reportService.getReasons();
+              const tagsRes = await reportClientService.getReasons();
               canonical = (tagsRes?.reasons ?? []).map((t: any) => ({
                 ...t,
                 emoji: decodeEmojiString(t?.emoji ?? ''),

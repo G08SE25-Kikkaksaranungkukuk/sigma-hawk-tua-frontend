@@ -59,8 +59,7 @@ export function ReportedIssuesTable({
           status: statusFilter as 'all' | 'resolved' | 'unresolved',
           tag: tagFilter !== 'all' ? tagFilter : undefined,
         });
-        setReports(response.reports);
-        setReports([]);
+        setReports(response.reports ?? []);
       } catch (err) {
         console.error('Failed to fetch reports:', err);
         setError(err instanceof Error ? err.message : 'Failed to load reports');
@@ -74,12 +73,16 @@ export function ReportedIssuesTable({
 
   // Filter reports based on search and filters
   const filteredReports = reports.filter((report) => {
+    const reasons = Array.isArray(report.reason) ? report.reason : [];
+
+    const safeToString = (v: any) => (v === null || v === undefined ? '' : String(v));
+
     const matchesSearch =
       searchQuery === '' ||
-      report.report_id.toString().includes(searchQuery) ||
-      report.user_id.toString().includes(searchQuery) ||
-      report.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      report.description.toLowerCase().includes(searchQuery.toLowerCase());
+      safeToString(report.report_id).includes(searchQuery) ||
+      safeToString(report.user_id).includes(searchQuery) ||
+      safeToString(report.title).toLowerCase().includes(searchQuery.toLowerCase()) ||
+      safeToString(report.description).toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesStatus =
       statusFilter === 'all' ||
@@ -88,7 +91,7 @@ export function ReportedIssuesTable({
 
     const matchesTag =
       tagFilter === 'all' ||
-      report.reason.some((r) => r.report_tag.key === tagFilter);
+      reasons.some((r) => (r?.report_tag?.key ?? r?.report_tag ?? '').toString() === tagFilter);
 
     return matchesSearch && matchesStatus && matchesTag;
   });
@@ -117,22 +120,27 @@ export function ReportedIssuesTable({
       const report = reports.find((r) => r.report_id === reportId);
       if (!report) return;
 
-      // TODO: Uncomment when API is ready
-      // const updatedReport = await reportService.updateReportStatus(reportId, {
-      //   is_resolved: !report.is_resolved,
-      // });
-      
       // Optimistic update
-      const updatedReports = reports.map((r) =>
-        r.report_id === reportId
-          ? { ...r, is_resolved: !r.is_resolved }
-          : r
-      );
+      const toggled = !report.is_resolved;
+      const updatedReports = reports.map((r) => (r.report_id === reportId ? { ...r, is_resolved: toggled } : r));
       setReports(updatedReports);
-      
+
       // Update selected report if it's the one being toggled
       if (selectedReport && selectedReport.report_id === reportId) {
-        setSelectedReport({ ...selectedReport, is_resolved: !selectedReport.is_resolved });
+        setSelectedReport({ ...selectedReport, is_resolved: toggled });
+      }
+
+      // Persist to backend using PUT /api/v2/reports/:id
+      const res = await reportService.updateReport(reportId, { is_resolved: toggled });
+      if (!res || res.success === false) {
+        // Revert optimistic update on failure
+        const reverted = reports.map((r) => (r.report_id === reportId ? { ...r, is_resolved: report.is_resolved } : r));
+        setReports(reverted);
+        if (selectedReport && selectedReport.report_id === reportId) {
+          setSelectedReport({ ...selectedReport, is_resolved: report.is_resolved });
+        }
+        console.error('Failed to persist report status update', res?.message ?? res);
+        alert('Failed to update report status. Please try again.');
       }
     } catch (err) {
       console.error('Failed to update report status:', err);
@@ -226,7 +234,7 @@ export function ReportedIssuesTable({
                   <TableCell className="text-orange-200/80">{report.user_id}</TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      {report.reason.map((r) => (
+                      {(Array.isArray(report.reason) ? report.reason : []).map((r) => (
                         <Badge
                           key={r.id}
                           variant="outline"

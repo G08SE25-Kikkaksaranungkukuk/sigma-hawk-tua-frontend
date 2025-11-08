@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from 'react';
 import {
   Table,
@@ -59,8 +61,7 @@ export function ReportedIssuesTable({
           status: statusFilter as 'all' | 'resolved' | 'unresolved',
           tag: tagFilter !== 'all' ? tagFilter : undefined,
         });
-        setReports(response.reports);
-        setReports([]);
+        setReports(response.reports ?? []);
       } catch (err) {
         console.error('Failed to fetch reports:', err);
         setError(err instanceof Error ? err.message : 'Failed to load reports');
@@ -116,23 +117,37 @@ export function ReportedIssuesTable({
     try {
       const report = reports.find((r) => r.report_id === reportId);
       if (!report) return;
-
-      // TODO: Uncomment when API is ready
-      // const updatedReport = await reportService.updateReportStatus(reportId, {
-      //   is_resolved: !report.is_resolved,
-      // });
-      
-      // Optimistic update
+      // Optimistic update: flip locally first
       const updatedReports = reports.map((r) =>
         r.report_id === reportId
           ? { ...r, is_resolved: !r.is_resolved }
           : r
       );
       setReports(updatedReports);
-      
       // Update selected report if it's the one being toggled
       if (selectedReport && selectedReport.report_id === reportId) {
         setSelectedReport({ ...selectedReport, is_resolved: !selectedReport.is_resolved });
+      }
+
+      // Persist change to backend using admin report service (PUT /api/v2/reports/:id)
+      const res = await reportService.updateReport(reportId, { is_resolved: !report.is_resolved });
+      if (!res || res.success === false) {
+        // Revert optimistic update on failure
+        const reverted = reports.map((r) => (r.report_id === reportId ? { ...r, is_resolved: report.is_resolved } : r));
+        setReports(reverted);
+        if (selectedReport && selectedReport.report_id === reportId) {
+          setSelectedReport({ ...selectedReport, is_resolved: report.is_resolved });
+        }
+        throw new Error(res?.message ?? 'Failed to update report');
+      }
+      // Optionally replace local report with server response if provided
+      if (res.report) {
+        const serverReport = res.report?.report ?? res.report; // support nested envelopes
+        const replaced = reports.map((r) => (r.report_id === reportId ? { ...r, ...serverReport } : r));
+        setReports(replaced);
+        if (selectedReport && selectedReport.report_id === reportId) {
+          setSelectedReport({ ...selectedReport, ...serverReport });
+        }
       }
     } catch (err) {
       console.error('Failed to update report status:', err);
