@@ -45,7 +45,7 @@ type ReportSchema = z.infer<typeof reportSchema>
 const reportReasons = [
     {
         id: "BUG",
-        label: "� Bug/Error",
+        label: "🐛 Bug/Error",
         description: "Application crashes, errors, or unexpected behavior",
     },
     {
@@ -65,7 +65,7 @@ const reportReasons = [
     },
     {
         id: "LOGIN_AUTH",
-        label: "� Login/Authentication",
+        label: "🔑 Login/Authentication",
         description: "Cannot login, logout issues, or authentication problems",
     },
     {
@@ -167,7 +167,7 @@ export default function ReportCreatePage() {
             reportSchema.parse(formData)
             console.log("Form submitted:", formData)
             setErrors({})
-
+            console.log("Submitting report:", formData)
             // Submit to API
             setLoading(true)
             await apiClient.post(
