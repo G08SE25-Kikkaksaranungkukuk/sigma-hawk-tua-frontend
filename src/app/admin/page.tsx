@@ -6,9 +6,35 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Filter } from 'lucide-react';
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import NotFound from '@/app/not-found';
 import { tokenService } from '@/lib/services/user/tokenService';
 
 export default function App() {
+  const router = useRouter();
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null); // null = checking
+
+  const decodeJwtPayload = (token: string): any | null => {
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) return null;
+      // Base64 decode (handle base64url)
+      let payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      while (payload.length % 4) payload += '=';
+      const decoded = atob(payload);
+      // percent-decode to support utf-8 characters
+      const json = decodeURIComponent(
+        decoded
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      return JSON.parse(json);
+    } catch (e) {
+      console.warn('Failed to decode token payload', e);
+      return null;
+    }
+  };
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [tagFilter, setTagFilter] = useState('all');
@@ -17,25 +43,30 @@ export default function App() {
   const [reportsError, setReportsError] = useState<string | null>(null);
 
   useEffect(() => {
-    const controller = new AbortController();
-    const fetchReports = async () => {
-      try {
-        setIsLoadingReports(true);
-        setReportsError(null);
-        const token = await tokenService.getAuthToken();
-        if (!token) {
-          throw new Error('Not authenticated: access token missing');
-        }
+    // First, check authorization. If isAuthorized is null we are still checking.
+    const checkAuthAndFetch = async () => {
+      // If we've already checked and found not authorized, skip.
+      if (isAuthorized === false) return;
 
-        const res = await fetch('http://localhost:8080/api/v2/reports', {
-          signal: controller.signal,
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-        const json = await res.json();
+      const controller = new AbortController();
+      const fetchReports = async () => {
+        try {
+          setIsLoadingReports(true);
+          setReportsError(null);
+          const token = await tokenService.getAuthToken();
+          if (!token) {
+            throw new Error('Not authenticated: access token missing');
+          }
+
+          const res = await fetch('http://localhost:8080/api/v2/reports', {
+            signal: controller.signal,
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+          const json = await res.json();
         // Fetch report reasons/tags so we can map reason labels to canonical report_tag objects
         let reasonsMap: Record<string, any> = {};
         try {
@@ -155,10 +186,55 @@ export default function App() {
         setIsLoadingReports(false);
       }
     };
+      // Only fetch reports if we have confirmed admin access
+      if (isAuthorized === null) {
+        // check token role quickly before fetching
+        try {
+          const token = await tokenService.getAuthToken();
+          if (!token) {
+            setIsAuthorized(false);
+            // don't redirect; we'll render the app's NotFound component on the client
+            return;
+          }
+          const payload = decodeJwtPayload(token);
+          const role = payload?.role ?? payload?.roles ?? payload?.isAdmin ?? payload?.is_admin;
+          const adminDetected = (typeof role === 'string' && role.toUpperCase() === 'ADMIN') || role === true;
+          if (!adminDetected) {
+            setIsAuthorized(false);
+            // don't redirect; we'll render the app's NotFound component on the client
+            return;
+          }
+          setIsAuthorized(true);
+          // now actually fetch
+          await fetchReports();
+        } catch (e) {
+          console.error('Auth check failed', e);
+          setIsAuthorized(false);
+          // on error we'll render NotFound instead of redirecting
+        }
+      } else if (isAuthorized === true) {
+        // authorized and can fetch
+        await fetchReports();
+      }
 
-    fetchReports();
-    return () => controller.abort();
-  }, []);
+      return () => controller.abort();
+    };
+
+    checkAuthAndFetch();
+    // Only re-run when authorization status changes
+  }, [isAuthorized, router]);
+
+  // While we are checking authorization, show a small loading state
+  if (isAuthorized === null) {
+    return (
+      <div className="min-h-screen bg-[#0a0b0f] flex items-center justify-center">
+        <p className="text-orange-200/90">Checking admin access...</p>
+      </div>
+    );
+  }
+
+  // If not authorized, render the app's NotFound component
+  if (isAuthorized === false) return <NotFound />;
 
   return (
     <div className="min-h-screen bg-[#0a0b0f]">
