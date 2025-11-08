@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ReportedIssuesTable } from './ReportedIssuesTable';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import { Search, Filter } from 'lucide-react';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -60,6 +61,7 @@ export default function App() {
   const [reportsError, setReportsError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     // First, check authorization. If isAuthorized is null we are still checking.
@@ -301,13 +303,17 @@ export default function App() {
     };
 
     checkAuthAndFetch();
-    // Only re-run when authorization status changes, page changes, or filters change
-  }, [isAuthorized, router, currentPage, searchQuery, statusFilter, tagFilter]);
+    // Only re-run when authorization status changes, page changes, or search is triggered
+  }, [isAuthorized, router, currentPage, isSearching]);
 
   // Reset page to 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, statusFilter, tagFilter]);
+
+  const handleSearch = () => {
+    setIsSearching(prev => !prev);
+  };
 
   // While we are checking authorization, show a small loading state
   if (isAuthorized === null) {
@@ -335,15 +341,24 @@ export default function App() {
         {/* Search and Filters */}
         <div className="mb-6 space-y-3">
           {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <Input
-              type="text"
-              placeholder="Search by ID, user ID, title, or description..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-[#1a1b23]/80 backdrop-blur-sm border-gray-600 text-white placeholder:text-gray-400 focus:border-[#ff6600] focus:ring-[#ff6600]/30"
-            />
+          <div className="relative flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <Input
+                type="text"
+                placeholder="Search by ID, title..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 bg-[#1a1b23]/80 backdrop-blur-sm border-gray-600 text-white placeholder:text-gray-400 focus:border-[#ff6600] focus:ring-[#ff6600]/30"
+              />
+            </div>
+            <Button
+              onClick={handleSearch}
+              disabled={isLoadingReports}
+              className="bg-[#ff6600] hover:bg-[#ff6600]/80 text-white"
+            >
+              {isLoadingReports ? 'Searching...' : 'Search'}
+            </Button>
           </div>
 
           {/* Filter Bar */}
