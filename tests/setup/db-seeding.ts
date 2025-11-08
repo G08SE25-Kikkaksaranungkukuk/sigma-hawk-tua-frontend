@@ -38,6 +38,17 @@ export const TEST_USERS_DATA: Record<string, TestUser> = {
     email: 'janetest@gmail.com',
     password: 'TestPass456!',
   },
+  testUser3: {
+    first_name: 'bob',
+    last_name: 'smith',
+    birth_date: '1998-05-20',
+    sex: 'male',
+    interests: ['SHOPPING_MALL', 'CAFE', 'FOOD_STREET'],
+    travel_styles: ['LUXURY', 'COMFORT'],
+    phone: '0887654321',
+    email: 'bobsmith@gmail.com',
+    password: 'TestPass456!',
+  },
 };
 
 /**
