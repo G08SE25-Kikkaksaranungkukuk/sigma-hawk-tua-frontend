@@ -33,7 +33,6 @@ export class ReportService {
 
       return { success: true, reasons };
     } catch (error) {
-      console.error('reportService.getReasons error', error);
       return { success: false, reasons: [] };
     }
   }

@@ -27,6 +27,13 @@ interface ReportedIssuesTableProps {
   // Optional pre-fetched reports (when the parent fetches them)
   initialReports?: Report[];
   initialLoading?: boolean;
+  initialPagination?: {
+    current_page?: number;
+    total_pages?: number;
+    total_records?: number;
+    per_page?: number;
+  };
+  onPageChange?: (page: number) => void;
 }
 
 export function ReportedIssuesTable({
@@ -35,22 +42,29 @@ export function ReportedIssuesTable({
   tagFilter,
   initialReports,
   initialLoading,
+  initialPagination,
+  onPageChange,
 }: ReportedIssuesTableProps) {
   const [reports, setReports] = useState<Report[]>(initialReports ?? []);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(initialLoading ?? true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [perPage, setPerPage] = useState<number>(10);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [totalRecords, setTotalRecords] = useState<number>(0);
 
   // If parent passed initialReports, use them and skip internal fetching.
   useEffect(() => {
     if (initialReports) {
       setReports(initialReports);
       setIsLoading(initialLoading ?? false);
+      // When parent provides initial reports we skip internal pagination.
       return;
     }
 
-    const fetchReports = async () => {
+    const fetchReports = async (page: number = 1) => {
       try {
         setIsLoading(true);
         setError(null);
@@ -58,8 +72,20 @@ export function ReportedIssuesTable({
           search: searchQuery || undefined,
           status: statusFilter as 'all' | 'resolved' | 'unresolved',
           tag: tagFilter !== 'all' ? tagFilter : undefined,
+          page,
+          limit: perPage,
         });
+
+        console.log('Raw response from backend:', response);
+
         setReports(response.reports ?? []);
+
+        // Wire pagination info if available from the backend
+        const pagination = response.pagination ?? {};
+        setCurrentPage(pagination.current_page ?? pagination.page ?? page);
+        setTotalPages(pagination.total_pages ?? pagination.totalPages ?? 1);
+        setPerPage(pagination.per_page ?? pagination.perPage ?? perPage);
+        setTotalRecords(pagination.total_records ?? pagination.totalRecords ?? pagination.total ?? 0);
       } catch (err) {
         console.error('Failed to fetch reports:', err);
         setError(err instanceof Error ? err.message : 'Failed to load reports');
@@ -68,33 +94,72 @@ export function ReportedIssuesTable({
       }
     };
 
-    fetchReports();
-  }, [searchQuery, statusFilter, tagFilter, initialReports, initialLoading]);
+    // fetch the current page
+    fetchReports(currentPage);
+  }, [searchQuery, statusFilter, tagFilter, initialReports, initialLoading, currentPage]);
+
+  // When filters change, reset to page 1
+  useEffect(() => {
+    if (initialReports) return; // parent-controlled
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, tagFilter, initialReports]);
+
+  // Set currentPage from initialPagination if provided
+  useEffect(() => {
+    if (initialPagination?.current_page) {
+      setCurrentPage(initialPagination.current_page);
+    }
+  }, [initialPagination]);
 
   // Filter reports based on search and filters
-  const filteredReports = reports.filter((report) => {
-    const reasons = Array.isArray(report.reason) ? report.reason : [];
+  const filteredReports = initialPagination
+    ? (initialReports || [])
+    : reports.filter((report) => {
+        const reasons = Array.isArray(report.reason) ? report.reason : [];
 
-    const safeToString = (v: any) => (v === null || v === undefined ? '' : String(v));
+        const safeToString = (v: any) => (v === null || v === undefined ? '' : String(v));
 
-    const matchesSearch =
-      searchQuery === '' ||
-      safeToString(report.report_id).includes(searchQuery) ||
-      safeToString(report.user_id).includes(searchQuery) ||
-      safeToString(report.title).toLowerCase().includes(searchQuery.toLowerCase()) ||
-      safeToString(report.description).toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearch =
+          searchQuery === '' ||
+          safeToString(report.report_id).includes(searchQuery) ||
+          safeToString(report.user_id).includes(searchQuery) ||
+          safeToString(report.title).toLowerCase().includes(searchQuery.toLowerCase()) ||
+          safeToString(report.description).toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesStatus =
-      statusFilter === 'all' ||
-      (statusFilter === 'resolved' && report.is_resolved) ||
-      (statusFilter === 'unresolved' && !report.is_resolved);
+        const matchesStatus =
+          statusFilter === 'all' ||
+          (statusFilter === 'resolved' && report.is_resolved) ||
+          (statusFilter === 'unresolved' && !report.is_resolved);
 
-    const matchesTag =
-      tagFilter === 'all' ||
-      reasons.some((r) => (r?.report_tag?.key ?? r?.report_tag ?? '').toString() === tagFilter);
+        const matchesTag =
+          tagFilter === 'all' ||
+          reasons.some((r) => (r?.report_tag?.key ?? r?.report_tag ?? '').toString() === tagFilter);
 
-    return matchesSearch && matchesStatus && matchesTag;
-  });
+        return matchesSearch && matchesStatus && matchesTag;
+      });
+
+  // If parent provided initialReports we handle pagination client-side by slicing the filtered array.
+  const effectiveTotalRecords = initialPagination
+    ? initialPagination.total_records ?? 0
+    : initialReports && Array.isArray(initialReports)
+    ? filteredReports.length
+    : totalRecords;
+  const effectiveTotalPages = initialPagination
+    ? initialPagination.total_pages ?? 1
+    : initialReports && Array.isArray(initialReports)
+    ? Math.max(1, Math.ceil(effectiveTotalRecords / perPage))
+    : totalPages;
+
+  // Ensure currentPage is within range for client-side pagination
+  if (currentPage > effectiveTotalPages) {
+    setCurrentPage(effectiveTotalPages);
+  }
+
+  const displayedReports = initialPagination
+    ? filteredReports
+    : initialReports && Array.isArray(initialReports)
+    ? filteredReports.slice((currentPage - 1) * perPage, currentPage * perPage)
+    : filteredReports;
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -149,6 +214,15 @@ export function ReportedIssuesTable({
     }
   };
 
+  const goToPage = (page: number) => {
+    if (page < 1 || page > effectiveTotalPages || page === currentPage) return;
+    if (initialPagination) {
+      onPageChange?.(page);
+    } else {
+      setCurrentPage(page);
+    }
+  };
+
   const handleViewDetails = (report: Report) => {
     setSelectedReport(report);
     setIsDetailOpen(true);
@@ -157,26 +231,6 @@ export function ReportedIssuesTable({
   return (
     <>
     <div className="rounded-3xl border border-orange-500/20 bg-gray-900/60 backdrop-blur-sm overflow-hidden shadow-2xl">
-      {/* Stats bar */}
-      <div className="border-b border-orange-500/20 px-6 py-4 bg-gray-900/40">
-        <div className="flex items-center gap-6 text-sm">
-          <div>
-            <span className="text-orange-200/60">Total: </span>
-            <span className="text-orange-100 font-semibold">{filteredReports.length}</span>
-          </div>
-          <div className="h-4 w-px bg-orange-500/20"></div>
-          <div>
-            <span className="text-orange-200/60">Unresolved: </span>
-            <span className="text-orange-400 font-semibold">{filteredReports.filter((r) => !r.is_resolved).length}</span>
-          </div>
-          <div className="h-4 w-px bg-orange-500/20"></div>
-          <div>
-            <span className="text-orange-200/60">Resolved: </span>
-            <span className="text-green-400 font-semibold">{filteredReports.filter((r) => r.is_resolved).length}</span>
-          </div>
-        </div>
-      </div>
-
       {/* Table */}
       <div className="overflow-x-auto">
         <Table>
@@ -225,7 +279,7 @@ export function ReportedIssuesTable({
                 </TableCell>
               </TableRow>
             ) : (
-              filteredReports.map((report) => (
+              displayedReports.map((report) => (
                 <TableRow
                   key={report.report_id}
                   className="border-orange-500/10 hover:bg-gray-800/30 transition-colors"
@@ -308,6 +362,55 @@ export function ReportedIssuesTable({
             )}
           </TableBody>
         </Table>
+        {/* Pagination bar */}
+        {effectiveTotalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-4 border-t border-orange-500/10 bg-gray-900/40">
+            <div className="text-sm text-orange-200/70">
+              {effectiveTotalRecords > 0 ? (
+                <>
+                  Showing {(currentPage - 1) * perPage + 1} - {Math.min(effectiveTotalRecords, currentPage * perPage)} of {effectiveTotalRecords}
+                </>
+              ) : (
+                <>No results</>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage <= 1 || isLoading}
+                className={`px-3 py-1 rounded-md text-sm ${currentPage <= 1 || isLoading ? 'text-gray-500 bg-gray-800/20' : 'text-orange-200 bg-gray-800/60 hover:bg-gray-800/80'}`}>
+                Prev
+              </button>
+
+              <div className="flex items-center gap-1">
+                {(() => {
+                  const pages: number[] = [];
+                  let start = Math.max(1, currentPage - 2);
+                  let end = Math.min(effectiveTotalPages, start + 4);
+                  if (end - start < 4) start = Math.max(1, end - 4);
+                  for (let p = start; p <= end; p++) pages.push(p);
+                  return pages.map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => goToPage(p)}
+                      disabled={isLoading}
+                      className={`w-9 h-9 flex items-center justify-center rounded-md text-sm ${p === currentPage ? 'bg-orange-500 text-black font-semibold' : 'bg-gray-800/60 text-orange-200 hover:bg-gray-800/80'}`}>
+                      {p}
+                    </button>
+                  ));
+                })()}
+              </div>
+
+              <button
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage >= effectiveTotalPages || isLoading}
+                className={`px-3 py-1 rounded-md text-sm ${currentPage >= effectiveTotalPages || isLoading ? 'text-gray-500 bg-gray-800/20' : 'text-orange-200 bg-gray-800/60 hover:bg-gray-800/80'}`}>
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
 

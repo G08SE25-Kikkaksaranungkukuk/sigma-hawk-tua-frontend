@@ -58,14 +58,14 @@ export default function App() {
   const [reports, setReports] = useState<any[] | null>(null);
   const [isLoadingReports, setIsLoadingReports] = useState(true);
   const [reportsError, setReportsError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState<any>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     // First, check authorization. If isAuthorized is null we are still checking.
   const checkAuthAndFetch = async () => {
-      // If we've already checked and found not authorized, skip.
-      if (isAuthorized === false) return;
-
-      const controller = new AbortController();
+    // If we've already checked and found not authorized, skip.
+    if (isAuthorized === false) return;      const controller = new AbortController();
       const fetchReports = async (canonicalTags: any[] = []) => {
         try {
           setIsLoadingReports(true);
@@ -75,9 +75,13 @@ export default function App() {
           if (statusFilter && statusFilter !== 'all') params.status = statusFilter;
           if (tagFilter && tagFilter !== 'all') params.tag = tagFilter;
           if (searchQuery) params.search = searchQuery;
+          params.page = currentPage;
+          params.limit = 10;
 
           const response = await adminReportService.getReports(params as any);
           const json = { data: { reports: response.reports ?? [] }, pagination: response.pagination };
+
+          console.log('Raw response from backend in admin page:', response);
         // Build lookup by key and label using canonicalTags (passed in) or fallback to state
         let reasonsMap: Record<string, any> = {};
         try {
@@ -194,6 +198,7 @@ export default function App() {
         });
 
         setReports(mapped);
+        setPagination(response.pagination);
       } catch (err) {
         if ((err as any).name === 'AbortError') return;
         console.error('Failed to fetch reports', err);
@@ -287,8 +292,13 @@ export default function App() {
     };
 
     checkAuthAndFetch();
-    // Only re-run when authorization status changes
-  }, [isAuthorized, router]);
+    // Only re-run when authorization status changes, page changes, or filters change
+  }, [isAuthorized, router, currentPage, searchQuery, statusFilter, tagFilter]);
+
+  // Reset page to 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, tagFilter]);
 
   // While we are checking authorization, show a small loading state
   if (isAuthorized === null) {
@@ -367,6 +377,8 @@ export default function App() {
           tagFilter={tagFilter}
           initialReports={reports ?? undefined}
           initialLoading={isLoadingReports}
+          initialPagination={pagination}
+          onPageChange={setCurrentPage}
         />
       </div>
     </div>
