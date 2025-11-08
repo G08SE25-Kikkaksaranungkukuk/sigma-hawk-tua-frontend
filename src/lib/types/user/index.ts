@@ -59,3 +59,9 @@ export interface UserData {
     iat: number; // issued-at timestamp
     exp: number; // expiry timestamp
 }
+
+export interface Rating {
+    trust_score : number;
+    engagement_score : number;
+    experience_score : number;
+}
