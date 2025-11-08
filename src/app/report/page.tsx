@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useCurrentUser } from "@/lib/hooks/user";
 import React from "react";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { tokenService } from '@/lib/services/user/tokenService';
 import { z } from 'zod';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,15 +36,11 @@ const reportSchema = z.object({
 
 type ReportSchema = z.infer<typeof reportSchema>;
 
-const reportReasons = [
-    { id: "HARASSMENT", label: "🚫 Harassment", description: "Bullying, threats, or intimidation" },
-    { id: "INAPPROPRIATE_CONTENT", label: "⚠️ Inappropriate Content", description: "Offensive or unsuitable material" },
-    { id: "SPAM", label: "📧 Spam", description: "Repetitive or unwanted messages" },
-    { id: "FAKE_PROFILE", label: "🎭 Fake Profile", description: "False identity or impersonation" },
-    { id: "SCAM", label: "💰 Scam", description: "Fraudulent or deceptive behavior" },
-    { id: "VIOLENCE", label: "⚔️ Violence", description: "Threats or promotion of violence" },
-    { id: "OTHER", label: "❓ Other", description: "Other violations not listed above" },
-];
+// reportTags will be fetched from the backend endpoint /api/v2/reports/reasons
+// Expected shape (example): { success: true, data: { reasons: [{ id, key, label, emoji, description }, ...] } }
+const DEFAULT_REASONS: any[] = [];
+
+
 
 // Success Modal Component
 function ReportSuccess({ isOpen }: { isOpen: boolean }) {
@@ -87,6 +84,42 @@ function ReportSuccess({ isOpen }: { isOpen: boolean }) {
 
 export default function ReportCreatePage() {
     const router = useRouter();
+    // fetched report tags
+    const [reportTags, setReportTags] = useState<any[]>(DEFAULT_REASONS);
+    const [tagsLoading, setTagsLoading] = useState<boolean>(false);
+
+    useEffect(() => {
+        let mounted = true;
+        const fetchTags = async () => {
+            setTagsLoading(true);
+            try {
+                const token = await tokenService.getAuthToken();
+                const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+                if (token) headers.Authorization = `Bearer ${token}`;
+
+                const baseUrl = (process.env.NEXT_PUBLIC_BASE_API_URL || 'http://localhost:8080').replace(/\/$/, '');
+                const res = await fetch(`${baseUrl}/api/v2/reports/reasons`, { headers });
+                if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+                const json = await res.json();
+                const raw: any[] = Array.isArray(json?.data?.reasons)
+                    ? json.data.reasons
+                    : Array.isArray(json?.reasons)
+                    ? json.reasons
+                    : Array.isArray(json?.data)
+                    ? json.data
+                    : Array.isArray(json)
+                    ? json
+                    : [];
+                if (mounted) setReportTags(raw);
+            } catch (err) {
+                console.warn('Failed to fetch report tags', err);
+            } finally {
+                if (mounted) setTagsLoading(false);
+            }
+        };
+        fetchTags();
+        return () => { mounted = false; };
+    }, []);
     const [formData, setFormData] = useState<ReportSchema>({ 
         title: '', 
         reason: '', 
@@ -121,6 +154,10 @@ export default function ReportCreatePage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (tagsLoading) {
+            alert('Please wait for report reasons to finish loading');
+            return;
+        }
         try {
             // Validate the form data
             reportSchema.parse(formData);
@@ -229,25 +266,31 @@ export default function ReportCreatePage() {
                                 <Label className="text-orange-300 font-medium">
                                     Reason *
                                 </Label>
-                                <Select value={formData.reason} onValueChange={(value) => handleChange('reason', value)}>
+                                <Select value={formData.reason} onValueChange={(value) => handleChange('reason', value)} disabled={tagsLoading}>
                                     <SelectTrigger className={`pb-7 pt-7 bg-gray-800/50 border-gray-600 text-white focus:border-orange-500 focus:ring-orange-500/20 ${
                                         errors.reason ? 'border-red-500' : ''
                                     }`}>
                                         <SelectValue placeholder="Select reason" />
                                     </SelectTrigger>
                                     <SelectContent className="bg-gray-800 border-gray-600">
-                                        {reportReasons.map((reasonItem) => (
-                                            <SelectItem 
-                                                key={reasonItem.id} 
-                                                value={reasonItem.id}
-                                                className="text-white hover:bg-gray-700 focus:bg-gray-700"
-                                            >
-                                                <div>
-                                                    <div className="font-medium text-left">{reasonItem.label}</div>
-                                                    <div className="text-sm text-gray-400">{reasonItem.description}</div>
-                                                </div>
+                                        {tagsLoading ? (
+                                            <SelectItem value="__loading" disabled className="text-gray-400">
+                                                Loading...
                                             </SelectItem>
-                                        ))}
+                                        ) : (
+                                            reportTags.map((tag) => (
+                                                <SelectItem
+                                                    key={tag.id ?? tag.key}
+                                                    value={tag.key ?? String(tag.id)}
+                                                    className="text-white hover:bg-gray-700 focus:bg-gray-700"
+                                                >
+                                                    <div>
+                                                        <div className="font-medium text-left">{(tag.emoji ? `${tag.emoji} ` : '') + (tag.label ?? tag.key)}</div>
+                                                        <div className="text-sm text-gray-400">{tag.description}</div>
+                                                    </div>
+                                                </SelectItem>
+                                            ))
+                                        )}
                                     </SelectContent>
                                 </Select>
                                 {errors.reason && <p className="text-red-400 text-sm flex items-center gap-1">
