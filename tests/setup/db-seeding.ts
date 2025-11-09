@@ -88,6 +88,8 @@ export async function seedTestUsers() {
         failed: [] as string[],
     }
     var groupId: number | undefined
+    let isFirstUser = true
+
     for (const [key, user] of Object.entries(TEST_USERS_DATA)) {
         try {
             const response = await axios.post(
@@ -151,6 +153,14 @@ export async function seedTestUsers() {
         )
         if (loginResponse.status === 200) {
             console.log(`✅ Login successful for: ${user.email}`)
+
+            // Extract cookies from login response for subsequent requests
+            const cookies = loginResponse.headers["set-cookie"]
+            if (cookies && cookies.length > 0) {
+                // Set the cookies for all subsequent requests
+                axiosInstance.defaults.headers.Cookie = cookies.join("; ")
+                console.log(`🍪 Authentication cookies set for: ${user.email}`)
+            }
         } else if (loginResponse.status !== 200) {
             console.error(
                 `❌ Failed to log in user ${user.email}:`,
@@ -158,97 +168,131 @@ export async function seedTestUsers() {
             )
             continue
         }
-        for (const [key, group] of Object.entries(TEST_GROUP_DATA)) {
-            try {
-                const formData = new FormData()
 
-                // Append text fields
-                formData.append("group_name", group.group_name)
-                if (group.description) {
-                    formData.append("description", group.description)
-                }
-                if (group.max_members) {
-                    formData.append("max_members", group.max_members.toString())
-                }
+        // Only create group for the first user, others will join
+        if (isFirstUser) {
+            for (const [key, group] of Object.entries(TEST_GROUP_DATA)) {
+                try {
+                    const formData = new FormData()
 
-                // Append interest fields as JSON string or individual entries
-                if (group.interest_fields && group.interest_fields.length > 0) {
-                    group.interest_fields.forEach((interest, index) => {
-                        formData.append(`interest_fields[${index}]`, interest)
-                    })
-                }
-
-                // Append file if provided
-                if (group.profile) {
-                    formData.append("profile", group.profile)
-                }
-
-                // Append file if provided
-                if (group.profile) {
-                    formData.append("profile", group.profile)
-                }
-                const createGroupResponse = await axiosInstance.post(
-                    `${API_BASE_URL}/api/v1/group`,
-                    formData,
-                    {
-                        withCredentials: true,
-                        headers: {
-                            "Content-Type": "multipart/form-data",
-                        },
+                    // Append text fields
+                    formData.append("group_name", group.group_name)
+                    if (group.description) {
+                        formData.append("description", group.description)
                     }
-                )
-                if (
-                    createGroupResponse.status === 200 ||
-                    createGroupResponse.status === 201
-                ) {
-                    groupId = createGroupResponse.data.id
-                    console.log(
-                        `✅ Created test group: ${group.group_name} for user: ${user.email}`
+                    if (group.max_members) {
+                        formData.append(
+                            "max_members",
+                            group.max_members.toString()
+                        )
+                    }
+
+                    // Append interest fields as JSON string or individual entries
+                    if (
+                        group.interest_fields &&
+                        group.interest_fields.length > 0
+                    ) {
+                        group.interest_fields.forEach((interest, index) => {
+                            formData.append(
+                                `interest_fields[${index}]`,
+                                interest
+                            )
+                        })
+                    }
+
+                    // Append file if provided
+                    if (group.profile) {
+                        formData.append("profile", group.profile)
+                    }
+
+                    const createGroupResponse = await axiosInstance.post(
+                        `${API_BASE_URL}/group`,
+                        formData,
+                        {
+                            withCredentials: true,
+                            headers: {
+                                "Content-Type": "multipart/form-data",
+                            },
+                        }
                     )
-                } else {
-                    console.log(
-                        `❌ Failed to create test group: ${group.group_name} for user: ${user.email} - Status: ${createGroupResponse.status}`
+                    if (
+                        createGroupResponse.status === 200 ||
+                        createGroupResponse.status === 201
+                    ) {
+                        console.log(
+                            `📋 Group creation response:`,
+                            createGroupResponse.data
+                        )
+                        groupId =
+                            createGroupResponse.data.data?.group_id ||
+                            createGroupResponse.data.group_id ||
+                            createGroupResponse.data.id
+                        console.log(
+                            `✅ Created test group: ${group.group_name} by user: ${user.email} (Group ID: ${groupId})`
+                        )
+                    } else {
+                        console.log(
+                            `❌ Failed to create test group: ${group.group_name} for user: ${user.email} - Status: ${createGroupResponse.status}`
+                        )
+                        console.log(`Response data:`, createGroupResponse.data)
+                    }
+                } catch (error: any) {
+                    console.error(
+                        "❌ Failed to create test group:",
+                        error.response?.data || error.message
                     )
                 }
+            }
+            isFirstUser = false
+        }
+
+        // Join the group (both creator and other users)
+        if (groupId) {
+            try {
                 const joinGroupResponse = await axiosInstance.put(
-                    `${API_BASE_URL}/api/v1/group/${groupId}/member`,
+                    `${API_BASE_URL}/group/${groupId}/member`,
                     {},
                     { withCredentials: true }
                 )
                 if (
                     joinGroupResponse.status === 200 ||
-                    joinGroupResponse.status === 201
+                    joinGroupResponse.status === 201 ||
+                    joinGroupResponse.status === 409
                 ) {
                     console.log(
-                        `✅ User: ${user.email} joined group: ${group.group_name}`
+                        `✅ User: ${user.email} joined group ID: ${groupId}`
                     )
                 } else {
                     console.log(
-                        `❌ Failed to add user: ${user.email} to group: ${group.group_name} - Status: ${joinGroupResponse.status}`
+                        `❌ Failed to add user: ${user.email} to group ID: ${groupId} - Status: ${joinGroupResponse.status}`
                     )
+                    console.log(`Response data:`, joinGroupResponse.data)
                 }
-            } catch (error) {
-                console.error("❌ Failed to create test group:", error)
-            }
-
-            console.log(`\n📊 Seeding Summary:`)
-            console.log(`   Created: ${results.created.length}`)
-            console.log(`   Already exists: ${results.existing.length}`)
-            console.log(`   Failed: ${results.failed.length}\n`)
-
-            if (
-                results.failed.length > 0 &&
-                results.created.length === 0 &&
-                results.existing.length === 0
-            ) {
-                throw new Error(
-                    "Failed to seed any test users. Check backend connection."
+            } catch (error: any) {
+                console.error(
+                    `❌ Failed to join group for user ${user.email}:`,
+                    error.response?.data || error.message
                 )
             }
-
-            console.log("✅ Test data seeding completed\n")
         }
     }
+
+    console.log(`\n📊 Seeding Summary:`)
+    console.log(`   Created: ${results.created.length}`)
+    console.log(`   Already exists: ${results.existing.length}`)
+    console.log(`   Failed: ${results.failed.length}\n`)
+
+    if (
+        results.failed.length > 0 &&
+        results.created.length === 0 &&
+        results.existing.length === 0
+    ) {
+        throw new Error(
+            "Failed to seed any test users. Check backend connection."
+        )
+    }
+
+    console.log("✅ Test data seeding completed\n")
 }
 /**
  * Cleans up test users after tests complete
