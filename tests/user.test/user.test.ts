@@ -19,7 +19,7 @@ test("user can login", async ({ page }) => {
 })
 
 test("user can delete account", async ({ page }) => {
-    const testUser = TEST_USERS_DATA.testUser1
+    const testUser = TEST_USERS_DATA.testDeleteUser
     await page.goto("/")
     await page.getByRole("button", { name: "✨ Sign In" }).click()
     await page.getByRole("textbox", { name: "Email" }).click()
@@ -29,7 +29,7 @@ test("user can delete account", async ({ page }) => {
         .getByRole("textbox", { name: "Password" })
         .fill(testUser.password)
     await page.getByRole("button", { name: "✨ Sign In & Explore" }).click()
-    await page.getByRole("button", { name: "J", exact: true }).click()
+    await page.getByRole("button", { name: "B", exact: true }).click()
     await page.getByRole("menuitem", { name: "Profile Management" }).click()
 
     await page.getByRole("button", { name: "Delete Account" }).click()

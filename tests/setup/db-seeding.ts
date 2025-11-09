@@ -60,6 +60,18 @@ export const TEST_USERS_DATA: Record<string, TestUser> = {
         email: "janetest@gmail.com",
         password: "TestPass456!",
     },
+    testDeleteUser: {
+        //this user is for testing account deletion do not use for other tests
+        first_name: "Bob",
+        last_name: "Smith",
+        birth_date: "1990-09-10",
+        sex: "male",
+        interests: ["SEA", "MOUNTAIN"],
+        travel_styles: ["ADVENTURE", "BUDGET"],
+        phone: "0891234567",
+        email: "bobtest@gmail.com",
+        password: "TestPass789!",
+    },
 }
 
 export const TEST_GROUP_DATA = {
