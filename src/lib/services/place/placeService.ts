@@ -41,7 +41,7 @@ interface APIResponse<T> {
 const RAPIDAPI_CONFIG = {
   baseURL: 'https://local-business-data.p.rapidapi.com',
   headers: {
-    'x-rapidapi-key': process.env.NEXT_PUBLIC_RAPIDAPI_API_KEY || 'd75cab7673msh63fb0e4eb9242f3p19ab01jsn33ae73d9230b',
+    'x-rapidapi-key': process.env.NEXT_PUBLIC_RAPID_API_KEY,
     'x-rapidapi-host': 'local-business-data.p.rapidapi.com'
   }
 } as const;
@@ -136,7 +136,7 @@ const searchPlaces = async (
   const data = await makeAPIRequest<APIBusinessData>('/search', {
     query,
     extract_emails_and_contacts: extractEmailsAndContacts.toString(),
-    limit: '5'
+    limit: '1'
   });
 
   return data.map(mapToPlace);
