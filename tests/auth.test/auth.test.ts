@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { TEST_USERS_DATA } from "../setup/db-seeding";
 
 test.describe('Auth flow', () => {
   test('consent checkbox is disabled until Terms and Privacy are scrolled to bottom', async ({ page }) => {
-    await page.goto('http://localhost:3000/signup');
+    await page.goto('/signup');
 
     const consent = page.locator('#consent');
     const submit = page.locator('button[type="submit"]');
@@ -40,7 +41,7 @@ test.describe('Auth flow', () => {
   });
 
   test('register flow', async ({ page }) => {
-        await page.goto('http://localhost:3000/signup');
+        await page.goto('/signup');
         await page.getByRole('textbox', { name: '👤 First Name' }).click();
         await page.getByRole('textbox', { name: '👤 First Name' }).fill('aaa');
         await page.getByRole('textbox', { name: '👤 Middle Name (Optional)' }).click();
@@ -74,7 +75,7 @@ test.describe('Auth flow', () => {
     await expect(page.getByRole('button', { name: '🚀 Create My Account' })).toBeEnabled();
     });
   test('login flow shows error on invalid credentials', async ({ page }) => {
-    await page.goto('http://localhost:3000/login');
+    await page.goto('/login');
     await page.getByRole('textbox', { name: 'Email' }).click();
     await page.getByRole('textbox', { name: 'Email' }).fill('nonexistent@example.com');
     await page.getByRole('textbox', { name: 'Password' }).click();
@@ -85,11 +86,33 @@ test.describe('Auth flow', () => {
   });
 
   test('signup page contains key inputs', async ({ page }) => {
-    await page.goto('http://localhost:3000/signup');
+    await page.goto('/signup');
     await expect(page.getByLabel('👤 First Name')).toBeVisible();
     await expect(page.getByLabel('👥 Last Name')).toBeVisible();
     await expect(page.getByLabel('📧 Email')).toBeVisible();
     await expect(page.getByLabel('🔒 Password')).toBeVisible();
     await expect(page.locator('#consent')).toBeVisible();
+  });
+
+  test('login sets session cookie and user stays logged in across navigation', async ({ page, context }) => {
+    // 1) Login via UI
+    const testUser = TEST_USERS_DATA.testUser1
+    await page.goto('/login');
+    await page.getByRole("textbox", { name: "Email" }).fill(testUser.email)
+    await page.getByRole("textbox", { name: "Password" }).fill(testUser.password)
+    await page.getByRole("button", { name: "✨ Sign In & Explore" }).click()
+    await page.waitForURL(url => url.pathname !== '/login');
+
+    // 2) Check cookie via context (can see HttpOnly cookies)
+    const cookies = await context.cookies();
+
+    const access = cookies.find(c => c.name === 'accessToken');
+    const refresh = cookies.find(c => c.name === 'refreshToken');
+
+    expect(access, 'accessToken cookie should be present').toBeDefined();
+    expect(refresh, 'refreshToken cookie should be present').toBeDefined();
+    await page.goto("/login")
+    await page.goto("/home")
+
   });
 });

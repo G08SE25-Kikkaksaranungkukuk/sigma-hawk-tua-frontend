@@ -25,7 +25,7 @@ export const handleViewGroup = (router: RouterType, group: GroupResponse) => {
 
 export const handleLogout = async (router: RouterType) => {
     try {
-        await fetch(`${BASE_API_URL}/api/v1/auth/logout`, {
+        await fetch(`${BASE_API_URL}api/v1/auth/logout`, {
             method: "POST",
             credentials: "include", // ส่ง cookie ไปด้วย
         });
