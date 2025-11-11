@@ -1,3 +1,4 @@
+import { Interest } from "@/lib/types/api/interest"
 import axios from "axios"
 
 const API_BASE_URL = process.env.TEST_API_URL || "http://localhost:8080/api/v1"
@@ -13,6 +14,27 @@ export interface TestUser {
     phone: string
     email: string
     password: string
+}
+export interface Member {
+    user_id: number
+    first_name: string
+    last_name: string
+    profile_url?: string | null
+    email: string
+    birth_date?: Date
+}
+export interface TestGroup {
+    group_id: number
+    group_name: string
+    group_leader_id: number
+    description: string
+    profile_url?: string | null
+    max_members: number
+    created_at: string
+    updated_at: string
+    leader: Member
+    members: Member[]
+    interests: Interest[]
 }
 
 export const TEST_USERS_DATA: Record<string, TestUser> = {
@@ -38,6 +60,32 @@ export const TEST_USERS_DATA: Record<string, TestUser> = {
         email: "janetest@gmail.com",
         password: "TestPass456!",
     },
+    testDeleteUser: {
+        //this user is for testing account deletion do not use for other tests
+        first_name: "Bob",
+        last_name: "Smith",
+        birth_date: "1990-09-10",
+        sex: "male",
+        interests: ["SEA", "MOUNTAIN"],
+        travel_styles: ["ADVENTURE", "BUDGET"],
+        phone: "0891234567",
+        email: "bobtest@gmail.com",
+        password: "TestPass789!",
+    },
+}
+
+export const TEST_GROUP_DATA = {
+    testGroup1: {
+        group_name: "test1",
+        description: "A group for testing purposes",
+        destination: "Testland",
+        max_members: 10,
+        profile: "",
+        profile_url: "", // For preview purposes
+        start_date: new Date("2023-01-01"),
+        end_date: new Date("2023-12-31"),
+        interest_fields: ["SEA"],
+    },
 }
 
 /**
@@ -51,6 +99,8 @@ export async function seedTestUsers() {
         existing: [] as string[],
         failed: [] as string[],
     }
+    var groupId: number | undefined
+    let isFirstUser = true
 
     for (const [key, user] of Object.entries(TEST_USERS_DATA)) {
         try {
@@ -100,6 +150,143 @@ export async function seedTestUsers() {
                 )
             }
         }
+        const axiosInstance = axios.create({
+            withCredentials: true,
+            timeout: 10000,
+            validateStatus: (status) => status < 500,
+        })
+
+        const loginResponse = await axiosInstance.post(
+            `${API_BASE_URL}/auth/login`,
+            {
+                email: user.email,
+                password: user.password,
+            }
+        )
+        if (loginResponse.status === 200) {
+            console.log(`✅ Login successful for: ${user.email}`)
+
+            // Extract cookies from login response for subsequent requests
+            const cookies = loginResponse.headers["set-cookie"]
+            if (cookies && cookies.length > 0) {
+                // Set the cookies for all subsequent requests
+                axiosInstance.defaults.headers.Cookie = cookies.join("; ")
+                console.log(`🍪 Authentication cookies set for: ${user.email}`)
+            }
+        } else if (loginResponse.status !== 200) {
+            console.error(
+                `❌ Failed to log in user ${user.email}:`,
+                loginResponse.status
+            )
+            continue
+        }
+
+        // Only create group for the first user, others will join
+        if (isFirstUser) {
+            for (const [key, group] of Object.entries(TEST_GROUP_DATA)) {
+                try {
+                    const formData = new FormData()
+
+                    // Append text fields
+                    formData.append("group_name", group.group_name)
+                    if (group.description) {
+                        formData.append("description", group.description)
+                    }
+                    if (group.max_members) {
+                        formData.append(
+                            "max_members",
+                            group.max_members.toString()
+                        )
+                    }
+
+                    // Append interest fields as JSON string or individual entries
+                    if (
+                        group.interest_fields &&
+                        group.interest_fields.length > 0
+                    ) {
+                        group.interest_fields.forEach((interest, index) => {
+                            formData.append(
+                                `interest_fields[${index}]`,
+                                interest
+                            )
+                        })
+                    }
+
+                    // Append file if provided
+                    if (group.profile) {
+                        formData.append("profile", group.profile)
+                    }
+
+                    const createGroupResponse = await axiosInstance.post(
+                        `${API_BASE_URL}/group`,
+                        formData,
+                        {
+                            withCredentials: true,
+                            headers: {
+                                "Content-Type": "multipart/form-data",
+                            },
+                        }
+                    )
+                    if (
+                        createGroupResponse.status === 200 ||
+                        createGroupResponse.status === 201
+                    ) {
+                        console.log(
+                            `📋 Group creation response:`,
+                            createGroupResponse.data
+                        )
+                        groupId =
+                            createGroupResponse.data.data?.group_id ||
+                            createGroupResponse.data.group_id ||
+                            createGroupResponse.data.id
+                        console.log(
+                            `✅ Created test group: ${group.group_name} by user: ${user.email} (Group ID: ${groupId})`
+                        )
+                    } else {
+                        console.log(
+                            `❌ Failed to create test group: ${group.group_name} for user: ${user.email} - Status: ${createGroupResponse.status}`
+                        )
+                        console.log(`Response data:`, createGroupResponse.data)
+                    }
+                } catch (error: any) {
+                    console.error(
+                        "❌ Failed to create test group:",
+                        error.response?.data || error.message
+                    )
+                }
+            }
+            isFirstUser = false
+        }
+
+        // Join the group (both creator and other users)
+        if (groupId) {
+            try {
+                const joinGroupResponse = await axiosInstance.put(
+                    `${API_BASE_URL}/group/${groupId}/member`,
+                    {},
+                    { withCredentials: true }
+                )
+                if (
+                    joinGroupResponse.status === 200 ||
+                    joinGroupResponse.status === 201 ||
+                    joinGroupResponse.status === 409
+                ) {
+                    console.log(
+                        `✅ User: ${user.email} joined group ID: ${groupId}`
+                    )
+                } else {
+                    console.log(
+                        `❌ Failed to add user: ${user.email} to group ID: ${groupId} - Status: ${joinGroupResponse.status}`
+                    )
+                    console.log(`Response data:`, joinGroupResponse.data)
+                }
+            } catch (error: any) {
+                console.error(
+                    `❌ Failed to join group for user ${user.email}:`,
+                    error.response?.data || error.message
+                )
+            }
+        }
     }
 
     console.log(`\n📊 Seeding Summary:`)
@@ -119,7 +306,6 @@ export async function seedTestUsers() {
 
     console.log("✅ Test data seeding completed\n")
 }
-
 /**
  * Cleans up test users after tests complete
  * Note: This requires a DELETE endpoint on your backend
