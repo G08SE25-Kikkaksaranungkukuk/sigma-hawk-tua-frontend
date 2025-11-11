@@ -94,6 +94,22 @@ test.describe('Auth flow', () => {
     await expect(page.locator('#consent')).toBeVisible();
   });
 
+  test('logout flow', async ({ page }) => {
+    const testUser = TEST_USERS_DATA.testUser1
+    await page.goto("/login")
+    await page.getByRole("textbox", { name: "Email" }).fill(testUser.email)
+    await page.getByRole("textbox", { name: "Password" }).fill(testUser.password)
+    await page.getByRole("button", { name: "✨ Sign In & Explore" }).click()
+    await page.waitForURL(url => url.pathname !== '/login');
+    await page.locator('button:has([data-slot="avatar-fallback"])').first().click();
+    await page.getByText('Sign Out').click();
+    await expect(page).toHaveURL("/login")
+
+    await page.goto("/home")
+    await expect(page).toHaveURL("/")
+  });
+
+
   test('login sets session cookie and user stays logged in across navigation', async ({ page, context }) => {
     // 1) Login via UI
     const testUser = TEST_USERS_DATA.testUser1
