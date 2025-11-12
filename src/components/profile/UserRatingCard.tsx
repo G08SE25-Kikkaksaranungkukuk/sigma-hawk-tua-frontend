@@ -4,19 +4,26 @@ import React, { useState, useEffect } from "react";
 import { Star, TrendingUp, Award, Users } from "lucide-react";
 import { ratingService } from "@/lib/services/user/ratingService";
 import { Rating } from "@/lib/types/user";
+import { groupService } from "@/lib/services/group/group-service";
 
 interface UserRatingCardProps {
-    userId: number;
+    userId: string;
     isOwnProfile?: boolean;
+    onRatingUpdated?: () => void | Promise<void>;
+
 }
 
-export default function UserRatingCard({ userId, isOwnProfile = false }: UserRatingCardProps) {
+export default function UserRatingCard({ userId, isOwnProfile = false, onRatingUpdated }: UserRatingCardProps) {
     const [rating, setRating] = useState<Rating | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isRating, setIsRating] = useState(false);
+    const [hasExistingReview, setHasExistingReview] = useState<boolean | null>(null);
     const [hoverRatings, setHoverRatings] = useState<Partial<Rating>>({});
     const [tempRatings, setTempRatings] = useState<Partial<Rating>>({});
+
+    // whether the user has changed any score (used to enable the submit button)
+    const hasChanges = Object.keys(tempRatings).length > 0;
 
     useEffect(() => {
         fetchRating();
@@ -26,8 +33,31 @@ export default function UserRatingCard({ userId, isOwnProfile = false }: UserRat
         setLoading(true);
         setError(null);
         try {
-            const data = await ratingService.getUserRating(userId);
-            setRating(data);
+            const currentUser = await groupService.getCurrentUser();
+            console.log("Current user data:", currentUser);
+            console.log("Current user ID:", currentUser.user_id);
+            const data = await ratingService.getRatingByRater(userId, currentUser.user_id);
+            console.log("Fetched rating data:", data);
+            // If the current user hasn't rated this profile yet, service
+            // returns null. Prefill tempRatings with 5s (preview) and mark
+            // that there's no existing review. Otherwise use the returned data.
+            if (data === null) {
+                setTempRatings({
+                    trust_score: 5,
+                    engagement_score: 5,
+                    experience_score: 5,
+                });
+                setRating({
+                    trust_score: 0,
+                    engagement_score: 0,
+                    experience_score: 0,
+                    total_score: 0,
+                });
+                setHasExistingReview(false);
+            } else {
+                setRating(data);
+                setHasExistingReview(true);
+            }
         } catch (err: any) {
             console.error("Error fetching rating:", err);
             setError(err.message || "Failed to load rating");
@@ -36,7 +66,9 @@ export default function UserRatingCard({ userId, isOwnProfile = false }: UserRat
                 trust_score: 0,
                 engagement_score: 0,
                 experience_score: 0,
+                total_score: 0
             });
+            setHasExistingReview(null);
         } finally {
             setLoading(false);
         }
@@ -50,18 +82,36 @@ export default function UserRatingCard({ userId, isOwnProfile = false }: UserRat
         setIsRating(true);
         setError(null);
         try {
-            const updatedRating = await ratingService.submitUserRating(userId, tempRatings);
+            console.log("Submitting rating:", tempRatings);
+            let updatedRating: any;
+            // If user had no existing review, create one; otherwise update.
+            if (hasExistingReview === false) {
+                updatedRating = await ratingService.submitUserRating(userId, tempRatings as any);
+            } else {
+                updatedRating = await ratingService.updateUserRating(userId, tempRatings);
+            }
             setRating(updatedRating);
             setTempRatings({});
-            alert("Rating submitted successfully!");
+            // Notify parent so it can refresh aggregate scores
+            if (typeof onRatingUpdated === "function") {
+                try {
+                    await onRatingUpdated()
+                } catch (e) {
+                    console.error("onRatingUpdated callback failed:", e)
+                }
+            }
+            // show a small confirmation
+            //alert("Rating submitted successfully!");
         } catch (err: any) {
             console.error("Error submitting rating:", err);
             setError(err.message || "Failed to submit rating");
-            alert("Failed to submit rating. Please try again.");
+            //alert("Failed to submit rating. Please try again.");
         } finally {
             setIsRating(false);
         }
     };
+
+    // Clicking a star will only set a temporary rating; actual submit happens when the Submit button is clicked.
 
     const renderStars = (
         score: number,
@@ -76,34 +126,58 @@ export default function UserRatingCard({ userId, isOwnProfile = false }: UserRat
             <div className="flex items-center gap-1">
                 {[...Array(maxScore)].map((_, idx) => {
                     const starValue = idx + 1;
-                    const isFilled = starValue <= displayScore;
+                    const full = displayScore >= starValue; // full star
+                    const half = !full && displayScore >= starValue - 0.5; // half star when e.g. 2.5 -> starValue 3 is half
+
+                    // wrapper handlers: support half-star on hover/click by reading mouse position
+                    const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
+                        if (!(isInteractive && !isOwnProfile)) return;
+                        const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+                        const relativeX = e.clientX - rect.left;
+                        const value = relativeX < rect.width / 2 ? starValue - 0.5 : starValue;
+                        setHoverRatings({ ...hoverRatings, [scoreKey]: value });
+                    };
+                    const onLeave = () => {
+                        if (isInteractive && !isOwnProfile) {
+                            setHoverRatings({ ...hoverRatings, [scoreKey]: undefined });
+                        }
+                    };
+                    const onClick = (e: React.MouseEvent<HTMLDivElement>) => {
+                        if (!(isInteractive && !isOwnProfile)) return;
+                        const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+                        const relativeX = e.clientX - rect.left;
+                        const value = relativeX < rect.width / 2 ? starValue - 0.5 : starValue;
+                        // set temporary rating; actual submit occurs when the user clicks Submit
+                        setTempRatings(prev => ({ ...prev, [scoreKey]: value }));
+                    };
 
                     return (
-                        <Star
+                        <div
                             key={idx}
-                            className={`w-5 h-5 transition-all ${
-                                isFilled ? "fill-yellow-400 text-yellow-400" : "text-gray-500"
-                            } ${isInteractive && !isOwnProfile ? "cursor-pointer hover:scale-110" : ""}`}
-                            onMouseEnter={() => {
-                                if (isInteractive && !isOwnProfile) {
-                                    setHoverRatings({ ...hoverRatings, [scoreKey]: starValue });
-                                }
-                            }}
-                            onMouseLeave={() => {
-                                if (isInteractive && !isOwnProfile) {
-                                    setHoverRatings({ ...hoverRatings, [scoreKey]: undefined });
-                                }
-                            }}
-                            onClick={() => {
-                                if (isInteractive && !isOwnProfile) {
-                                    setTempRatings({ ...tempRatings, [scoreKey]: starValue });
-                                }
-                            }}
-                        />
+                            className={`relative inline-block w-5 h-5 ${isInteractive && !isOwnProfile ? 'cursor-pointer' : ''}`}
+                            onMouseMove={onMove}
+                            onMouseLeave={onLeave}
+                            onClick={onClick}
+                        >
+                            {/* base empty/outlined star */}
+                            <Star className={`w-5 h-5 ${full || half ? 'text-yellow-400' : 'text-gray-500'}`} />
+
+                            {/* if full, render filled star to show as filled (use same Star but with fill) */}
+                            {full && (
+                                <Star className="w-5 h-5 fill-yellow-400 text-yellow-400 absolute left-0 top-0" />
+                            )}
+
+                            {/* if half, overlay half-width filled star */}
+                            {half && !full && (
+                                <div style={{ position: 'absolute', left: 0, top: 0, width: '50%', overflow: 'hidden' }}>
+                                    <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                                </div>
+                            )}
+                        </div>
                     );
                 })}
                 <span className="ml-2 text-orange-300 font-semibold">
-                    {displayScore.toFixed(1)} / {maxScore}
+                    {displayScore.toFixed(2)} / {maxScore}
                 </span>
             </div>
         );
@@ -126,7 +200,7 @@ export default function UserRatingCard({ userId, isOwnProfile = false }: UserRat
     }
 
     const averageScore = rating
-        ? ((rating.trust_score + rating.engagement_score + rating.experience_score) / 3).toFixed(1)
+        ? ((rating.trust_score + rating.engagement_score + rating.experience_score) / 3).toFixed(2)
         : "0.0";
 
     return (
@@ -188,13 +262,15 @@ export default function UserRatingCard({ userId, isOwnProfile = false }: UserRat
                 </div>
             )}
 
-            {!isOwnProfile && Object.keys(tempRatings).length > 0 && (
+            {!isOwnProfile && (
                 <button
                     onClick={handleRatingSubmit}
-                    disabled={isRating}
-                    className="w-full py-2 px-4 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-600 text-white font-semibold rounded-lg transition-colors duration-200"
+                    disabled={isRating || !hasChanges}
+                    className={`w-full py-2 px-4 bg-orange-500 text-white font-semibold rounded-lg transition-colors duration-200 ${
+                        !isRating && hasChanges ? 'hover:bg-orange-600' : ''
+                    } ${isRating || !hasChanges ? 'opacity-60 cursor-not-allowed' : ''}`}
                 >
-                    {isRating ? "Submitting..." : "Submit Rating"}
+                    {isRating ? 'Submitting...' : 'Submit Rating'}
                 </button>
             )}
 

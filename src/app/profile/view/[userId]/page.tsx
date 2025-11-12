@@ -1,15 +1,18 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, ConciergeBellIcon } from "lucide-react"
 import { userService } from "@/lib/services/user"
+import { ratingService } from "@/lib/services/user/ratingService"
 import { tokenService } from "@/lib/services/user/tokenService"
 import UserRatingCard from "@/components/profile/UserRatingCard"
 import {
     interestOptions,
     travel_style_options,
 } from "@/components/editprofile/constants"
+import { group } from "console"
+import { groupService } from "@/lib/services/group/group-service"
 
 export default function UserProfileView({
     params,
@@ -20,82 +23,127 @@ export default function UserProfileView({
     const [formData, setFormData] = useState<any>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
-    const [viewedUserId, setViewedUserId] = useState<number | null>(null)
+    const [viewedUserId, setViewedUserId] = useState<string | null>(null)
     const [isOwnProfile, setIsOwnProfile] = useState(false)
 
-    // Get the userId from URL parameters (actually contains email)
-    const { userId } = React.use(params)
-    const userEmail = decodeURIComponent(userId) // Decode the email from URL
+    // Resolve the userId from the incoming params (params is a Promise in client components)
+    // We can't `await` at top-level in a client component, so resolve inside an effect.
+    const [resolvedUserId, setResolvedUserId] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchUserAndProfile = async () => {
-            setLoading(true)
-            setError(null)
+        let mounted = true;
+
+        (async () => {
             try {
-                console.log("Fetching user profile for email:", userEmail)
-                const profile = await userService.getUserProfile(userEmail)
+                const p = (await params) as { userId: string };
+                let id = p.userId;
 
-                // Get current user to check if it's their own profile
-                const currentUser = await userService.getCurrentUser()
-                const isOwn = currentUser.email === profile.email
-                setIsOwnProfile(isOwn)
-
-                // Extract user_id from token or profile response
-                const token = await tokenService.getAuthToken()
-                if (token) {
-                    const parts = token.split(".")
-                    if (parts.length === 3) {
-                        const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")))
-                        setViewedUserId(payload.user_id || payload.userId || null)
-                    }
+                if (id === "current-user") {
+                    // replace with the logged-in user's email
+                    const currentUser = await userService.getCurrentUser();
+                    id = currentUser?.email ?? id;
                 }
 
-                console.log("Profile image URL:", profile.profileImage)
-                console.log("Profile data:", profile.interests)
-                setFormData({
-                    firstName: profile.firstName,
-                    lastName: profile.lastName,
-                    middleName: profile.middleName || "",
-                    phoneNumber: profile.phoneNumber,
-                    email: profile.email,
-                    profileImage: profile.profileImage,
-                    interests:
-                        profile.interests?.map((interestKey: string) => {
-                            const interest = interestOptions.find(
-                                (opt) => opt.key === interestKey
-                            )
-                            return {
-                                label: interest?.label || interestKey,
-                                color: interest?.color || "#666666",
-                                emoji: interest?.emoji || "",
-                            }
-                        }) || [],
-                    travelStyle:
-                        profile.travelStyle?.map((styleKey: string) => {
-                            const style = travel_style_options.find(
-                                (opt) => opt.key === styleKey
-                            )
-                            return {
-                                label: style?.label || styleKey,
-                                color: style?.color || "#666666",
-                                emoji: style?.emoji || "",
-                            }
-                        }) || [],
-                    scoreRating: profile.social_credit || 0,
-                    reviews: [], // Add mapping if reviews are available in backend
-                })
-            } catch (err: any) {
-                console.error("Error fetching user or profile:", err)
-                setError("Failed to load user profile")
-            } finally {
-                setLoading(false)
+                if (mounted) setResolvedUserId(id);
+            } catch (err) {
+                console.error("Failed to resolve userId from params:", err);
             }
-        }
+        })();
 
-        if (userEmail) {
-            fetchUserAndProfile()
+        return () => {
+            mounted = false;
+        };
+    }, [params]);
+
+    const userEmail = resolvedUserId ? decodeURIComponent(resolvedUserId) : null; // Decode the email from URL when available
+
+    // Memoized fetch function the child can call after it updates ratings.
+    const fetchUserAndProfile = useCallback(async () => {
+        setLoading(true)
+        setError(null)
+        try {
+            if (!userEmail) {
+                setLoading(false)
+                return
+            }
+
+            const profile = await userService.getUserProfile(userEmail)
+
+            // Get current user to check if it's their own profile
+            const currentUser = await userService.getCurrentUser()
+            const isOwn = currentUser.email === profile.email
+            setIsOwnProfile(isOwn)
+
+            // parse token payload safely to extract viewed id (if available)
+            let viewedId: string | null = null
+            const token = await tokenService.getAuthToken()
+            if (token) {
+                const parts = token.split(".")
+                if (parts.length === 3) {
+                    try {
+                        const payload = JSON.parse(
+                            atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"))
+                        )
+                        viewedId = payload.email || null
+                    } catch (e) {
+                        viewedId = null
+                    }
+                }
+            }
+            setViewedUserId(viewedId)
+
+
+            const rating = await ratingService.getUserRating(userEmail)
+
+            setFormData({
+                firstName: profile.firstName,
+                lastName: profile.lastName,
+                middleName: profile.middleName || "",
+                phoneNumber: profile.phoneNumber,
+                email: profile.email,
+                profileImage: profile.profileImage,
+                interests:
+                    profile.interests?.map((interestKey: string) => {
+                        const interest = interestOptions.find(
+                            (opt) => opt.key === interestKey
+                        )
+                        return {
+                            label: interest?.label || interestKey,
+                            color: interest?.color || "#666666",
+                            emoji: interest?.emoji || "",
+                        }
+                    }) || [],
+                travelStyle:
+                    profile.travelStyle?.map((styleKey: string) => {
+                        const style = travel_style_options.find(
+                            (opt) => opt.key === styleKey
+                        )
+                        return {
+                            label: style?.label || styleKey,
+                            color: style?.color || "#666666",
+                            emoji: style?.emoji || "",
+                        }
+                    }) || [],
+                // rating may be null when there are no average scores
+                scoreRating: rating,
+                reviews: [],
+            })
+            console.log("Fetched profile data:", profile)
+            console.log("Fetched rating data:", rating)
+            //console.log("Fetched rating data:", formData.scoreRating)
+        } catch (err: any) {
+            console.error("Error fetching user or profile:", err)
+            setError("Failed to load user profile")
+        } finally {
+            setLoading(false)
         }
     }, [userEmail])
+
+    useEffect(() => {
+        if (userEmail) {
+            void fetchUserAndProfile()
+        }
+    }, [userEmail, fetchUserAndProfile])
 
     if (loading) {
         return (
@@ -226,56 +274,47 @@ export default function UserProfileView({
                                 ⭐ Score Rating
                             </span>
                             <div className="flex items-center gap-2 mt-2">
-                                <span className="text-orange-400 font-bold text-lg">
-                                    {formData.scoreRating}
-                                </span>
-                                <span className="text-yellow-400">
-                                    {"★".repeat(
-                                        Math.round(formData.scoreRating || 0)
-                                    )}
-                                </span>
-                            </div>
-                        </div>
-                        
-                        {/* User Rating Card - Only show if we have a valid user ID */}
-                        {viewedUserId && (
-                            <UserRatingCard 
-                                userId={viewedUserId} 
-                                isOwnProfile={isOwnProfile}
-                            />
-                        )}
-                        
-                        <div>
-                            <span className="text-orange-300 font-semibold">
-                                📝 User Reviews
-                            </span>
-                            <div className="space-y-2 mt-2">
-                                {formData.reviews?.map(
-                                    (review: any, idx: number) => (
-                                        <div
-                                            key={idx}
-                                            className="bg-gray-800/60 rounded-lg p-3 border border-orange-500/10"
-                                        >
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <span className="text-orange-200 font-semibold">
-                                                    {review.reviewer}
-                                                </span>
-                                                <span className="text-yellow-400 text-sm">
-                                                    {"★".repeat(
-                                                        Math.round(
-                                                            review.rating
+                                {formData.scoreRating == null ? (
+                                    <span className="text-orange-400 font-bold text-lg">No ratings</span>
+                                ) : (
+                                    <>
+                                        <span className="text-orange-400 font-bold text-lg">
+                                            {(
+                                                0.2 * (formData.scoreRating.trust_score ?? 0) +
+                                                0.3 * (formData.scoreRating.engagement_score ?? 0) +
+                                                0.5 * (formData.scoreRating.experience_score ?? 0)
+                                            ).toFixed(2)}
+                                        </span>
+                                        <span className="text-yellow-400">
+                                            {"★".repeat(
+                                                Math.min(
+                                                    5,
+                                                    Math.max(
+                                                        0,
+                                                        Math.ceil(
+                                                            0.2 * (formData.scoreRating.trust_score ?? 0) +
+                                                            0.3 * (formData.scoreRating.engagement_score ?? 0) +
+                                                            0.5 * (formData.scoreRating.experience_score ?? 0)
                                                         )
-                                                    )}
-                                                </span>
-                                            </div>
-                                            <p className="text-gray-300 text-sm">
-                                                {review.comment}
-                                            </p>
-                                        </div>
-                                    )
+                                                    )
+                                                )
+                                            )}
+                                        </span>
+                                    </>
                                 )}
                             </div>
                         </div>
+                        
+                        {/* User Rating Card - show only when viewing another user's profile */}
+                        {!isOwnProfile && viewedUserId && (
+                            <UserRatingCard
+                                userId={formData.email}
+                                isOwnProfile={isOwnProfile}
+                                onRatingUpdated={fetchUserAndProfile}
+                            />
+                        )}
+                        
+
                     </div>
                 </div>
             </div>
