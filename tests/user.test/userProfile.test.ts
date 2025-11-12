@@ -1,18 +1,12 @@
 import { test, expect } from "@playwright/test"
-import { TEST_USERS_DATA, TestGroup } from "../setup/db-seeding"
+import { TEST_USERS_DATA } from "../setup/db-seeding"
+import { TestHelpers } from "../test-helpers"
 
 test.describe("User Profile Tests", () => {
     test("user can view other user's profile", async ({ page }) => {
         const testUser = TEST_USERS_DATA.testUser2
-        await page.goto("/")
-        await page.getByRole("link", { name: "✨ Sign In" }).click()
-        await page.getByRole("textbox", { name: "Email" }).click()
-        await page.getByRole("textbox", { name: "Email" }).fill(testUser.email)
-        await page.getByRole("textbox", { name: "Password" }).click()
-        await page
-            .getByRole("textbox", { name: "Password" })
-            .fill(testUser.password)
-        await page.getByRole("button", { name: "✨ Sign In & Explore" }).click()
+        await TestHelpers.loginUser(page, testUser)
+
         await page.getByRole("button", { name: "View" }).click()
         await page.getByRole("img", { name: "Jo Chanah" }).click()
         await expect(
@@ -24,20 +18,7 @@ test.describe("User Profile Tests", () => {
 
     test("user can update profile successfully", async ({ page }) => {
         const testUser = TEST_USERS_DATA.testUser1
-        await page.goto("/")
-        await page.getByRole("button", { name: "✨ Sign In" }).click()
-        await page.getByRole("textbox", { name: "Email" }).click()
-        await page.getByRole("textbox", { name: "Email" }).fill(testUser.email)
-        await page.getByRole("textbox", { name: "Password" }).click()
-        await page
-            .getByRole("textbox", { name: "Password" })
-            .fill(testUser.password)
-        await page.getByRole("button", { name: "✨ Sign In & Explore" }).click()
-
-        // Wait for home page to load
-        await expect(page).toHaveURL("/home")
-
-        // Navigate to profile management - use original working selector
+        await TestHelpers.loginUser(page, testUser)
         await page.getByRole("button", { name: "J", exact: true }).click()
         await page.getByRole("menuitem", { name: "Profile Management" }).click()
 
@@ -78,23 +59,13 @@ test.describe("User Profile Tests", () => {
 
         await page.getByRole("button", { name: "Confirm Changes" }).click()
 
-        // Verify success (wait for navigation or success message)
+        // Verify success
         await expect(page).toHaveURL("/home", { timeout: 10000 })
     })
 
     test("user cannot update profile with invalid data", async ({ page }) => {
         const testUser = TEST_USERS_DATA.testUser1
-        await page.goto("/")
-        await page.getByRole("button", { name: "✨ Sign In" }).click()
-        await page.getByRole("textbox", { name: "Email" }).click()
-        await page.getByRole("textbox", { name: "Email" }).fill(testUser.email)
-        await page.getByRole("textbox", { name: "Password" }).click()
-        await page
-            .getByRole("textbox", { name: "Password" })
-            .fill(testUser.password)
-        await page.getByRole("button", { name: "✨ Sign In & Explore" }).click()
-
-        // Navigate to profile management
+        await TestHelpers.loginUser(page, testUser)
         await page.getByRole("button", { name: "J", exact: true }).click()
         await page.getByRole("menuitem", { name: "Profile Management" }).click()
 
