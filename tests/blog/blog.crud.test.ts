@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test';
 import { delay } from 'framer-motion';
 import { browser } from 'process';
-
+import { TEST_USERS_DATA } from '../setup/db-seeding';
 test.describe.serial('Test Blog functionality',()=>{
-
+  const user = TEST_USERS_DATA.testUser1;
+  const user2 = TEST_USERS_DATA.testUser2;
   test.beforeEach(async ({page}, testInfo)=>{
     if (testInfo.title === 'View another user blog') {
       return; // Skip login
@@ -13,9 +14,9 @@ test.describe.serial('Test Blog functionality',()=>{
     await page.getByRole('button', { name: '✨ Sign In' }).click();
     await page.getByRole('textbox', { name: 'Email' }).click();
     await page.waitForTimeout(2000);
-    await page.getByRole('textbox', { name: 'Email' }).fill('jirapat.dkk@gmail.com');
+    await page.getByRole('textbox', { name: 'Email' }).fill(user.email);
     await page.getByRole('textbox', { name: 'Password' }).click();
-    await page.getByRole('textbox', { name: 'Password' }).fill('Letmein@2547');
+    await page.getByRole('textbox', { name: 'Password' }).fill(user.password);
     await page.getByRole('button', { name: '✨ Sign In & Explore' }).click();
     await page.waitForTimeout(3000);
   })
@@ -67,9 +68,9 @@ test.describe.serial('Test Blog functionality',()=>{
     await page.getByRole('link', { name: '✨ Sign In' }).click();
     await page.getByRole('textbox', { name: 'Email' }).click();
     await page.waitForTimeout(2000);
-    await page.getByRole('textbox', { name: 'Email' }).fill('test@gmail.com');
+    await page.getByRole('textbox', { name: 'Email' }).fill(user2.email);
     await page.getByRole('textbox', { name: 'Password' }).click();
-    await page.getByRole('textbox', { name: 'Password' }).fill('Letmein@2547');
+    await page.getByRole('textbox', { name: 'Password' }).fill(user2.password);
     await page.getByRole('button', { name: '✨ Sign In & Explore' }).click();
     await page.getByRole('link', { name: 'Blog' }).click();
     await page.getByText('GeneralFLAG1-editedFLAG2-').hover();
