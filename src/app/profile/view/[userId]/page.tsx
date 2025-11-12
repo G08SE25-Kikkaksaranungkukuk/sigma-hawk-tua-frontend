@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, ConciergeBellIcon } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import { userService } from "@/lib/services/user"
 import { ratingService } from "@/lib/services/user/ratingService"
 import { tokenService } from "@/lib/services/user/tokenService"
@@ -11,8 +11,6 @@ import {
     interestOptions,
     travel_style_options,
 } from "@/components/editprofile/constants"
-import { group } from "console"
-import { groupService } from "@/lib/services/group/group-service"
 
 export default function UserProfileView({
     params,
@@ -80,14 +78,10 @@ export default function UserProfileView({
             if (token) {
                 const parts = token.split(".")
                 if (parts.length === 3) {
-                    try {
                         const payload = JSON.parse(
-                            atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"))
+                            atob(parts[1].replaceAll(/-/g, "+").replaceAll(/_/g, "/"))
                         )
                         viewedId = payload.email || null
-                    } catch (e) {
-                        viewedId = null
-                    }
                 }
             }
             setViewedUserId(viewedId)
@@ -141,7 +135,7 @@ export default function UserProfileView({
 
     useEffect(() => {
         if (userEmail) {
-            void fetchUserAndProfile()
+            fetchUserAndProfile()
         }
     }, [userEmail, fetchUserAndProfile])
 

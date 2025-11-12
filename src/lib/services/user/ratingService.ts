@@ -13,8 +13,6 @@ class RatingService {
     async getUserRating(userId: string): Promise<Rating | null> {
         try {
             const token = await tokenService.getAuthToken();
-            //console.log("Auth token:", token);
-            //console.log("Fetching rating for user ID:", userId);
 
             if (!token) {
                 throw new Error("No authentication token found");
@@ -35,7 +33,7 @@ class RatingService {
 
             // If the backend didn't return average scores (null/undefined),
             // return null so callers can detect "no ratings".
-            if (response == null || response.average_scores == null) {
+            if (response?.average_scores == null) {
                 return null;
             }
 

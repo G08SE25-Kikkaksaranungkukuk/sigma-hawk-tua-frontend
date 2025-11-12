@@ -7,9 +7,9 @@ import { Rating } from "@/lib/types/user";
 import { groupService } from "@/lib/services/group/group-service";
 
 interface UserRatingCardProps {
-    userId: string;
-    isOwnProfile?: boolean;
-    onRatingUpdated?: () => void | Promise<void>;
+    readonly userId: string;
+    readonly isOwnProfile?: boolean;
+    readonly onRatingUpdated?: () => void | Promise<void>;
 
 }
 
@@ -105,7 +105,6 @@ export default function UserRatingCard({ userId, isOwnProfile = false, onRatingU
         } catch (err: any) {
             console.error("Error submitting rating:", err);
             setError(err.message || "Failed to submit rating");
-            //alert("Failed to submit rating. Please try again.");
         } finally {
             setIsRating(false);
         }
@@ -122,52 +121,62 @@ export default function UserRatingCard({ userId, isOwnProfile = false, onRatingU
         const normalizedScore = Math.min(Math.max(score, 0), maxScore);
         const displayScore = hoverRatings[scoreKey] ?? normalizedScore;
 
+        const calcStarValueFromEvent = (e: React.MouseEvent<HTMLDivElement>, starValue: number) => {
+            const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+            const relativeX = e.clientX - rect.left;
+            return relativeX < rect.width / 2 ? starValue - 0.5 : starValue;
+        };
+
+        const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>, starValue: number) => {
+            if (!(isInteractive && !isOwnProfile)) return;
+            const value = calcStarValueFromEvent(e, starValue);
+            setHoverRatings(prev => ({ ...prev, [scoreKey]: value }));
+        };
+
+        const handleMouseLeave = () => {
+            if (isInteractive && !isOwnProfile) {
+                setHoverRatings(prev => ({ ...prev, [scoreKey]: undefined }));
+            }
+        };
+
+        const handleClick = (e: React.MouseEvent<HTMLDivElement>, starValue: number) => {
+            if (!(isInteractive && !isOwnProfile)) return;
+            const value = calcStarValueFromEvent(e, starValue);
+            setTempRatings(prev => ({ ...prev, [scoreKey]: value }));
+        };
+
         return (
             <div className="flex items-center gap-1">
                 {[...Array(maxScore)].map((_, idx) => {
                     const starValue = idx + 1;
-                    const full = displayScore >= starValue; // full star
-                    const half = !full && displayScore >= starValue - 0.5; // half star when e.g. 2.5 -> starValue 3 is half
-
-                    // wrapper handlers: support half-star on hover/click by reading mouse position
-                    const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
-                        if (!(isInteractive && !isOwnProfile)) return;
-                        const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
-                        const relativeX = e.clientX - rect.left;
-                        const value = relativeX < rect.width / 2 ? starValue - 0.5 : starValue;
-                        setHoverRatings({ ...hoverRatings, [scoreKey]: value });
-                    };
-                    const onLeave = () => {
-                        if (isInteractive && !isOwnProfile) {
-                            setHoverRatings({ ...hoverRatings, [scoreKey]: undefined });
-                        }
-                    };
-                    const onClick = (e: React.MouseEvent<HTMLDivElement>) => {
-                        if (!(isInteractive && !isOwnProfile)) return;
-                        const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
-                        const relativeX = e.clientX - rect.left;
-                        const value = relativeX < rect.width / 2 ? starValue - 0.5 : starValue;
-                        // set temporary rating; actual submit occurs when the user clicks Submit
-                        setTempRatings(prev => ({ ...prev, [scoreKey]: value }));
-                    };
+                    const full = displayScore >= starValue;
+                    const half = !full && displayScore >= starValue - 0.5;
 
                     return (
                         <div
                             key={idx}
                             className={`relative inline-block w-5 h-5 ${isInteractive && !isOwnProfile ? 'cursor-pointer' : ''}`}
-                            onMouseMove={onMove}
-                            onMouseLeave={onLeave}
-                            onClick={onClick}
+                            onMouseMove={(e) => handleMouseMove(e, starValue)}
+                            onMouseLeave={handleMouseLeave}
+                            onClick={(e) => handleClick(e, starValue)}
+                            // Accessibility: non-native interactive element — provide role,
+                            // keyboard support and tab focus when interactive.
+                            role={isInteractive && !isOwnProfile ? 'button' : undefined}
+                            tabIndex={isInteractive && !isOwnProfile ? 0 : -1}
+                            aria-label={isInteractive && !isOwnProfile ? `Set ${String(scoreKey)} to ${starValue} stars` : undefined}
+                            onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
+                                if (!(isInteractive && !isOwnProfile)) return;
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    // For keyboard we select the full star (no half-step)
+                                    setTempRatings(prev => ({ ...prev, [scoreKey]: starValue }));
+                                }
+                            }}
                         >
-                            {/* base empty/outlined star */}
                             <Star className={`w-5 h-5 ${full || half ? 'text-yellow-400' : 'text-gray-500'}`} />
-
-                            {/* if full, render filled star to show as filled (use same Star but with fill) */}
                             {full && (
                                 <Star className="w-5 h-5 fill-yellow-400 text-yellow-400 absolute left-0 top-0" />
                             )}
-
-                            {/* if half, overlay half-width filled star */}
                             {half && !full && (
                                 <div style={{ position: 'absolute', left: 0, top: 0, width: '50%', overflow: 'hidden' }}>
                                     <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
