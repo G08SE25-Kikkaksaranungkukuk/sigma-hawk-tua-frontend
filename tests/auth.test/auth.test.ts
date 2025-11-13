@@ -94,7 +94,7 @@ test.describe('Auth flow', () => {
     await expect(page.locator('#consent')).toBeVisible();
   });
 
-  test('logout flow', async ({ page }) => {
+  test('logout flow', async ({ page, context }) => {
     const testUser = TEST_USERS_DATA.testUser1
     await page.goto("/login")
     await page.getByRole("textbox", { name: "Email" }).fill(testUser.email)
@@ -104,13 +104,14 @@ test.describe('Auth flow', () => {
     await page.locator('button:has([data-slot="avatar-fallback"])').first().click();
     await page.getByText('Sign Out').click();
     await expect(page).toHaveURL("/login")
-
-    await page.goto("/home")
-    await expect(page).toHaveURL("/")
+    const cookies = await context.cookies();
+    const access = cookies.find(c => c.name === 'accessToken');
+    const refresh = cookies.find(c => c.name === 'refreshToken');
+    expect(access).toBeUndefined();
+    expect(refresh).toBeUndefined();
   });
 
-
-  test('login sets session cookie and user stays logged in across navigation', async ({ page, context }) => {
+  test('login make JWT token in cookie', async ({ page, context }) => {
     // 1) Login via UI
     const testUser = TEST_USERS_DATA.testUser1
     await page.goto('/login');
@@ -123,12 +124,23 @@ test.describe('Auth flow', () => {
     const cookies = await context.cookies();
 
     const access = cookies.find(c => c.name === 'accessToken');
-    const refresh = cookies.find(c => c.name === 'refreshToken');
+    const refresh = cookies.find(c => c.name === 'refreshToken'); 
 
     expect(access, 'accessToken cookie should be present').toBeDefined();
     expect(refresh, 'refreshToken cookie should be present').toBeDefined();
-    await page.goto("/login")
-    await page.goto("/home")
 
   });
+
+  test('Redirect to home page after exit', async ({ page }) => {
+    const testUser = TEST_USERS_DATA.testUser1
+    await page.goto("/login")
+    await page.getByRole("textbox", { name: "Email" }).fill(testUser.email)
+    await page.getByRole("textbox", { name: "Password" }).fill(testUser.password)
+    await page.getByRole("button", { name: "✨ Sign In & Explore" }).click()
+    await page.waitForURL(url => url.pathname !== '/login');
+    await page.goto("https://www.google.com")
+    await page.goto("/home")
+    await expect(page).toHaveURL("/home")
+  });
+
 });
