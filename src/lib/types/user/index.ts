@@ -64,4 +64,13 @@ export interface Rating {
     trust_score : number;
     engagement_score : number;
     experience_score : number;
+    total_score : number;
+}
+
+export interface Review {
+    reviewer_name: string;
+    trust_score : number;
+    engagement_score : number;
+    experience_score : number;
+    total_score : number;
 }
