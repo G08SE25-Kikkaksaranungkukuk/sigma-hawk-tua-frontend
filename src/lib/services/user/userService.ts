@@ -36,11 +36,11 @@ class UserService {
     Transform backend user data to frontend UserProfile format
   */
     private transformUserData(backendData: any): UserProfile {
-        // Construct full profile image URL if profile_url exists
-        // Add timestamp to bust browser cache
+        // Return null for profileImage if user doesn't have one
+        // This allows UI to display first character of user's name as fallback
         const profileImageUrl = backendData.profile_url
             ? `http://localhost:6969/${backendData.profile_url}?t=${Date.now()}`
-            : undefined
+            : null
 
         return {
             firstName: backendData.first_name || "",
