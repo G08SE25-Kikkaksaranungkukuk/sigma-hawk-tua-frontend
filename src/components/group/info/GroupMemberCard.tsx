@@ -11,6 +11,7 @@ interface Member {
     joinDate: string
     isHost?: boolean
     email: string
+    userId?: string // Add userId for secure routing
 }
 
 interface GroupMembersCardProps {
@@ -27,8 +28,27 @@ export function GroupMembersCard({
     const router = useRouter()
 
     const handleMemberClick = (member: Member) => {
-        console.log("Member clicked:", member.email)
-        router.push(`/profile/view/${encodeURIComponent(member.email)}`)
+        console.log(
+            "Member clicked:",
+            member.name,
+            "User ID:",
+            member.userId || member.id
+        )
+
+        // Store user ID to email mapping for secure navigation
+        if (member.userId && member.email) {
+            const existingMap = sessionStorage.getItem("userIdToEmailMap")
+            const userIdToEmailMap = existingMap ? JSON.parse(existingMap) : {}
+            userIdToEmailMap[member.userId] = member.email
+            sessionStorage.setItem(
+                "userIdToEmailMap",
+                JSON.stringify(userIdToEmailMap)
+            )
+        }
+
+        // Use userId if available (for security), otherwise fall back to id for backwards compatibility
+        const identifier = member.userId || member.id
+        router.push(`/profile/view/${identifier}`)
     }
 
     return (
