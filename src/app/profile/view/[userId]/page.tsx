@@ -26,46 +26,48 @@ export default function UserProfileView({
 
     // Resolve the userId from the incoming params (params is a Promise in client components)
     // We can't `await` at top-level in a client component, so resolve inside an effect.
-    const [resolvedUserId, setResolvedUserId] = useState<string | null>(null);
+    const [resolvedUserId, setResolvedUserId] = useState<string | null>(null)
 
     useEffect(() => {
-        let mounted = true;
+        let mounted = true
 
-        (async () => {
+        ;(async () => {
             try {
-                const p = (await params) as { userId: string };
-                let id = p.userId;
+                const p = (await params) as { userId: string }
+                let id = p.userId
 
                 if (id === "current-user") {
-                    // replace with the logged-in user's email
-                    const currentUser = await userService.getCurrentUser();
-                    id = currentUser?.email ?? id;
+                    // replace with the logged-in user's identifier
+                    const currentUser = await userService.getCurrentUser()
+                    id = currentUser?.email ?? id
                 }
 
-                if (mounted) setResolvedUserId(id);
+                if (mounted) setResolvedUserId(id)
             } catch (err) {
-                console.error("Failed to resolve userId from params:", err);
+                console.error("Failed to resolve userId from params:", err)
             }
-        })();
+        })()
 
         return () => {
-            mounted = false;
-        };
-    }, [params]);
+            mounted = false
+        }
+    }, [params])
 
-    const userEmail = resolvedUserId ? decodeURIComponent(resolvedUserId) : null; // Decode the email from URL when available
+    const userIdentifier = resolvedUserId
+        ? decodeURIComponent(resolvedUserId)
+        : null // Can be user ID or email
 
     // Memoized fetch function the child can call after it updates ratings.
     const fetchUserAndProfile = useCallback(async () => {
         setLoading(true)
         setError(null)
         try {
-            if (!userEmail) {
+            if (!userIdentifier) {
                 setLoading(false)
                 return
             }
 
-            const profile = await userService.getUserProfile(userEmail)
+            const profile = await userService.getUserProfile(userIdentifier)
 
             // Get current user to check if it's their own profile
             const currentUser = await userService.getCurrentUser()
@@ -78,16 +80,17 @@ export default function UserProfileView({
             if (token) {
                 const parts = token.split(".")
                 if (parts.length === 3) {
-                        const payload = JSON.parse(
-                            atob(parts[1].replaceAll(/-/g, "+").replaceAll(/_/g, "/"))
+                    const payload = JSON.parse(
+                        atob(
+                            parts[1].replaceAll(/-/g, "+").replaceAll(/_/g, "/")
                         )
-                        viewedId = payload.email || null
+                    )
+                    viewedId = payload.email || null
                 }
             }
             setViewedUserId(viewedId)
 
-
-            const rating = await ratingService.getUserRating(userEmail)
+            const rating = await ratingService.getUserRating(userIdentifier)
 
             setFormData({
                 firstName: profile.firstName,
@@ -131,13 +134,13 @@ export default function UserProfileView({
         } finally {
             setLoading(false)
         }
-    }, [userEmail])
+    }, [userIdentifier])
 
     useEffect(() => {
-        if (userEmail) {
+        if (userIdentifier) {
             fetchUserAndProfile()
         }
-    }, [userEmail, fetchUserAndProfile])
+    }, [userIdentifier, fetchUserAndProfile])
 
     if (loading) {
         return (
@@ -269,14 +272,23 @@ export default function UserProfileView({
                             </span>
                             <div className="flex items-center gap-2 mt-2">
                                 {formData.scoreRating == null ? (
-                                    <span className="text-orange-400 font-bold text-lg">No ratings</span>
+                                    <span className="text-orange-400 font-bold text-lg">
+                                        No ratings
+                                    </span>
                                 ) : (
                                     <>
                                         <span className="text-orange-400 font-bold text-lg">
                                             {(
-                                                0.2 * (formData.scoreRating.trust_score ?? 0) +
-                                                0.3 * (formData.scoreRating.engagement_score ?? 0) +
-                                                0.5 * (formData.scoreRating.experience_score ?? 0)
+                                                0.2 *
+                                                    (formData.scoreRating
+                                                        .trust_score ?? 0) +
+                                                0.3 *
+                                                    (formData.scoreRating
+                                                        .engagement_score ??
+                                                        0) +
+                                                0.5 *
+                                                    (formData.scoreRating
+                                                        .experience_score ?? 0)
                                             ).toFixed(2)}
                                         </span>
                                         <span className="text-yellow-400">
@@ -286,9 +298,21 @@ export default function UserProfileView({
                                                     Math.max(
                                                         0,
                                                         Math.ceil(
-                                                            0.2 * (formData.scoreRating.trust_score ?? 0) +
-                                                            0.3 * (formData.scoreRating.engagement_score ?? 0) +
-                                                            0.5 * (formData.scoreRating.experience_score ?? 0)
+                                                            0.2 *
+                                                                (formData
+                                                                    .scoreRating
+                                                                    .trust_score ??
+                                                                    0) +
+                                                                0.3 *
+                                                                    (formData
+                                                                        .scoreRating
+                                                                        .engagement_score ??
+                                                                        0) +
+                                                                0.5 *
+                                                                    (formData
+                                                                        .scoreRating
+                                                                        .experience_score ??
+                                                                        0)
                                                         )
                                                     )
                                                 )
@@ -298,7 +322,7 @@ export default function UserProfileView({
                                 )}
                             </div>
                         </div>
-                        
+
                         {/* User Rating Card - show only when viewing another user's profile */}
                         {!isOwnProfile && viewedUserId && (
                             <UserRatingCard
@@ -307,8 +331,6 @@ export default function UserProfileView({
                                 onRatingUpdated={fetchUserAndProfile}
                             />
                         )}
-                        
-
                     </div>
                 </div>
             </div>
