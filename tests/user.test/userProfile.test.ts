@@ -113,7 +113,17 @@ test.describe("User Profile Tests", () => {
         // Verify navigation to profile page Jane Doe id is 4
         await expect(page).toHaveURL("/profile/view/4")
         
-        // Verify review submission success (you may want to add more specific assertions)
+        // Refresh the page to ensure scores persist
+        await page.reload()
+        
+        // Verify review submission success and scores are visible after refresh
         await expect(page.getByRole("heading", { name: "Jane Doe" })).toBeVisible()
+        
+        // Verify the submitted scores are displayed after refresh
+        await expect(page.getByText("Trust Score")).toBeVisible()
+        await expect(page.getByText("Engagement Score")).toBeVisible() 
+        await expect(page.getByText("Experience Score")).toBeVisible()
+
+        
     })
 })
