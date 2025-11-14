@@ -11,7 +11,7 @@ import {
     interestOptions,
     travel_style_options,
 } from "@/components/editprofile/constants"
-import { Itinerary, ItineraryGroupHistory } from "@/lib/types"
+import { ItineraryGroupHistory } from "@/lib/types"
 import { UserTravelHistoryCard } from "@/components/profile/TravelHistoryCard"
 
 export default function UserProfileView({

@@ -74,8 +74,8 @@ export function useUserProfile(userId?: string): UseUserProfileReturn {
     const getUserTravelHistory = async (): Promise<any> => {
         try {
             setError(null)
-            const updatedProfile = await userService.getTravelHistory()
-            return true
+            return await userService.getTravelHistory()
+            
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : "Failed to get travel history"
             setError(errorMessage)
