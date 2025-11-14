@@ -1,6 +1,5 @@
 // User service for handling user-related API calls
 // This service will be used to fetch user data from the database
-import { Itinerary } from "@/lib/types"
 import { UserProfile, UpdateUserProfile } from "../../types/user"
 import { tokenService } from "./tokenService"
 import { apiClient } from "@/lib/api"

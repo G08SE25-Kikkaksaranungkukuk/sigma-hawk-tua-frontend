@@ -95,11 +95,11 @@ export const UserTravelHistoryCard: React.FC<UserTravelHistoryCardProps> = ({ it
                 <div className="max-h-96 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
                     {/* Render a skeleton for each itinerary being loaded */}
                     {itineraries.map((_, index) => (
-                        <SkeletonCard key={index} />
+                        <SkeletonCard key={_.itinerary_id} />
                     ))}
                 </div>
                 {/* Style block for scrollbar */}
-                <style jsx>{`
+                <style>{`
                     .custom-scrollbar::-webkit-scrollbar { width: 6px; }
                     .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 3px; }
                     .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(251, 146, 60, 0.3); border-radius: 3px; }
@@ -182,7 +182,7 @@ export const UserTravelHistoryCard: React.FC<UserTravelHistoryCardProps> = ({ it
                 ))}
             </div>
 
-            <style jsx>{`
+            <style>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
         }
