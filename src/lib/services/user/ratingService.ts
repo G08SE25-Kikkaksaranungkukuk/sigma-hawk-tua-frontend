@@ -32,27 +32,10 @@ class RatingService {
      */
     private async getUserIdFromIdentifier(userIdentifier: string): Promise<string> {
         let userId = userIdentifier
-
+        console.log(`Resolving user identifier: ${userIdentifier}`)
         // Handle "current-user" case
-        if (userIdentifier === "current-user") {
-            const token = await tokenService.getAuthToken()
-            if (!token) {
-                throw new Error("No authentication token found for current user")
-            }
-            
-            try {
-                const payload = this.decodeJwtPayload(token)
-                userId = payload.user_id?.toString()
-                if (!userId) {
-                    throw new Error("User ID not found in token payload for current user")
-                }
-                console.log(`Resolved current-user to user ID: ${userId}`)
-            } catch (error) {
-                throw new Error(`Failed to resolve current user: ${error instanceof Error ? error.message : 'Unknown error'}`)
-            }
-        }
-        // If userIdentifier is an email (contains @), we need to get the user ID
-        else if (userIdentifier.includes("@")) {
+
+        if (userIdentifier.includes("@")) {
             // First try session storage for performance
             const userIdToEmailMap = sessionStorage.getItem("userIdToEmailMap")
             const emailMap = userIdToEmailMap ? JSON.parse(userIdToEmailMap) : {}
@@ -63,39 +46,31 @@ class RatingService {
             )
 
             if (foundUserId) {
-                userId = foundUserId
-            } else {
-                // If not in session storage, extract from current user's token
-                const token = await tokenService.getAuthToken()
-                if (!token) {
-                    throw new Error(`No authentication token found to resolve email: ${userIdentifier}`)
-                }
-                
-                try {
-                    const payload = this.decodeJwtPayload(token)
-                    
-                    // Check if the email matches the current user's email
-                    if (payload.email === userIdentifier) {
-                        userId = payload.user_id?.toString()
-                        if (!userId) {
-                            throw new Error(`User ID not found in token for email: ${userIdentifier}`)
-                        }
-                        console.log(`Resolved email ${userIdentifier} to current user ID: ${userId}`)
-                    } else {
-                        throw new Error(`Cannot resolve email ${userIdentifier}. Email doesn't match current user (${payload.email || 'unknown'}).`)
-                    }
-                } catch (error) {
-                    if (error instanceof Error && error.message.startsWith('Cannot resolve email')) {
-                        throw error // Re-throw email mismatch errors as-is
-                    }
-                    throw new Error(`Failed to resolve email ${userIdentifier}: ${error instanceof Error ? error.message : 'Unknown error'}`)
-                }
+                return foundUserId
             }
-        }
 
-        // Validate that we have a numeric user ID
-        if (!/^\d+$/.test(userId)) {
-            throw new Error(`Valid numeric user ID is required. Received: ${userId}`)
+            // If not in session storage, extract from current user's token
+            const token = await tokenService.getAuthToken()
+            if (!token) {
+                throw new Error(`No authentication token found to resolve email: ${userIdentifier}`)
+            }
+            try {
+                const payload = this.decodeJwtPayload(token)
+                
+                // Check if the email matches the current user's email
+                if (payload.email === userIdentifier) {
+                    userId = payload.user_id?.toString()
+                    if (!userId) {
+                        throw new Error(`User ID not found in token for email: ${userIdentifier}`)
+                    }
+                    console.log(`Resolved email ${userIdentifier} to current user ID: ${userId}`)
+                } else {
+                    throw new Error(`Cannot resolve email ${userIdentifier}. Email doesn't match current user (${payload.email || 'unknown'}).`)
+                }
+            } catch (error) {
+                throw new Error(`Failed to resolve email ${userIdentifier}: ${error instanceof Error ? error.message : 'Unknown error'}`)
+            }
+            
         }
 
         return userId
