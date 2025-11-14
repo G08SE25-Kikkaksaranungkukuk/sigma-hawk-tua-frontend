@@ -1,0 +1,53 @@
+steps:
+  # Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '${_ARTIFACT_REGISTRY}/${_IMAGE_NAME}:${SHORT_SHA}'
+      - '-t'
+      - '${_ARTIFACT_REGISTRY}/${_IMAGE_NAME}:latest'
+      - '-f'
+      - 'Dockerfile.cloud.run'
+      - '.'
+    id: 'build-image'
+
+  # Push the Docker image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '${_ARTIFACT_REGISTRY}/${_IMAGE_NAME}:${SHORT_SHA}'
+    id: 'push-image-sha'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '${_ARTIFACT_REGISTRY}/${_IMAGE_NAME}:latest'
+    id: 'push-image-latest'
+
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'services'
+      - 'update'
+      - '${_SERVICE_NAME}'
+      - '--image=${_ARTIFACT_REGISTRY}/${_IMAGE_NAME}:${SHORT_SHA}'
+      - '--region=${_REGION}'
+      - '--platform=managed'
+    id: 'deploy-cloud-run'
+
+# Substitutions (provided by Cloud Build trigger)
+substitutions:
+  _ENVIRONMENT: 'dev'
+  _REGION: 'asia-southeast1'
+  _SERVICE_NAME: 'sigma-hawk-tua-frontend-dev'
+  _ARTIFACT_REGISTRY: 'asia-southeast1-docker.pkg.dev/PROJECT_ID/REPO_NAME'
+  _IMAGE_NAME: 'sigma-hawk-tua-frontend'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_HIGHCPU_8'
+
+timeout: '1800s'
