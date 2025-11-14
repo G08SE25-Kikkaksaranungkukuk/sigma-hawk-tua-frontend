@@ -9,6 +9,7 @@ export interface UseUserProfileReturn {
     error: string | null
     updateProfile: (profileData: UpdateUserProfile) => Promise<boolean>
     refreshProfile: () => Promise<void>
+    getUserTravelHistory : () => Promise<void>
 }
 
 /**
@@ -69,6 +70,20 @@ export function useUserProfile(userId?: string): UseUserProfileReturn {
         }
     }
 
+    // Get User travel history
+    const getUserTravelHistory = async (): Promise<any> => {
+        try {
+            setError(null)
+            const updatedProfile = await userService.getTravelHistory()
+            return true
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : "Failed to get travel history"
+            setError(errorMessage)
+            console.error("Failed to get travel history:", err)
+            return false
+        }
+    }
+
     // Refresh profile data
     const refreshProfile = async () => {
         hasFetched.current = false
@@ -90,5 +105,6 @@ export function useUserProfile(userId?: string): UseUserProfileReturn {
         error,
         updateProfile,
         refreshProfile,
+        getUserTravelHistory
     }
 }
