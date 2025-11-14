@@ -6,38 +6,57 @@ class RatingService {
     private baseUrl = process.env.NEXT_PUBLIC_BASE_API_URL
 
     /**
+     * Helper method to decode JWT token payload
+     * @param token - JWT token string
+     * @returns Decoded payload object
+     */
+    private decodeJwtPayload(token: string): any {
+        const parts = token.split('.')
+        if (parts.length !== 3) {
+            throw new Error("Invalid JWT token format")
+        }
+        return JSON.parse(
+            atob(parts[1].replaceAll('-', '+').replaceAll('_', '/'))
+        )
+    }
+
+    /**
      * Helper method to convert email to user ID if needed
-     * @param userIdentifier - User ID or email
+     * @param userIdentifier - User ID or email or "current-user"
      * @returns User ID string
      */
-    private getUserIdFromIdentifier(userIdentifier: string): string {
+    private async getUserIdFromIdentifier(userIdentifier: string): Promise<string> {
         let userId = userIdentifier
-
-        // If userIdentifier is an email (contains @), try to get user ID from session storage
-        if (userIdentifier.includes("@")) {
-            const userIdToEmailMap = sessionStorage.getItem("userIdToEmailMap")
-            const emailMap = userIdToEmailMap
-                ? JSON.parse(userIdToEmailMap)
-                : {}
-
-            // Find user ID by email (reverse lookup)
-            const foundUserId = Object.keys(emailMap).find(
-                (id) => emailMap[id] === userIdentifier
-            )
-
-            if (foundUserId) {
-                userId = foundUserId
-                console.log(
-                    `Found user ID ${userId} for email ${userIdentifier}`
-                )
-            } else {
-                console.warn(
-                    `Unable to find user ID for email: ${userIdentifier}. Using email as fallback.`
-                )
-                // Keep userIdentifier as is - this might work for some backend endpoints
-            }
+        console.log(`Resolving user identifier: ${userIdentifier}`)
+        // Handle "current-user" case
+        if (!userIdentifier.includes("@")) {
+            return userId
         }
 
+        const userIdToEmailMap = sessionStorage.getItem("userIdToEmailMap")
+        const emailMap = userIdToEmailMap ? JSON.parse(userIdToEmailMap) : {}
+
+        // Find user ID by email (reverse lookup)
+        const foundUserId = Object.keys(emailMap).find(
+            (id) => emailMap[id] === userIdentifier
+        )
+
+        if (foundUserId) {
+            return foundUserId
+        }
+
+        // If not in session storage, extract from current user's token
+        const token = await tokenService.getAuthToken()
+        if (!token) {
+            throw new Error(`No authentication token found to resolve email: ${userIdentifier}`)
+        }
+        try {
+            const payload = this.decodeJwtPayload(token)
+            userId = payload.user_id?.toString()
+        } catch (error) {
+            throw new Error(`Failed to resolve email ${userIdentifier}: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        }
+        
         return userId
     }
 
@@ -53,8 +72,7 @@ class RatingService {
             if (!token) {
                 throw new Error("No authentication token found")
             }
-
-            const userId = this.getUserIdFromIdentifier(userIdentifier)
+            const userId = await this.getUserIdFromIdentifier(userIdentifier)
 
             const response: any = await apiClient.get(
                 `${this.baseUrl}api/v1/rating/user/${userId}/rating`,
@@ -66,8 +84,6 @@ class RatingService {
                     withCredentials: true,
                 }
             )
-
-            console.log("Rating response data:", response)
 
             // If the backend didn't return average scores (null/undefined),
             // return null so callers can detect "no ratings".
@@ -104,7 +120,7 @@ class RatingService {
                 throw new Error("No authentication token found")
             }
 
-            const userId = this.getUserIdFromIdentifier(userIdentifier)
+            const userId = await this.getUserIdFromIdentifier(userIdentifier)
 
             const response: any = await apiClient.put(
                 `${this.baseUrl}api/v1/rating/user/${userId}/rating`,
@@ -142,7 +158,7 @@ class RatingService {
                 throw new Error("No authentication token found")
             }
 
-            const userId = this.getUserIdFromIdentifier(userIdentifier)
+            const userId = await this.getUserIdFromIdentifier(userIdentifier)
 
             const response: any = await apiClient.post(
                 `${this.baseUrl}api/v1/rating/user/${userId}/rating`,
@@ -171,7 +187,7 @@ class RatingService {
             const token = await tokenService.getAuthToken()
             if (!token) throw new Error("No authentication token found")
 
-            const userId = this.getUserIdFromIdentifier(userIdentifier)
+            const userId = await this.getUserIdFromIdentifier(userIdentifier)
 
             const response: any = await apiClient.get(
                 `${this.baseUrl}api/v1/rating/user/${userId}/rating`,
@@ -185,7 +201,6 @@ class RatingService {
             )
 
             // response should contain { average_scores: {...}, ratings: [ ... ] }
-            console.log("Ratings response data:", response)
             const ratings = Array.isArray(response.ratings)
                 ? response.ratings
                 : []
