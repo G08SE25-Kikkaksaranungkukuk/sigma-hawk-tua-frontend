@@ -6,6 +6,26 @@ class RatingService {
     private baseUrl = process.env.NEXT_PUBLIC_BASE_API_URL
 
     /**
+     * Helper method to decode JWT token payload
+     * @param token - JWT token string
+     * @returns Decoded payload object
+     */
+    private decodeJwtPayload(token: string): any {
+        const parts = token.split('.')
+        if (parts.length !== 3) {
+            throw new Error("Invalid JWT token format")
+        }
+        
+        try {
+            return JSON.parse(
+                atob(parts[1].replaceAll(/-/g, '+').replaceAll(/_/g, '/'))
+            )
+        } catch (error) {
+            throw new Error("Failed to decode JWT token payload")
+        }
+    }
+
+    /**
      * Helper method to convert email to user ID if needed
      * @param userIdentifier - User ID or email or "current-user"
      * @returns User ID string
@@ -16,23 +36,22 @@ class RatingService {
         // Handle "current-user" case
         if (userIdentifier === "current-user") {
             const token = await tokenService.getAuthToken()
-            if (token) {
-                const parts = token.split('.')
-                if (parts.length === 3) {
-                    const payload = JSON.parse(
-                        atob(parts[1].replaceAll(/-/g, '+').replaceAll(/_/g, '/'))
-                    )
-                    userId = payload.user_id?.toString() || userIdentifier
-                }
+            if (!token) {
+                throw new Error("No authentication token found for current user")
             }
+            
+            const payload = this.decodeJwtPayload(token)
+            userId = payload.user_id?.toString()
+            if (!userId) {
+                throw new Error("User ID not found in token payload")
+            }
+            console.log(`Resolved current-user to user ID: ${userId}`)
         }
         // If userIdentifier is an email (contains @), we need to get the user ID
         else if (userIdentifier.includes("@")) {
             // First try session storage for performance
             const userIdToEmailMap = sessionStorage.getItem("userIdToEmailMap")
-            const emailMap = userIdToEmailMap
-                ? JSON.parse(userIdToEmailMap)
-                : {}
+            const emailMap = userIdToEmailMap ? JSON.parse(userIdToEmailMap) : {}
 
             // Find user ID by email (reverse lookup)
             const foundUserId = Object.keys(emailMap).find(
@@ -43,26 +62,22 @@ class RatingService {
                 userId = foundUserId
             } else {
                 // If not in session storage, extract from current user's token
-                // This assumes the email belongs to the current user
                 const token = await tokenService.getAuthToken()
-                if (token) {
-                    const parts = token.split('.')
-                    if (parts.length === 3) {
-                        const payload = JSON.parse(
-                            atob(parts[1].replaceAll(/-/g, '+').replaceAll(/_/g, '/'))
-                        )
-                        // Check if the email matches the current user's email
-                        if (payload.email === userIdentifier) {
-                            userId = payload.user_id?.toString() || userIdentifier
-                        } else {
-                            console.warn(
-                                `Unable to find user ID for email: ${userIdentifier}. Email doesn't match current user.`
-                            )
-                            throw new Error(`Valid user ID is required. Cannot resolve email: ${userIdentifier}`)
-                        }
-                    }
-                } else {
+                if (!token) {
                     throw new Error("No authentication token found to resolve email")
+                }
+                
+                const payload = this.decodeJwtPayload(token)
+                
+                // Check if the email matches the current user's email
+                if (payload.email === userIdentifier) {
+                    userId = payload.user_id?.toString()
+                    if (!userId) {
+                        throw new Error("User ID not found in token payload")
+                    }
+                    console.log(`Resolved email ${userIdentifier} to current user ID: ${userId}`)
+                } else {
+                    throw new Error(`Cannot resolve email ${userIdentifier}. Email doesn't match current user.`)
                 }
             }
         }
