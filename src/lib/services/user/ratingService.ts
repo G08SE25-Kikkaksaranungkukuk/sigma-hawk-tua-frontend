@@ -7,14 +7,28 @@ class RatingService {
 
     /**
      * Helper method to convert email to user ID if needed
-     * @param userIdentifier - User ID or email
+     * @param userIdentifier - User ID or email or "current-user"
      * @returns User ID string
      */
-    private getUserIdFromIdentifier(userIdentifier: string): string {
+    private async getUserIdFromIdentifier(userIdentifier: string): Promise<string> {
         let userId = userIdentifier
 
-        // If userIdentifier is an email (contains @), try to get user ID from session storage
-        if (userIdentifier.includes("@")) {
+        // Handle "current-user" case
+        if (userIdentifier === "current-user") {
+            const token = await tokenService.getAuthToken()
+            if (token) {
+                const parts = token.split('.')
+                if (parts.length === 3) {
+                    const payload = JSON.parse(
+                        atob(parts[1].replaceAll(/-/g, '+').replaceAll(/_/g, '/'))
+                    )
+                    userId = payload.user_id?.toString() || userIdentifier
+                }
+            }
+        }
+        // If userIdentifier is an email (contains @), we need to get the user ID
+        else if (userIdentifier.includes("@")) {
+            // First try session storage for performance
             const userIdToEmailMap = sessionStorage.getItem("userIdToEmailMap")
             const emailMap = userIdToEmailMap
                 ? JSON.parse(userIdToEmailMap)
@@ -27,15 +41,35 @@ class RatingService {
 
             if (foundUserId) {
                 userId = foundUserId
-                console.log(
-                    `Found user ID ${userId} for email ${userIdentifier}`
-                )
             } else {
-                console.warn(
-                    `Unable to find user ID for email: ${userIdentifier}. Using email as fallback.`
-                )
-                // Keep userIdentifier as is - this might work for some backend endpoints
+                // If not in session storage, extract from current user's token
+                // This assumes the email belongs to the current user
+                const token = await tokenService.getAuthToken()
+                if (token) {
+                    const parts = token.split('.')
+                    if (parts.length === 3) {
+                        const payload = JSON.parse(
+                            atob(parts[1].replaceAll(/-/g, '+').replaceAll(/_/g, '/'))
+                        )
+                        // Check if the email matches the current user's email
+                        if (payload.email === userIdentifier) {
+                            userId = payload.user_id?.toString() || userIdentifier
+                        } else {
+                            console.warn(
+                                `Unable to find user ID for email: ${userIdentifier}. Email doesn't match current user.`
+                            )
+                            throw new Error(`Valid user ID is required. Cannot resolve email: ${userIdentifier}`)
+                        }
+                    }
+                } else {
+                    throw new Error("No authentication token found to resolve email")
+                }
             }
+        }
+
+        // Validate that we have a numeric user ID
+        if (!/^\d+$/.test(userId)) {
+            throw new Error(`Valid user ID is required. Received: ${userId}`)
         }
 
         return userId
@@ -53,8 +87,7 @@ class RatingService {
             if (!token) {
                 throw new Error("No authentication token found")
             }
-
-            const userId = this.getUserIdFromIdentifier(userIdentifier)
+            const userId = await this.getUserIdFromIdentifier(userIdentifier)
 
             const response: any = await apiClient.get(
                 `${this.baseUrl}api/v1/rating/user/${userId}/rating`,
@@ -66,8 +99,6 @@ class RatingService {
                     withCredentials: true,
                 }
             )
-
-            console.log("Rating response data:", response)
 
             // If the backend didn't return average scores (null/undefined),
             // return null so callers can detect "no ratings".
@@ -104,7 +135,7 @@ class RatingService {
                 throw new Error("No authentication token found")
             }
 
-            const userId = this.getUserIdFromIdentifier(userIdentifier)
+            const userId = await this.getUserIdFromIdentifier(userIdentifier)
 
             const response: any = await apiClient.put(
                 `${this.baseUrl}api/v1/rating/user/${userId}/rating`,
@@ -142,7 +173,7 @@ class RatingService {
                 throw new Error("No authentication token found")
             }
 
-            const userId = this.getUserIdFromIdentifier(userIdentifier)
+            const userId = await this.getUserIdFromIdentifier(userIdentifier)
 
             const response: any = await apiClient.post(
                 `${this.baseUrl}api/v1/rating/user/${userId}/rating`,
@@ -171,7 +202,7 @@ class RatingService {
             const token = await tokenService.getAuthToken()
             if (!token) throw new Error("No authentication token found")
 
-            const userId = this.getUserIdFromIdentifier(userIdentifier)
+            const userId = await this.getUserIdFromIdentifier(userIdentifier)
 
             const response: any = await apiClient.get(
                 `${this.baseUrl}api/v1/rating/user/${userId}/rating`,
@@ -185,7 +216,6 @@ class RatingService {
             )
 
             // response should contain { average_scores: {...}, ratings: [ ... ] }
-            console.log("Ratings response data:", response)
             const ratings = Array.isArray(response.ratings)
                 ? response.ratings
                 : []
