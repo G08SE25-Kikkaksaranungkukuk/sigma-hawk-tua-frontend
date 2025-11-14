@@ -15,14 +15,9 @@ class RatingService {
         if (parts.length !== 3) {
             throw new Error("Invalid JWT token format")
         }
-        
-        try {
-            return JSON.parse(
-                atob(parts[1].replaceAll(/-/g, '+').replaceAll(/_/g, '/'))
-            )
-        } catch (error) {
-            throw new Error("Failed to decode JWT token payload")
-        }
+        return JSON.parse(
+            atob(parts[1].replaceAll('-', '+').replaceAll('_', '/'))
+        )
     }
 
     /**
@@ -37,7 +32,7 @@ class RatingService {
         if (!userIdentifier.includes("@")) {
             return userId
         }
-        
+
         const userIdToEmailMap = sessionStorage.getItem("userIdToEmailMap")
         const emailMap = userIdToEmailMap ? JSON.parse(userIdToEmailMap) : {}
 
