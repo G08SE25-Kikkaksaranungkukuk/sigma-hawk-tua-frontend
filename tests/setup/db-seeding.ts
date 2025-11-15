@@ -335,7 +335,7 @@ async function createGroupItineraries(axiosInstance: any, groupId: number): Prom
  * Handles group creation and itinerary setup for first user
  */
 async function setupGroupsAndItineraries(axiosInstance: any, userEmail: string): Promise<number | undefined> {
-    for (const [key, group] of Object.entries(TEST_GROUP_DATA)) {
+    for (const group of Object.values(TEST_GROUP_DATA)) {
         const groupId = await createTestGroup(axiosInstance, group, userEmail)
 
         if (groupId) {
@@ -436,7 +436,7 @@ export async function seedTestUsers() {
     let groupId: number | undefined
     let isFirstUser = true
 
-    for (const [key, user] of Object.entries(TEST_USERS_DATA)) {
+    for (const user of Object.values(TEST_USERS_DATA)) {
         groupId = await processUser(user, results, isFirstUser, groupId)
         isFirstUser = false
     }
@@ -454,7 +454,7 @@ export async function cleanupTestUsers() {
     let notFound = 0
     let failed = 0
 
-    for (const [key, user] of Object.entries(TEST_USERS_DATA)) {
+    for (const user of Object.values(TEST_USERS_DATA)) {
         try {
             console.log(`🔑 Attempting login for: ${user.email}`)
 
