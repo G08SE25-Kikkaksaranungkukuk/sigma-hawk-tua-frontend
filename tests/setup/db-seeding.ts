@@ -100,252 +100,311 @@ export const TEST_ITINERARY_DATA = [
     }
 ]
 
+interface SeedResults {
+    created: string[]
+    existing: string[]
+    failed: string[]
+}
+
+interface UserCreationResult {
+    success: boolean
+    status: 'created' | 'existing' | 'failed'
+}
+
 /**
- * Seeds the database with test users before tests run
+ * Registers a single test user
  */
-export async function seedTestUsers() {
-    console.log("🌱 Seeding test users to database...")
-
-    const results = {
-        created: [] as string[],
-        existing: [] as string[],
-        failed: [] as string[],
-    }
-    var groupId: number | undefined
-    let isFirstUser = true
-
-    for (const [key, user] of Object.entries(TEST_USERS_DATA)) {
-        try {
-            const response = await axios.post(
-                `${API_BASE_URL}/auth/register`,
-                user,
-                {
-                    timeout: 10000,
-                    validateStatus: (status) => status < 500, // Don't throw on 4xx errors
-                }
-            )
-
-            if (response.status === 200 || response.status === 201) {
-                results.created.push(user.email)
-                console.log(`✅ Created test user: ${user.email}`)
-            } else if (response.status === 409 || response.status === 400) {
-                results.existing.push(user.email)
-                console.log(`ℹ️  Test user already exists: ${user.email}`)
-            } else {
-                results.failed.push(user.email)
-                console.log(
-                    `⚠️  Unexpected response for ${user.email}: ${response.status}`
-                )
-            }
-        } catch (error: any) {
-            if (error.code === "ECONNREFUSED") {
-                console.error(
-                    `❌ Cannot connect to backend API at ${API_BASE_URL}`
-                )
-                console.error(
-                    `   Make sure your backend is running on port 8080`
-                )
-                throw new Error(
-                    "Backend API not available. Start backend before running tests."
-                )
-            } else if (
-                error.response?.status === 409 ||
-                error.response?.status === 400
-            ) {
-                results.existing.push(user.email)
-                console.log(`ℹ️  Test user already exists: ${user.email}`)
-            } else {
-                results.failed.push(user.email)
-                console.error(
-                    `❌ Failed to create test user ${user.email}:`,
-                    error.message
-                )
-            }
-        }
-        const axiosInstance = axios.create({
-            withCredentials: true,
-            timeout: 10000,
-            validateStatus: (status) => status < 500,
-        })
-
-        const loginResponse = await axiosInstance.post(
-            `${API_BASE_URL}/auth/login`,
+async function registerUser(user: TestUser): Promise<UserCreationResult> {
+    try {
+        const response = await axios.post(
+            `${API_BASE_URL}/auth/register`,
+            user,
             {
-                email: user.email,
-                password: user.password,
+                timeout: 10000,
+                validateStatus: (status) => status < 500,
             }
         )
-        if (loginResponse.status === 200) {
-            console.log(`✅ Login successful for: ${user.email}`)
 
-            // Extract cookies from login response for subsequent requests
-            const cookies = loginResponse.headers["set-cookie"]
-            if (cookies && cookies.length > 0) {
-                // Set the cookies for all subsequent requests
-                axiosInstance.defaults.headers.Cookie = cookies.join("; ")
-                console.log(`🍪 Authentication cookies set for: ${user.email}`)
-            }
-        } else if (loginResponse.status !== 200) {
-            console.error(
-                `❌ Failed to log in user ${user.email}:`,
-                loginResponse.status
-            )
-            continue
+        if (response.status === 200 || response.status === 201) {
+            console.log(`✅ Created test user: ${user.email}`)
+            return { success: true, status: 'created' }
+        } else if (response.status === 409 || response.status === 400) {
+            console.log(`ℹ️  Test user already exists: ${user.email}`)
+            return { success: true, status: 'existing' }
+        } else {
+            console.log(`⚠️  Unexpected response for ${user.email}: ${response.status}`)
+            return { success: false, status: 'failed' }
         }
+    } catch (error: any) {
+        return handleRegistrationError(error, user.email)
+    }
+}
 
-        // Only create group for the first user, others will join
-        if (isFirstUser) {
-            for (const [key, group] of Object.entries(TEST_GROUP_DATA)) {
-                try {
-                    const formData = new FormData()
+/**
+ * Handles registration errors
+ */
+function handleRegistrationError(error: any, email: string): UserCreationResult {
+    if (error.code === "ECONNREFUSED") {
+        console.error(`❌ Cannot connect to backend API at ${API_BASE_URL}`)
+        console.error(`   Make sure your backend is running on port 8080`)
+        throw new Error("Backend API not available. Start backend before running tests.")
+    } else if (error.response?.status === 409 || error.response?.status === 400) {
+        console.log(`ℹ️  Test user already exists: ${email}`)
+        return { success: true, status: 'existing' }
+    } else {
+        console.error(`❌ Failed to create test user ${email}:`, error.message)
+        return { success: false, status: 'failed' }
+    }
+}
 
-                    // Append text fields
-                    formData.append("group_name", group.group_name)
-                    if (group.description) {
-                        formData.append("description", group.description)
-                    }
-                    if (group.max_members) {
-                        formData.append(
-                            "max_members",
-                            group.max_members.toString()
-                        )
-                    }
+/**
+ * Creates an authenticated axios instance for a user
+ */
+async function createAuthenticatedAxios(user: TestUser): Promise<any> {
+    const axiosInstance = axios.create({
+        withCredentials: true,
+        timeout: 10000,
+        validateStatus: (status) => status < 500,
+    })
 
-                    // Append interest fields as JSON string or individual entries
-                    if (
-                        group.interest_fields &&
-                        group.interest_fields.length > 0
-                    ) {
-                        group.interest_fields.forEach((interest, index) => {
-                            formData.append(
-                                `interest_fields[${index}]`,
-                                interest
-                            )
-                        })
-                    }
-
-                    // Append file if provided
-                    if (group.profile) {
-                        formData.append("profile", group.profile)
-                    }
-
-                    const createGroupResponse = await axiosInstance.post(
-                        `${API_BASE_URL}/group`,
-                        formData,
-                        {
-                            withCredentials: true,
-                            headers: {
-                                "Content-Type": "multipart/form-data",
-                            },
-                        }
-                    )
-                    if (
-                        createGroupResponse.status === 200 ||
-                        createGroupResponse.status === 201
-                    ) {
-                        console.log(
-                            `📋 Group creation response:`,
-                            createGroupResponse.data
-                        )
-                        groupId =
-                            createGroupResponse.data.data?.group_id ||
-                            createGroupResponse.data.group_id ||
-                            createGroupResponse.data.id
-                        console.log(
-                            `✅ Created test group: ${group.group_name} by user: ${user.email} (Group ID: ${groupId})`
-                        )
-
-                        // Create and assign itineraries to the group
-                        if (groupId) {
-                            for (const itineraryData of TEST_ITINERARY_DATA) {
-                                try {
-                                    // Create itinerary
-                                    const createItineraryResponse = await axiosInstance.post(
-                                        `${API_BASE_URL.replace('/v1', '/v2')}/itineraries`,
-                                        itineraryData,
-                                        { withCredentials: true }
-                                    )
-
-                                    if (createItineraryResponse.status === 200 || createItineraryResponse.status === 201) {
-                                        const itineraryId = 
-                                            createItineraryResponse.data.data?.itinerary_id ||
-                                            createItineraryResponse.data.itinerary_id ||
-                                            createItineraryResponse.data.id
-                                        
-                                        console.log(`✅ Created itinerary: ${itineraryData.title} (ID: ${itineraryId})`)
-
-                                        // Assign itinerary to group
-                                        if (itineraryId) {
-                                            const assignResponse = await axiosInstance.post(
-                                                `${API_BASE_URL.replace('/v1', '/v2')}/groups/${groupId}/itineraries/assign`,
-                                                { itinerary_id: itineraryId },
-                                                { withCredentials: true }
-                                            )
-
-                                            if (assignResponse.status === 200 || assignResponse.status === 201) {
-                                                console.log(`✅ Assigned itinerary ${itineraryData.title} to group ${groupId}`)
-                                            } else {
-                                                console.log(`⚠️  Failed to assign itinerary: ${assignResponse.status}`)
-                                            }
-                                        }
-                                    } else {
-                                        console.log(`⚠️  Failed to create itinerary ${itineraryData.title}: ${createItineraryResponse.status}`)
-                                    }
-                                } catch (error: any) {
-                                    console.error(
-                                        `❌ Failed to create/assign itinerary ${itineraryData.title}:`,
-                                        error.response?.data || error.message
-                                    )
-                                }
-                            }
-                        }
-                    } else {
-                        console.log(
-                            `❌ Failed to create test group: ${group.group_name} for user: ${user.email} - Status: ${createGroupResponse.status}`
-                        )
-                        console.log(`Response data:`, createGroupResponse.data)
-                    }
-                } catch (error: any) {
-                    console.error(
-                        "❌ Failed to create test group:",
-                        error.response?.data || error.message
-                    )
-                }
-            }
-            isFirstUser = false
+    const loginResponse = await axiosInstance.post(
+        `${API_BASE_URL}/auth/login`,
+        {
+            email: user.email,
+            password: user.password,
         }
+    )
 
-        // Join the group (both creator and other users)
-        if (groupId) {
-            try {
-                const joinGroupResponse = await axiosInstance.put(
-                    `${API_BASE_URL}/group/${groupId}/member`,
-                    {},
-                    { withCredentials: true }
-                )
-                if (
-                    joinGroupResponse.status === 200 ||
-                    joinGroupResponse.status === 201 ||
-                    joinGroupResponse.status === 409
-                ) {
-                    console.log(
-                        `✅ User: ${user.email} joined group ID: ${groupId}`
-                    )
-                } else {
-                    console.log(
-                        `❌ Failed to add user: ${user.email} to group ID: ${groupId} - Status: ${joinGroupResponse.status}`
-                    )
-                    console.log(`Response data:`, joinGroupResponse.data)
-                }
-            } catch (error: any) {
-                console.error(
-                    `❌ Failed to join group for user ${user.email}:`,
-                    error.response?.data || error.message
-                )
-            }
-        }
+    if (loginResponse.status !== 200) {
+        console.error(`❌ Failed to log in user ${user.email}:`, loginResponse.status)
+        return null
     }
 
+    console.log(`✅ Login successful for: ${user.email}`)
+
+    const cookies = loginResponse.headers["set-cookie"]
+    if (cookies && cookies.length > 0) {
+        axiosInstance.defaults.headers.Cookie = cookies.join("; ")
+        console.log(`🍪 Authentication cookies set for: ${user.email}`)
+    }
+
+    return axiosInstance
+}
+
+/**
+ * Creates form data for group creation
+ */
+function createGroupFormData(group: typeof TEST_GROUP_DATA.testGroup1): FormData {
+    const formData = new FormData()
+
+    formData.append("group_name", group.group_name)
+    if (group.description) {
+        formData.append("description", group.description)
+    }
+    if (group.max_members) {
+        formData.append("max_members", group.max_members.toString())
+    }
+
+    if (group.interest_fields && group.interest_fields.length > 0) {
+        group.interest_fields.forEach((interest, index) => {
+            formData.append(`interest_fields[${index}]`, interest)
+        })
+    }
+
+    if (group.profile) {
+        formData.append("profile", group.profile)
+    }
+
+    return formData
+}
+
+/**
+ * Creates a test group
+ */
+async function createTestGroup(
+    axiosInstance: any,
+    group: typeof TEST_GROUP_DATA.testGroup1,
+    userEmail: string
+): Promise<number | undefined> {
+    try {
+        const formData = createGroupFormData(group)
+
+        const createGroupResponse = await axiosInstance.post(
+            `${API_BASE_URL}/group`,
+            formData,
+            {
+                withCredentials: true,
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            }
+        )
+
+        if (createGroupResponse.status === 200 || createGroupResponse.status === 201) {
+            console.log(`📋 Group creation response:`, createGroupResponse.data)
+            const groupId =
+                createGroupResponse.data.data?.group_id ||
+                createGroupResponse.data.group_id ||
+                createGroupResponse.data.id
+            console.log(`✅ Created test group: ${group.group_name} by user: ${userEmail} (Group ID: ${groupId})`)
+            return groupId
+        } else {
+            console.log(`❌ Failed to create test group: ${group.group_name} for user: ${userEmail} - Status: ${createGroupResponse.status}`)
+            console.log(`Response data:`, createGroupResponse.data)
+            return undefined
+        }
+    } catch (error: any) {
+        console.error("❌ Failed to create test group:", error.response?.data || error.message)
+        return undefined
+    }
+}
+
+/**
+ * Creates and assigns an itinerary to a group
+ */
+async function createAndAssignItinerary(
+    axiosInstance: any,
+    itineraryData: typeof TEST_ITINERARY_DATA[0],
+    groupId: number
+): Promise<void> {
+    try {
+        const createItineraryResponse = await axiosInstance.post(
+            `${API_BASE_URL.replace('/v1', '/v2')}/itineraries`,
+            itineraryData,
+            { withCredentials: true }
+        )
+
+        if (createItineraryResponse.status === 200 || createItineraryResponse.status === 201) {
+            const itineraryId =
+                createItineraryResponse.data.data?.itinerary_id ||
+                createItineraryResponse.data.itinerary_id ||
+                createItineraryResponse.data.id
+
+            console.log(`✅ Created itinerary: ${itineraryData.title} (ID: ${itineraryId})`)
+
+            if (itineraryId) {
+                await assignItineraryToGroup(axiosInstance, itineraryId, groupId, itineraryData.title)
+            }
+        } else {
+            console.log(`⚠️  Failed to create itinerary ${itineraryData.title}: ${createItineraryResponse.status}`)
+        }
+    } catch (error: any) {
+        console.error(
+            `❌ Failed to create/assign itinerary ${itineraryData.title}:`,
+            error.response?.data || error.message
+        )
+    }
+}
+
+/**
+ * Assigns an itinerary to a group
+ */
+async function assignItineraryToGroup(
+    axiosInstance: any,
+    itineraryId: number,
+    groupId: number,
+    itineraryTitle: string
+): Promise<void> {
+    try {
+        const assignResponse = await axiosInstance.post(
+            `${API_BASE_URL.replace('/v1', '/v2')}/groups/${groupId}/itineraries/assign`,
+            { itinerary_id: itineraryId },
+            { withCredentials: true }
+        )
+
+        if (assignResponse.status === 200 || assignResponse.status === 201) {
+            console.log(`✅ Assigned itinerary ${itineraryTitle} to group ${groupId}`)
+        } else {
+            console.log(`⚠️  Failed to assign itinerary: ${assignResponse.status}`)
+        }
+    } catch (error: any) {
+        console.error(`❌ Failed to assign itinerary:`, error.response?.data || error.message)
+    }
+}
+
+/**
+ * Creates itineraries for a group
+ */
+async function createGroupItineraries(axiosInstance: any, groupId: number): Promise<void> {
+    for (const itineraryData of TEST_ITINERARY_DATA) {
+        await createAndAssignItinerary(axiosInstance, itineraryData, groupId)
+    }
+}
+
+/**
+ * Handles group creation and itinerary setup for first user
+ */
+async function setupGroupsAndItineraries(axiosInstance: any, userEmail: string): Promise<number | undefined> {
+    for (const [key, group] of Object.entries(TEST_GROUP_DATA)) {
+        const groupId = await createTestGroup(axiosInstance, group, userEmail)
+
+        if (groupId) {
+            await createGroupItineraries(axiosInstance, groupId)
+            return groupId
+        }
+    }
+    return undefined
+}
+
+/**
+ * Joins a user to a group
+ */
+async function joinGroup(axiosInstance: any, groupId: number, userEmail: string): Promise<void> {
+    try {
+        const joinGroupResponse = await axiosInstance.put(
+            `${API_BASE_URL}/group/${groupId}/member`,
+            {},
+            { withCredentials: true }
+        )
+
+        if (
+            joinGroupResponse.status === 200 ||
+            joinGroupResponse.status === 201 ||
+            joinGroupResponse.status === 409
+        ) {
+            console.log(`✅ User: ${userEmail} joined group ID: ${groupId}`)
+        } else {
+            console.log(`❌ Failed to add user: ${userEmail} to group ID: ${groupId} - Status: ${joinGroupResponse.status}`)
+            console.log(`Response data:`, joinGroupResponse.data)
+        }
+    } catch (error: any) {
+        console.error(`❌ Failed to join group for user ${userEmail}:`, error.response?.data || error.message)
+    }
+}
+
+/**
+ * Processes a single user (register, login, group operations)
+ */
+async function processUser(
+    user: TestUser,
+    results: SeedResults,
+    isFirstUser: boolean,
+    existingGroupId?: number
+): Promise<number | undefined> {
+    const registrationResult = await registerUser(user)
+    results[registrationResult.status].push(user.email)
+
+    const axiosInstance = await createAuthenticatedAxios(user)
+    if (!axiosInstance) {
+        return existingGroupId
+    }
+
+    let groupId = existingGroupId
+    if (isFirstUser) {
+        groupId = await setupGroupsAndItineraries(axiosInstance, user.email)
+    }
+
+    if (groupId) {
+        await joinGroup(axiosInstance, groupId, user.email)
+    }
+
+    return groupId
+}
+
+/**
+ * Prints seeding summary
+ */
+function printSeedingSummary(results: SeedResults): void {
     console.log(`\n📊 Seeding Summary:`)
     console.log(`   Created: ${results.created.length}`)
     console.log(`   Already exists: ${results.existing.length}`)
@@ -356,12 +415,33 @@ export async function seedTestUsers() {
         results.created.length === 0 &&
         results.existing.length === 0
     ) {
-        throw new Error(
-            "Failed to seed any test users. Check backend connection."
-        )
+        throw new Error("Failed to seed any test users. Check backend connection.")
     }
 
     console.log("✅ Test data seeding completed\n")
+}
+
+/**
+ * Seeds the database with test users before tests run
+ */
+export async function seedTestUsers() {
+    console.log("🌱 Seeding test users to database...")
+
+    const results: SeedResults = {
+        created: [],
+        existing: [],
+        failed: [],
+    }
+
+    let groupId: number | undefined
+    let isFirstUser = true
+
+    for (const [key, user] of Object.entries(TEST_USERS_DATA)) {
+        groupId = await processUser(user, results, isFirstUser, groupId)
+        isFirstUser = false
+    }
+
+    printSeedingSummary(results)
 }
 /**
  * Cleans up test users after tests complete
