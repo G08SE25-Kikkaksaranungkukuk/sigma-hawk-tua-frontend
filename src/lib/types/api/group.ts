@@ -46,6 +46,14 @@ export interface Itinerary {
   place_links: string[];
 }
 
+export interface ItineraryGroupHistory {
+  id : number;
+  group_id : number;
+  itinerary_id : number;
+  created_at : Date;
+  itinerary : Itinerary
+}
+
 // Alias for backwards compatibility
 export type ItineraryResponse = Itinerary;
 

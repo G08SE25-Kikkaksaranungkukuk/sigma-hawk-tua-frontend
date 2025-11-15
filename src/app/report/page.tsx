@@ -36,13 +36,18 @@ const reportSchema = z.object({
 type ReportSchema = z.infer<typeof reportSchema>;
 
 const reportReasons = [
-    { id: "HARASSMENT", label: "🚫 Harassment", description: "Bullying, threats, or intimidation" },
-    { id: "INAPPROPRIATE_CONTENT", label: "⚠️ Inappropriate Content", description: "Offensive or unsuitable material" },
-    { id: "SPAM", label: "📧 Spam", description: "Repetitive or unwanted messages" },
-    { id: "FAKE_PROFILE", label: "🎭 Fake Profile", description: "False identity or impersonation" },
-    { id: "SCAM", label: "💰 Scam", description: "Fraudulent or deceptive behavior" },
-    { id: "VIOLENCE", label: "⚔️ Violence", description: "Threats or promotion of violence" },
-    { id: "OTHER", label: "❓ Other", description: "Other violations not listed above" },
+    { id: "BUG", label: "🐛 Bug/ Error", description: "Application crashes, errors, or unexpected behavior" },
+    {
+        id: "PERFORMANCE", label: "⚡ Performance Issues", description: "Slow loading, lag, or system performance problems"
+    },
+    { id: "UI_UX", label: "🎨 UI / UX Problem", description: "Design issues, layout problems, or usability concerns" },
+    {
+        id: "DATA_LOSS", label: "💾 Data Loss", description: "Missing data, sync issues, or data corruption"
+    },
+    { id: "LOGIN_AUTH", label: "🔑 Login/ Authentication", description: "Cannot login, logout issues, or authentication problems" },
+    { id: "NETWORK", label: "📡 Network / Connectivity", description: "Connection errors, timeout, or network-related issues" },
+    { id: "FEATURE_REQUEST", label: "✨ Feature Request", description: "Suggestions for new features or improvements" },
+    { id: "OTHER", label: "❓ Other", description: "Other technical issues not listed above" },
 ];
 
 // Success Modal Component
@@ -52,7 +57,7 @@ function ReportSuccess({ isOpen }: { isOpen: boolean }) {
     return (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
-            
+
             <div className="relative z-50 max-w-md w-full mx-auto">
                 <div className="bg-gray-900/95 backdrop-blur-sm border border-orange-500/20 rounded-2xl p-8 text-center shadow-2xl animate-in fade-in zoom-in-95 duration-300">
                     {/* Success Icon */}
@@ -64,7 +69,7 @@ function ReportSuccess({ isOpen }: { isOpen: boolean }) {
                     <h2 className="text-2xl font-bold text-white mb-3">
                         Report Submitted
                     </h2>
-                    
+
                     <p className="text-gray-300 mb-6 leading-relaxed">
                         Thank you for your report. Our team will review it and take appropriate action if necessary.
                     </p>
@@ -75,7 +80,7 @@ function ReportSuccess({ isOpen }: { isOpen: boolean }) {
                         <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
                         <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce"></div>
                     </div>
-                    
+
                     <p className="text-sm text-orange-300 mt-4">
                         Redirecting to home page...
                     </p>
@@ -87,15 +92,15 @@ function ReportSuccess({ isOpen }: { isOpen: boolean }) {
 
 export default function ReportCreatePage() {
     const router = useRouter();
-    const [formData, setFormData] = useState<ReportSchema>({ 
-        title: '', 
-        reason: '', 
-        description: '' 
+    const [formData, setFormData] = useState<ReportSchema>({
+        title: '',
+        reason: '',
+        description: ''
     });
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
-    
+
     const {
         currentUser,
         loading: userLoading,
@@ -126,7 +131,7 @@ export default function ReportCreatePage() {
             reportSchema.parse(formData);
             console.log('Form submitted:', formData);
             setErrors({});
-            
+
             // Submit to API
             setLoading(true);
             await apiClient.post(
@@ -138,9 +143,9 @@ export default function ReportCreatePage() {
                 },
                 { withCredentials: true }
             );
-            
+
             setShowSuccessModal(true);
-            
+
             // Redirect after delay
             setTimeout(() => {
                 router.push("/home");
@@ -201,7 +206,7 @@ export default function ReportCreatePage() {
 
                     <CardContent className="p-6">
                         <form onSubmit={handleSubmit} className="space-y-6">
-                           
+
                             {/* Title Input */}
                             <div className="space-y-2">
                                 <Label className="text-orange-300 font-medium">
@@ -213,9 +218,8 @@ export default function ReportCreatePage() {
                                     placeholder="Brief title for the report"
                                     value={formData.title}
                                     onChange={(e) => handleChange('title', e.target.value)}
-                                    className={`bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-orange-500 focus:ring-orange-500/20 ${
-                                        errors.title ? 'border-red-500' : ''
-                                    }`}
+                                    className={`bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-orange-500 focus:ring-orange-500/20 ${errors.title ? 'border-red-500' : ''
+                                        }`}
                                     maxLength={100}
                                 />
                                 {errors.title && <p className="text-red-400 text-sm flex items-center gap-1">
@@ -230,15 +234,14 @@ export default function ReportCreatePage() {
                                     Reason *
                                 </Label>
                                 <Select value={formData.reason} onValueChange={(value) => handleChange('reason', value)}>
-                                    <SelectTrigger className={`pb-7 pt-7 bg-gray-800/50 border-gray-600 text-white focus:border-orange-500 focus:ring-orange-500/20 ${
-                                        errors.reason ? 'border-red-500' : ''
-                                    }`}>
+                                    <SelectTrigger className={`pb-7 pt-7 bg-gray-800/50 border-gray-600 text-white focus:border-orange-500 focus:ring-orange-500/20 ${errors.reason ? 'border-red-500' : ''
+                                        }`}>
                                         <SelectValue placeholder="Select reason" />
                                     </SelectTrigger>
                                     <SelectContent className="bg-gray-800 border-gray-600">
                                         {reportReasons.map((reasonItem) => (
-                                            <SelectItem 
-                                                key={reasonItem.id} 
+                                            <SelectItem
+                                                key={reasonItem.id}
                                                 value={reasonItem.id}
                                                 className="text-white hover:bg-gray-700 focus:bg-gray-700"
                                             >
@@ -266,9 +269,8 @@ export default function ReportCreatePage() {
                                     placeholder="Please provide details about the incident..."
                                     value={formData.description}
                                     onChange={(e) => handleChange('description', e.target.value)}
-                                    className={`bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-orange-500 focus:ring-orange-500/20 min-h-[120px] resize-none ${
-                                        errors.description ? 'border-red-500' : ''
-                                    }`}
+                                    className={`bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-orange-500 focus:ring-orange-500/20 min-h-[120px] resize-none ${errors.description ? 'border-red-500' : ''
+                                        }`}
                                     maxLength={500}
                                 />
                                 <div className="flex justify-between items-center">
