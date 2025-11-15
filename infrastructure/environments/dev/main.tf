@@ -17,10 +17,7 @@ resource "google_project_service" "required_apis" {
   for_each = toset([
     "run.googleapis.com",
     "cloudbuild.googleapis.com",
-    "artifactregistry.googleapis.com",
-    "sqladmin.googleapis.com",
-    "secretmanager.googleapis.com",
-    "cloudscheduler.googleapis.com"
+    "artifactregistry.googleapis.com"
   ])
   service            = each.value
   disable_on_destroy = false
@@ -34,18 +31,6 @@ module "artifact_registry" {
   repository_id = "${var.app_name}-repo-${var.environment}"
   description   = "Docker repository for ${var.app_name} (${var.environment})"
   
-  labels = {
-    environment = var.environment
-    app         = var.app_name
-  }
-
-  depends_on = [google_project_service.required_apis]
-}
-
-# Secret Manager
-module "secrets" {
-  source = "../../modules/secrets"
-
   labels = {
     environment = var.environment
     app         = var.app_name
@@ -76,6 +61,9 @@ module "cloud_run" {
   env_vars = {
     NODE_ENV = var.environment
     BACKEND_URL = var.backend_url
+    NEXT_PUBLIC_BASE_API_URL = var.backend_url
+    NEXT_PUBLIC_API_BASE = var.backend_url
+    NEXT_PUBLIC_API_URL = "${var.backend_url}"
   }
   
   secret_env_vars = {}
@@ -85,8 +73,7 @@ module "cloud_run" {
   allow_public_access      = true
 
   depends_on = [
-    google_project_service.required_apis,
-    module.secrets
+    google_project_service.required_apis
   ]
 }
 

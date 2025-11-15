@@ -47,3 +47,10 @@ variable "backend_url" {
   type        = string
   default     = "https://sigma-hawk-tua-backend-dev-1097710273935.asia-southeast1.run.app"
 }
+
+variable "rapid_api_key" {
+  description = "RapidAPI key for place services"
+  type        = string
+  sensitive   = true
+  default     = "90f810ae8emsh1dbbac66f4e33bfp19a3afjsn97630dbbbc1b"
+}

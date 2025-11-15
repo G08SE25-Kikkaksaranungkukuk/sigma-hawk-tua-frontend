@@ -39,7 +39,7 @@ class UserService {
         // Return null for profileImage if user doesn't have one
         // This allows UI to display first character of user's name as fallback
         const profileImageUrl = backendData.profile_url
-            ? `http://localhost:6969/${backendData.profile_url}?t=${Date.now()}`
+            ? `${process.env.NEXT_PUBLIC_BASE_API_URL}/${backendData.profile_url}?t=${Date.now()}`
             : null
 
         return {
