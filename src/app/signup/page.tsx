@@ -126,7 +126,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
     const checkEmailExists = async (email: string): Promise<boolean> => {
         try {
             const res = await axios.get(
-                `${API_BASE_URL}api/v1/auth/check-email?email=${(
+                `${API_BASE_URL}api/v1/auth/email/status?email=${(
                     email
                 )}`
             );
