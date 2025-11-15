@@ -41,39 +41,259 @@ test.describe('Auth flow', () => {
   });
 
   test('register flow', async ({ page }) => {
-        await page.goto('/signup');
-        await page.getByRole('textbox', { name: '👤 First Name' }).click();
-        await page.getByRole('textbox', { name: '👤 First Name' }).fill('aaa');
-        await page.getByRole('textbox', { name: '👤 Middle Name (Optional)' }).click();
-        await page.getByRole('textbox', { name: '👤 Middle Name (Optional)' }).fill('aaa');
-        await page.getByRole('textbox', { name: '👥 Last Name' }).click();
-        await page.getByRole('textbox', { name: '👥 Last Name' }).fill('aaa');
-        await page.getByRole('button', { name: 'Select date' }).click();
-        await page.getByLabel('Choose the Year').selectOption('1991');
-        await page.getByRole('button', { name: 'Friday, November 1st,' }).click();
-        await page.getByRole('button', { name: '👨 Male' }).click();
-        await page.getByRole('button', { name: '🌊 Sea' }).click();
-        await page.getByRole('checkbox', { name: '💰 Budget' }).click();
-        await page.getByRole('textbox', { name: '📱 Phone Number' }).click();
-        await page.getByRole('textbox', { name: '📱 Phone Number' }).fill('123-456-7890');
-        await page.getByRole('textbox', { name: '📧 Email' }).click();
-        await page.getByRole('textbox', { name: '📧 Email' }).fill('1@gmail.com');
-        await page.getByRole('textbox', { name: '🔒 Password' }).click();
-        await page.getByRole('textbox', { name: '🔒 Password' }).fill('@Admin55');
-        await page.getByRole('textbox', { name: '🔒 Password' }).press('Tab');
-        await page.getByRole('textbox', { name: '🔐 Confirm Password' }).fill('@Admin55');
-        await page.getByText('Terms of Service', { exact: true }).click();
-        const tosContent = page.locator('div.max-h-64').first();
-        await tosContent.evaluate((el: HTMLElement) => { el.scrollTop = el.scrollHeight; });
-        await page.getByRole('button', { name: 'Close' }).click();
-        await page.getByText('Privacy Policy', { exact: true }).click();
-        const ppContent = page.locator('div.max-h-64').first();
-        await ppContent.evaluate((el: HTMLElement) => { el.scrollTop = el.scrollHeight; });
-        await page.getByRole('button', { name: 'Close' }).click();
-        await page.locator('#consent').click();
+    await page.goto('/signup');
+    await page.getByRole('textbox', { name: '👤 First Name' }).click();
+    await page.getByRole('textbox', { name: '👤 First Name' }).fill('aaa');
+    await page.getByRole('textbox', { name: '👤 Middle Name (Optional)' }).click();
+    await page.getByRole('textbox', { name: '👤 Middle Name (Optional)' }).fill('aaa');
+    await page.getByRole('textbox', { name: '👥 Last Name' }).click();
+    await page.getByRole('textbox', { name: '👥 Last Name' }).fill('aaa');
+    await page.getByRole('button', { name: 'Select date' }).click();
+    await page.getByLabel('Choose the Year').selectOption('1991');
+    await page.getByRole('button', { name: 'Friday, November 1st,' }).click();
+    await page.getByRole('button', { name: '👨 Male' }).click();
+    await page.getByRole('button', { name: '🌊 Sea' }).click();
+    await page.getByRole('checkbox', { name: '💰 Budget' }).click();
+    await page.getByRole('textbox', { name: '📱 Phone Number' }).click();
+    await page.getByRole('textbox', { name: '📱 Phone Number' }).fill('123-456-7890');
+    await page.getByRole('textbox', { name: '📧 Email' }).click();
+    await page.getByRole('textbox', { name: '📧 Email' }).fill('1@gmail.com');
+    await page.getByRole('textbox', { name: '🔒 Password' }).click();
+    await page.getByRole('textbox', { name: '🔒 Password' }).fill('@Admin55');
+    await page.getByRole('textbox', { name: '🔒 Password' }).press('Tab');
+    await page.getByRole('textbox', { name: '🔐 Confirm Password' }).fill('@Admin55');
+    // Scroll through Terms and Privacy to enable consent
+    await page.getByText('Terms of Service', { exact: true }).click();
+    const tosContent = page.locator('div.max-h-64').first();
+    await tosContent.evaluate((el: HTMLElement) => { el.scrollTop = el.scrollHeight; });
+    await page.getByRole('button', { name: 'Close' }).click();
+    await page.getByText('Privacy Policy', { exact: true }).click();
+    const ppContent = page.locator('div.max-h-64').first();
+    await ppContent.evaluate((el: HTMLElement) => { el.scrollTop = el.scrollHeight; });
+    await page.getByRole('button', { name: 'Close' }).click();
+    await page.locator('#consent').click();
     // Do not submit to avoid relying on backend in this test run; assert consent and submit enabled
     await expect(page.getByRole('button', { name: '🚀 Create My Account' })).toBeEnabled();
-    });
+  });
+
+  test('register fails with missing required fields', async ({ page }) => {
+    await page.goto('/signup');
+    // Leave First Name empty
+    await page.getByRole('textbox', { name: '👤 Middle Name (Optional)' }).click();
+    await page.getByRole('textbox', { name: '👤 Middle Name (Optional)' }).fill('aaa');
+    await page.getByRole('textbox', { name: '👥 Last Name' }).click();
+    await page.getByRole('textbox', { name: '👥 Last Name' }).fill('aaa');
+    await page.getByRole('button', { name: 'Select date' }).click();
+    await page.getByLabel('Choose the Year').selectOption('1991');
+    await page.getByRole('button', { name: 'Friday, November 1st,' }).click();
+    await page.getByRole('button', { name: '👨 Male' }).click();
+    await page.getByRole('button', { name: '🌊 Sea' }).click();
+    await page.getByRole('checkbox', { name: '💰 Budget' }).click();
+    await page.getByRole('textbox', { name: '📱 Phone Number' }).click();
+    await page.getByRole('textbox', { name: '📱 Phone Number' }).fill('123-456-7890');
+    await page.getByRole('textbox', { name: '📧 Email' }).click();
+    await page.getByRole('textbox', { name: '📧 Email' }).fill('1@gmail.com');
+    await page.getByRole('textbox', { name: '🔒 Password' }).click();
+    await page.getByRole('textbox', { name: '🔒 Password' }).fill('@Admin55');
+    await page.getByRole('textbox', { name: '🔒 Password' }).press('Tab');
+    await page.getByRole('textbox', { name: '🔐 Confirm Password' }).fill('@Admin55');
+    // Scroll through Terms and Privacy to enable consent
+    await page.getByText('Terms of Service', { exact: true }).click();
+    const tosContent = page.locator('div.max-h-64').first();
+    await tosContent.evaluate((el: HTMLElement) => { el.scrollTop = el.scrollHeight; });
+    await page.getByRole('button', { name: 'Close' }).click();
+    await page.getByText('Privacy Policy', { exact: true }).click();
+    const ppContent = page.locator('div.max-h-64').first();
+    await ppContent.evaluate((el: HTMLElement) => { el.scrollTop = el.scrollHeight; });
+    await page.getByRole('button', { name: 'Close' }).click();
+    await page.locator('#consent').click();
+    await page.getByRole('button', { name: '🚀 Create My Account' }).click();
+    await expect(page.locator('form')).toContainText('⚠️ First name is required and must be at least 2 characters');
+  });
+
+  test('register fails with invalid email format', async ({ page }) => {
+    await page.getByRole('textbox', { name: '👤 Middle Name (Optional)' }).click();
+    await page.getByRole('textbox', { name: '👤 Middle Name (Optional)' }).fill('aaa');
+    await page.getByRole('textbox', { name: '👥 Last Name' }).click();
+    await page.getByRole('textbox', { name: '👥 Last Name' }).fill('aaa');
+    await page.getByRole('button', { name: 'Select date' }).click();
+    await page.getByLabel('Choose the Year').selectOption('1991');
+    await page.getByRole('button', { name: 'Friday, November 1st,' }).click();
+    await page.getByRole('button', { name: '👨 Male' }).click();
+    await page.getByRole('button', { name: '🌊 Sea' }).click();
+    await page.getByRole('checkbox', { name: '💰 Budget' }).click();
+    await page.getByRole('textbox', { name: '📱 Phone Number' }).click();
+    await page.getByRole('textbox', { name: '📱 Phone Number' }).fill('123-456-7890');
+    await page.getByRole('textbox', { name: '🔒 Password' }).click();
+    await page.getByRole('textbox', { name: '🔒 Password' }).fill('@Admin55');
+    await page.getByRole('textbox', { name: '🔒 Password' }).press('Tab');
+    await page.getByRole('textbox', { name: '🔐 Confirm Password' }).fill('@Admin55');
+    // Scroll through Terms and Privacy to enable consent
+    await page.getByText('Terms of Service', { exact: true }).click();
+    const tosContent = page.locator('div.max-h-64').first();
+    await tosContent.evaluate((el: HTMLElement) => { el.scrollTop = el.scrollHeight; });
+    await page.getByRole('button', { name: 'Close' }).click();
+    await page.getByText('Privacy Policy', { exact: true }).click();
+    const ppContent = page.locator('div.max-h-64').first();
+    await ppContent.evaluate((el: HTMLElement) => { el.scrollTop = el.scrollHeight; });
+    await page.getByRole('button', { name: 'Close' }).click();
+    await page.locator('#consent').click();
+    await page.getByRole('button', { name: '🚀 Create My Account' }).click();
+    await expect(page.locator('form')).toContainText('⚠️ Please enter a valid email address');
+  });
+
+  test('register fails when password and confirm password do not match', async ({ page }) => {
+    await page.goto('/signup');
+    await page.getByRole('textbox', { name: '👤 First Name' }).click();
+    await page.getByRole('textbox', { name: '👤 First Name' }).fill('aaa');
+    await page.getByRole('textbox', { name: '👤 Middle Name (Optional)' }).click();
+    await page.getByRole('textbox', { name: '👤 Middle Name (Optional)' }).fill('aaa');
+    await page.getByRole('textbox', { name: '👥 Last Name' }).click();
+    await page.getByRole('textbox', { name: '👥 Last Name' }).fill('aaa');
+    await page.getByRole('button', { name: 'Select date' }).click();
+    await page.getByLabel('Choose the Year').selectOption('1991');
+    await page.getByRole('button', { name: 'Friday, November 1st,' }).click();
+    await page.getByRole('button', { name: '👨 Male' }).click();
+    await page.getByRole('button', { name: '🌊 Sea' }).click();
+    await page.getByRole('checkbox', { name: '💰 Budget' }).click();
+    await page.getByRole('textbox', { name: '📱 Phone Number' }).click();
+    await page.getByRole('textbox', { name: '📱 Phone Number' }).fill('123-456-7890');
+    await page.getByRole('textbox', { name: '📧 Email' }).click();
+    await page.getByRole('textbox', { name: '📧 Email' }).fill('1@gmail.com');
+    await page.getByRole('textbox', { name: '🔒 Password' }).click();
+    await page.getByRole('textbox', { name: '🔒 Password' }).fill('@Admin55');
+    await page.getByRole('textbox', { name: '🔒 Password' }).press('Tab');
+    await page.getByRole('textbox', { name: '🔐 Confirm Password' }).fill('@Admin551');
+    await page.getByText('Terms of Service', { exact: true }).click();
+    const tosContent = page.locator('div.max-h-64').first();
+    await tosContent.evaluate((el: HTMLElement) => { el.scrollTop = el.scrollHeight; });
+    await page.getByRole('button', { name: 'Close' }).click();
+    await page.getByText('Privacy Policy', { exact: true }).click();
+    const ppContent = page.locator('div.max-h-64').first();
+    await ppContent.evaluate((el: HTMLElement) => { el.scrollTop = el.scrollHeight; });
+    await page.getByRole('button', { name: 'Close' }).click();
+    await page.locator('#consent').click();
+    await page.getByRole('button', { name: '🚀 Create My Account' }).click();
+    await expect(page.locator('form')).toContainText('⚠️ Passwords don\'t match');
+  });
+
+  test('register fails with short password', async ({ page }) => {
+    await page.goto('/signup');
+    await page.getByRole('textbox', { name: '👤 First Name' }).click();
+    await page.getByRole('textbox', { name: '👤 First Name' }).fill('aaa');
+    await page.getByRole('textbox', { name: '👤 Middle Name (Optional)' }).click();
+    await page.getByRole('textbox', { name: '👤 Middle Name (Optional)' }).fill('aaa');
+    await page.getByRole('textbox', { name: '👥 Last Name' }).click();
+    await page.getByRole('textbox', { name: '👥 Last Name' }).fill('aaa');
+    await page.getByRole('button', { name: 'Select date' }).click();
+    await page.getByLabel('Choose the Year').selectOption('1991');
+    await page.getByRole('button', { name: 'Friday, November 1st,' }).click();
+    await page.getByRole('button', { name: '👨 Male' }).click();
+    await page.getByRole('button', { name: '🌊 Sea' }).click();
+    await page.getByRole('checkbox', { name: '💰 Budget' }).click();
+    await page.getByRole('textbox', { name: '📱 Phone Number' }).click();
+    await page.getByRole('textbox', { name: '📱 Phone Number' }).fill('123-456-7890');
+    await page.getByRole('textbox', { name: '📧 Email' }).click();
+    await page.getByRole('textbox', { name: '📧 Email' }).fill('1@gmail.com');
+    await page.getByRole('textbox', { name: '🔒 Password' }).click();
+    await page.getByRole('textbox', { name: '🔒 Password' }).fill('@Adn55');
+    await page.getByRole('textbox', { name: '🔒 Password' }).press('Tab');
+    await page.getByRole('textbox', { name: '🔐 Confirm Password' }).fill('@Adn55');
+    await page.getByText('Terms of Service', { exact: true }).click();
+    const tosContent = page.locator('div.max-h-64').first();
+    await tosContent.evaluate((el: HTMLElement) => { el.scrollTop = el.scrollHeight; });
+    await page.getByRole('button', { name: 'Close' }).click();
+    await page.getByText('Privacy Policy', { exact: true }).click();
+    const ppContent = page.locator('div.max-h-64').first();
+    await ppContent.evaluate((el: HTMLElement) => { el.scrollTop = el.scrollHeight; });
+    await page.getByRole('button', { name: 'Close' }).click();
+    await page.locator('#consent').click();
+    await page.getByRole('button', { name: '🚀 Create My Account' }).click();
+    await expect(page.locator('form')).toContainText('⚠️ Password is required and must be at least 8 characters');
+  });
+
+  test('register fails with invalid phone number format', async ({ page }) => {
+    await page.goto('/signup');
+    await page.getByRole('textbox', { name: '👤 First Name' }).click();
+    await page.getByRole('textbox', { name: '👤 First Name' }).fill('aaa');
+    await page.getByRole('textbox', { name: '👤 Middle Name (Optional)' }).click();
+    await page.getByRole('textbox', { name: '👤 Middle Name (Optional)' }).fill('aaa');
+    await page.getByRole('textbox', { name: '👥 Last Name' }).click();
+    await page.getByRole('textbox', { name: '👥 Last Name' }).fill('aaa');
+    await page.getByRole('button', { name: 'Select date' }).click();
+    await page.getByLabel('Choose the Year').selectOption('1991');
+    await page.getByRole('button', { name: 'Friday, November 1st,' }).click();
+    await page.getByRole('button', { name: '👨 Male' }).click();
+    await page.getByRole('button', { name: '🌊 Sea' }).click();
+    await page.getByRole('checkbox', { name: '💰 Budget' }).click();
+    await page.getByRole('textbox', { name: '📧 Email' }).click();
+    await page.getByRole('textbox', { name: '📧 Email' }).fill('1@gmail.com');
+    await page.getByRole('textbox', { name: '🔒 Password' }).click();
+    await page.getByRole('textbox', { name: '🔒 Password' }).fill('@Admin55');
+    await page.getByRole('textbox', { name: '🔒 Password' }).press('Tab');
+    await page.getByRole('textbox', { name: '🔐 Confirm Password' }).fill('@Admin551');
+    await page.getByText('Terms of Service', { exact: true }).click();
+    const tosContent = page.locator('div.max-h-64').first();
+    await tosContent.evaluate((el: HTMLElement) => { el.scrollTop = el.scrollHeight; });
+    await page.getByRole('button', { name: 'Close' }).click();
+    await page.getByText('Privacy Policy', { exact: true }).click();
+    const ppContent = page.locator('div.max-h-64').first();
+    await ppContent.evaluate((el: HTMLElement) => { el.scrollTop = el.scrollHeight; });
+    await page.getByRole('button', { name: 'Close' }).click();
+    await page.locator('#consent').click();
+    await page.getByRole('button', { name: '🚀 Create My Account' }).click();
+    await expect(page.locator('form')).toContainText('⚠️ Invalid phone number format');
+  });
+
+  test('register fails with duplicate email', async ({ page }) => {
+    await page.goto('/signup');
+    await page.getByRole('textbox', { name: '👤 First Name' }).click();
+    await page.getByRole('textbox', { name: '👤 First Name' }).fill('aaa');
+    await page.getByRole('textbox', { name: '👤 Middle Name (Optional)' }).click();
+    await page.getByRole('textbox', { name: '👤 Middle Name (Optional)' }).fill('aaa');
+    await page.getByRole('textbox', { name: '👥 Last Name' }).click();
+    await page.getByRole('textbox', { name: '👥 Last Name' }).fill('aaa');
+    await page.getByRole('button', { name: 'Select date' }).click();
+    await page.getByLabel('Choose the Year').selectOption('1991');
+    await page.getByRole('button', { name: 'Friday, November 1st,' }).click();
+    await page.getByRole('button', { name: '👨 Male' }).click();
+    await page.getByRole('button', { name: '🌊 Sea' }).click();
+    await page.getByRole('checkbox', { name: '💰 Budget' }).click();
+    await page.getByRole('textbox', { name: '📱 Phone Number' }).click();
+    await page.getByRole('textbox', { name: '📱 Phone Number' }).fill('123-456-7890');
+    await page.getByRole('textbox', { name: '📧 Email' }).click();
+    await page.getByRole('textbox', { name: '📧 Email' }).fill('1@gmail.com');
+    await page.getByRole('textbox', { name: '🔒 Password' }).click();
+    await page.getByRole('textbox', { name: '🔒 Password' }).fill('@Admin55');
+    await page.getByRole('textbox', { name: '🔒 Password' }).press('Tab');
+    await page.getByRole('textbox', { name: '🔐 Confirm Password' }).fill('@Admin55');
+    // Scroll through Terms and Privacy to enable consent
+    await page.getByText('Terms of Service', { exact: true }).click();
+    const tosContent = page.locator('div.max-h-64').first();
+    await tosContent.evaluate((el: HTMLElement) => { el.scrollTop = el.scrollHeight; });
+    await page.getByRole('button', { name: 'Close' }).click();
+    await page.getByText('Privacy Policy', { exact: true }).click();
+    const ppContent = page.locator('div.max-h-64').first();
+    await ppContent.evaluate((el: HTMLElement) => { el.scrollTop = el.scrollHeight; });
+    await page.getByRole('button', { name: 'Close' }).click();
+    await page.locator('#consent').click();
+  });
+
+  test('register succeeds with missing optional middle name', async ({ page }) => {
+    await page.goto('/signup');
+    await page.getByRole('textbox', { name: '👤 First Name' }).fill('Test');
+    await page.getByRole('textbox', { name: '👥 Last Name' }).fill('User');
+    await page.getByRole('textbox', { name: '📧 Email' }).fill('newuser@example.com');
+    await page.getByRole('textbox', { name: '🔒 Password' }).fill('@Admin55');
+    await page.getByRole('textbox', { name: '🔒 Confirm Password' }).fill('@Admin55');
+    await page.getByRole('checkbox', { name: /consent/i }).check();
+    await page.getByRole('button', { name: /Create Account|สมัครสมาชิก/i }).click();
+    await expect(page.getByText(/register.*success/i)).toBeVisible();
+  });
+
+
+
+
   test('login flow shows error on invalid credentials', async ({ page }) => {
     await page.goto('/login');
     await page.getByRole('textbox', { name: 'Email' }).click();
@@ -124,7 +344,7 @@ test.describe('Auth flow', () => {
     const cookies = await context.cookies();
 
     const access = cookies.find(c => c.name === 'accessToken');
-    const refresh = cookies.find(c => c.name === 'refreshToken'); 
+    const refresh = cookies.find(c => c.name === 'refreshToken');
 
     expect(access, 'accessToken cookie should be present').toBeDefined();
     expect(refresh, 'refreshToken cookie should be present').toBeDefined();

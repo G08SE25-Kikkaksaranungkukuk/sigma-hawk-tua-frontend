@@ -90,6 +90,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
         []
     );
     const [consent, setConsent] = useState(false);
+    const [emailError, setEmailError] = useState("");
 
     // Toggle functions
     const toggleInterest = (id: string) => {
@@ -118,9 +119,27 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
         });
     };
 
+    // Get API base URL from environment
+    const API_BASE_URL = process.env.NEXT_PUBLIC_BASE_API_URL || "http://localhost:8080";
+
+    // Email existence check function
+    const checkEmailExists = async (email: string): Promise<boolean> => {
+        try {
+            const res = await axios.get(
+                `${API_BASE_URL}api/v1/auth/check-email?email=${(
+                    email
+                )}`
+            );
+            return !!res.data?.data?.exists;
+        } catch (err) {
+            return false;
+        }
+    };
+
     // Submit Handler
     const createUser = async (e: React.FormEvent) => {
         e.preventDefault();
+        setEmailError("");
 
         // สร้าง form data object สำหรับ validation
         const formData = {
@@ -143,9 +162,19 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
             return;
         }
 
-        try {
-            setLoading(true);
+        // เช็ค email ซ้ำก่อน submit
+        setLoading(true);
+        const emailExists = await checkEmailExists(email.trim());
+        
+        if (emailExists) {
+            setEmailError("This email cannot be used for registration.");
+            setLoading(false);
+            return;
+        }
+       
+    
 
+        try {
             // เตรียม payload สำหรับ backend
             const payload = {
                 first_name: firstName.trim(),
@@ -557,6 +586,11 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                                 {getError("email") && (
                                     <p className="text-sm text-red-400 flex items-center gap-1">
                                         ⚠️ {getError("email")}
+                                    </p>
+                                )}
+                                {emailError && (
+                                    <p className="text-sm text-red-400 flex items-center gap-1">
+                                        ⚠️ {emailError}
                                     </p>
                                 )}
                             </div>
