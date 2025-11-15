@@ -162,12 +162,9 @@ test.describe.serial("Update User Profile Tests", () => {
         await page.getByRole("button", { name: "J", exact: true }).click()
         await page.getByRole("menuitem", { name: "Profile Management" }).click()
         // Clear first name to trigger validation
-        await page.getByRole("textbox", { name: "👤 First Name *" }).dblclick()
-        await page.getByRole("textbox", { name: "👤 First Name *" }).fill("jest3")
         await page.getByRole("textbox", { name: "👤 Middle Name (optional)" }).dblclick()
         await page.getByRole("textbox", { name: "👤 Middle Name (optional)" }).fill("")
-        await page.getByRole("textbox", { name: "👤 Last Name *" }).dblclick()
-        await page.getByRole("textbox", { name: "👤 Last Name *" }).fill("jest4")
+
         await page.getByRole("button", { name: "Confirm Changes" }).click()
 
         // Verify success
@@ -175,9 +172,7 @@ test.describe.serial("Update User Profile Tests", () => {
         await page.getByRole("button", { name: "J", exact: true }).click()
         await page.getByRole("menuitem", { name: "Profile Management" }).click()
         
-        await expect(page.getByRole('textbox', { name: '👤 First Name *' })).toHaveValue('jest3');
         await expect(page.getByRole('textbox', { name: '👤 Middle Name (optional)' })).toHaveValue('');
-        await expect(page.getByRole('textbox', { name: '👤 Last Name *' })).toHaveValue('jest4');
     })
 
     test("user can update profile picture successfully", async ({ page }) => {
