@@ -88,6 +88,18 @@ export const TEST_GROUP_DATA = {
     },
 }
 
+export const TEST_ITINERARY_DATA = [
+    {
+        title: "Samyan",
+        description: "Relaxing day at the beach with water activities",
+        start_date: new Date("2023-06-15T09:00:00"),
+        end_date: new Date("2023-06-15T18:00:00"),
+        place_links: [
+            '0x862161157fa89659:0x78257f71872c99de'
+        ],
+    }
+]
+
 /**
  * Seeds the database with test users before tests run
  */
@@ -242,6 +254,51 @@ export async function seedTestUsers() {
                         console.log(
                             `✅ Created test group: ${group.group_name} by user: ${user.email} (Group ID: ${groupId})`
                         )
+
+                        // Create and assign itineraries to the group
+                        if (groupId) {
+                            for (const itineraryData of TEST_ITINERARY_DATA) {
+                                try {
+                                    // Create itinerary
+                                    const createItineraryResponse = await axiosInstance.post(
+                                        `${API_BASE_URL.replace('/v1', '/v2')}/itineraries`,
+                                        itineraryData,
+                                        { withCredentials: true }
+                                    )
+
+                                    if (createItineraryResponse.status === 200 || createItineraryResponse.status === 201) {
+                                        const itineraryId = 
+                                            createItineraryResponse.data.data?.itinerary_id ||
+                                            createItineraryResponse.data.itinerary_id ||
+                                            createItineraryResponse.data.id
+                                        
+                                        console.log(`✅ Created itinerary: ${itineraryData.title} (ID: ${itineraryId})`)
+
+                                        // Assign itinerary to group
+                                        if (itineraryId) {
+                                            const assignResponse = await axiosInstance.post(
+                                                `${API_BASE_URL.replace('/v1', '/v2')}/groups/${groupId}/itineraries/assign`,
+                                                { itinerary_id: itineraryId },
+                                                { withCredentials: true }
+                                            )
+
+                                            if (assignResponse.status === 200 || assignResponse.status === 201) {
+                                                console.log(`✅ Assigned itinerary ${itineraryData.title} to group ${groupId}`)
+                                            } else {
+                                                console.log(`⚠️  Failed to assign itinerary: ${assignResponse.status}`)
+                                            }
+                                        }
+                                    } else {
+                                        console.log(`⚠️  Failed to create itinerary ${itineraryData.title}: ${createItineraryResponse.status}`)
+                                    }
+                                } catch (error: any) {
+                                    console.error(
+                                        `❌ Failed to create/assign itinerary ${itineraryData.title}:`,
+                                        error.response?.data || error.message
+                                    )
+                                }
+                            }
+                        }
                     } else {
                         console.log(
                             `❌ Failed to create test group: ${group.group_name} for user: ${user.email} - Status: ${createGroupResponse.status}`
