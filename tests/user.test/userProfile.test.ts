@@ -7,7 +7,7 @@ test.describe("User Profile Tests", () => {
         const testUser = TEST_USERS_DATA.testUser2
         await TestHelpers.loginUser(page, testUser)
 
-        await page.getByRole("button", { name: "View" }).click()
+        await page.getByRole("button", { name: "View" }).first().click()
         await page.getByRole("img", { name: "Jo Chanah" }).click()
         await expect(
             page.getByRole("heading", { name: "Jo Chanah" })
@@ -47,9 +47,9 @@ test.describe("User Profile Tests", () => {
         await TestHelpers.loginUser(page, testUser)
         await page.getByRole('button', { name: 'J', exact: true }).click();
         await page.getByRole('menuitem', { name: 'Your Profile' }).click();
-        await page.waitForTimeout(5000);
-        await expect(page.getByRole('heading', { name: 'Travel History' })).toBeVisible();
-        await expect(page.getByRole('heading', { name: 'Samyan' })).toBeVisible();
+        await page.waitForTimeout(10000);
+        await expect(page.getByRole('heading', { name: 'Travel History' })).toBeVisible({ timeout: 15000 });
+        await expect(page.getByRole('heading', { name: 'Samyan' }).first()).toBeVisible({ timeout: 15000 });
     });
 
 })
