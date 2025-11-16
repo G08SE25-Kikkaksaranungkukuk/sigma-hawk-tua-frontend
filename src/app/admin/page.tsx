@@ -13,45 +13,165 @@ import { tokenService } from '@/lib/services/user/tokenService';
 import { reportService as reportClientService } from '@/lib/services/report';
 import { reportService as adminReportService } from '@/lib/services/admin/reportService';
 
+const decodeJwtPayload = (token: string): any | null => {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    // Base64 decode (handle base64url)
+    let payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    while (payload.length % 4) payload += '=';
+    const decoded = atob(payload);
+    // percent-decode to support utf-8 characters
+    const json = decodeURIComponent(
+      decoded
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(json);
+  } catch (e) {
+    console.warn('Failed to decode token payload', e);
+    return null;
+  }
+};
+
+// Decode escaped unicode sequences like "\\uD83D\\uDCBE" into real emoji characters
+const decodeEmojiString = (s: any): string => {
+  if (!s && s !== 0) return '';
+  if (typeof s !== 'string') return String(s);
+  try {
+    // If string contains literal backslash-u sequences, JSON.parse will decode them
+    if (/\\u[0-9a-fA-F]{4}/.test(s)) {
+      return JSON.parse('"' + s.replace(/"/g, '\\"') + '"');
+    }
+  } catch (e) {
+    // ignore and fallback
+  }
+  return s;
+};
+
+const isAdminUser = (payload: any): boolean => {
+  const role = payload?.role ?? payload?.roles ?? payload?.isAdmin ?? payload?.is_admin;
+  return (typeof role === 'string' && role.toUpperCase() === 'ADMIN') || role === true;
+};
+
+const getNormalizedReasons = (json: any): any[] => {
+  if (Array.isArray(json?.data?.reasons)) return json.data.reasons;
+  if (Array.isArray(json?.reasons)) return json.reasons;
+  if (Array.isArray(json?.data)) return json.data;
+  if (Array.isArray(json)) return json;
+  return [];
+};
+
+const buildReasonsMap = (rawTags: any[]): Record<string, any> => {
+  const reasonsMap: Record<string, any> = {};
+  (rawTags || []).forEach((t) => {
+    if (!t) return;
+    const key = t.key ?? t.label ?? String(t.id ?? '');
+    if (key) reasonsMap[String(key).toUpperCase()] = t;
+    if (t.label) reasonsMap[String(t.label).toUpperCase()] = t;
+  });
+  return reasonsMap;
+};
+
+const mapReason = (rr: any, idx: number, reportId: any, reasonsMap: Record<string, any>) => {
+  if (rr.report_tag) {
+    const existing = rr.report_tag;
+    return {
+      id: rr.id ?? existing.id ?? idx + 1,
+      report_id: reportId,
+      report_tag_id: existing.id ?? 0,
+      created_at: rr.created_at ?? existing.created_at ?? existing.createdAt ?? undefined,
+      report_tag: {
+        id: existing.id ?? 0,
+        key: existing.key ?? existing.label ?? String(existing.id ?? ''),
+        label: existing.label ?? existing.key ?? String(existing.id ?? ''),
+        emoji: decodeEmojiString(existing.emoji ?? ''),
+        description: existing.description ?? existing.desc ?? undefined,
+      },
+    };
+  }
+
+  const lookupKey = (rr.label ?? rr.key ?? rr.report_tag?.label ?? String(rr)).toString().toUpperCase();
+  const matchedTag = reasonsMap[lookupKey];
+
+  if (matchedTag) {
+    return {
+      id: rr.id ?? matchedTag.id ?? idx + 1,
+      report_id: reportId,
+      report_tag_id: matchedTag.id ?? 0,
+      created_at: rr.created_at ?? rr.createdAt ?? undefined,
+      report_tag: {
+        id: matchedTag.id ?? 0,
+        key: matchedTag.key ?? matchedTag.label ?? String(matchedTag.id ?? ''),
+        label: matchedTag.label ?? matchedTag.key ?? String(matchedTag.id ?? ''),
+        emoji: decodeEmojiString(matchedTag.emoji ?? (rr.emoji ?? '')),
+        description: matchedTag.description ?? rr.description ?? undefined,
+      },
+    };
+  }
+
+  const tagLabel = rr.label ?? rr.key ?? rr.report_tag?.label ?? String(rr);
+  const tagEmoji = rr.emoji ?? rr.report_tag?.emoji ?? '';
+
+  return {
+    id: rr.id ?? idx + 1,
+    report_id: reportId,
+    report_tag_id: 0,
+    created_at: rr.created_at ?? rr.createdAt ?? undefined,
+    report_tag: {
+      id: 0,
+      key: tagLabel,
+      label: tagLabel,
+      emoji: tagEmoji,
+      description: rr.description ?? undefined,
+    },
+  };
+};
+
+const mapReport = (r: any, reasonsMap: Record<string, any>, canonicalTags: any[]): any => {
+  const reportId = r.report_id ?? r.id ?? r.reportId;
+  const userId = r.user_id ?? r.userId ?? r.user?.id ?? r.user;
+
+  let rawReasons = Array.isArray(r.reason)
+    ? r.reason
+    : Array.isArray(r.reasons)
+    ? r.reasons
+    : [];
+
+  if ((!rawReasons || rawReasons.length === 0) && (r.report_tag || r.reportTag || r.reportTagId || r.report_tag_id)) {
+    const embedded = r.report_tag ?? r.reportTag ?? undefined;
+    if (embedded) rawReasons = [{ report_tag: embedded }];
+    else if (r.reportTagId || r.report_tag_id) {
+      rawReasons = [{ report_tag: { id: r.reportTagId ?? r.report_tag_id, key: String(r.reportTagId ?? r.report_tag_id), label: String(r.reportTagId ?? r.report_tag_id) } }];
+    }
+  }
+
+  const reasonArr = rawReasons.map((rr: any, idx: number) => mapReason(rr, idx, reportId, reasonsMap));
+
+  return {
+    report_id: reportId,
+    user_id: userId,
+    title: r.title ?? r.subject ?? r.name,
+    description: r.description ?? r.body ?? r.details,
+    created_at: r.created_at ?? r.createdAt ?? r.created,
+    is_resolved: !!(r.is_resolved ?? r.isResolved ?? r.resolved),
+    reason: reasonArr,
+  };
+};
+
+const normalizeReports = (response: any): any[] => {
+  const anyJson: any = { data: { reports: response.reports ?? [] }, pagination: response.pagination };
+  if (Array.isArray(anyJson?.data?.reports)) return anyJson.data.reports;
+  if (Array.isArray(anyJson?.reports)) return anyJson.reports;
+  if (Array.isArray(anyJson?.data)) return anyJson.data;
+  if (Array.isArray(anyJson)) return anyJson;
+  return [];
+};
+
 export default function App() {
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null); // null = checking
-
-  const decodeJwtPayload = (token: string): any | null => {
-    try {
-      const parts = token.split('.');
-      if (parts.length !== 3) return null;
-      // Base64 decode (handle base64url)
-      let payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-      while (payload.length % 4) payload += '=';
-      const decoded = atob(payload);
-      // percent-decode to support utf-8 characters
-      const json = decodeURIComponent(
-        decoded
-          .split('')
-          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
-      );
-      return JSON.parse(json);
-    } catch (e) {
-      console.warn('Failed to decode token payload', e);
-      return null;
-    }
-  };
-  // Decode escaped unicode sequences like "\\uD83D\\uDCBE" into real emoji characters
-  const decodeEmojiString = (s: any): string => {
-    if (!s && s !== 0) return '';
-    if (typeof s !== 'string') return String(s);
-    try {
-      // If string contains literal backslash-u sequences, JSON.parse will decode them
-      if (/\\u[0-9a-fA-F]{4}/.test(s)) {
-        return JSON.parse('"' + s.replace(/"/g, '\\"') + '"');
-      }
-    } catch (e) {
-      // ignore and fallback
-    }
-    return s;
-  };
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [tagFilter, setTagFilter] = useState('all');
@@ -62,11 +182,6 @@ export default function App() {
   const [pagination, setPagination] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [isSearching, setIsSearching] = useState(false);
-
-  const isAdminUser = (payload: any): boolean => {
-    const role = payload?.role ?? payload?.roles ?? payload?.isAdmin ?? payload?.is_admin;
-    return (typeof role === 'string' && role.toUpperCase() === 'ADMIN') || role === true;
-  };
 
   const fetchCanonicalTags = async (): Promise<any[]> => {
     try {
@@ -85,20 +200,14 @@ export default function App() {
     try {
       const baseUrl = (process.env.NEXT_PUBLIC_BASE_API_URL || 'http://localhost:8080').replace(/\/$/, '');
       const token = await tokenService.getAuthToken();
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (token) headers.Authorization = `Bearer ${token}`;
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+      };
       const reasonsRes = await fetch(`${baseUrl}/api/v2/reports/reasons`, { headers });
       if (reasonsRes.ok) {
         const reasonsJson = await reasonsRes.json();
-        const canonical = Array.isArray(reasonsJson?.data?.reasons)
-          ? reasonsJson.data.reasons
-          : Array.isArray(reasonsJson?.reasons)
-          ? reasonsJson.reasons
-          : Array.isArray(reasonsJson?.data)
-          ? reasonsJson.data
-          : Array.isArray(reasonsJson)
-          ? reasonsJson
-          : [];
+        const canonical = getNormalizedReasons(reasonsJson);
         return canonical.map((t: any) => ({
           ...t,
           emoji: decodeEmojiString(t?.emoji ?? ''),
@@ -108,103 +217,6 @@ export default function App() {
       console.warn('Direct fetch fallback for report tags failed', err);
     }
     return [];
-  };
-
-  const buildReasonsMap = (rawTags: any[]): Record<string, any> => {
-    const reasonsMap: Record<string, any> = {};
-    (rawTags || []).forEach((t) => {
-      if (!t) return;
-      const key = t.key ?? t.label ?? String(t.id ?? '');
-      if (key) reasonsMap[String(key).toUpperCase()] = t;
-      if (t.label) reasonsMap[String(t.label).toUpperCase()] = t;
-    });
-    return reasonsMap;
-  };
-
-  const mapReason = (rr: any, idx: number, reportId: any, reasonsMap: Record<string, any>) => {
-    if (rr.report_tag) {
-      const existing = rr.report_tag;
-      return {
-        id: rr.id ?? existing.id ?? idx + 1,
-        report_id: reportId,
-        report_tag_id: existing.id ?? 0,
-        created_at: rr.created_at ?? existing.created_at ?? existing.createdAt ?? undefined,
-        report_tag: {
-          id: existing.id ?? 0,
-          key: existing.key ?? existing.label ?? String(existing.id ?? ''),
-          label: existing.label ?? existing.key ?? String(existing.id ?? ''),
-          emoji: decodeEmojiString(existing.emoji ?? ''),
-          description: existing.description ?? existing.desc ?? undefined,
-        },
-      };
-    }
-
-    const lookupKey = (rr.label ?? rr.key ?? rr.report_tag?.label ?? String(rr)).toString().toUpperCase();
-    const matchedTag = reasonsMap[lookupKey];
-
-    if (matchedTag) {
-      return {
-        id: rr.id ?? matchedTag.id ?? idx + 1,
-        report_id: reportId,
-        report_tag_id: matchedTag.id ?? 0,
-        created_at: rr.created_at ?? rr.createdAt ?? undefined,
-        report_tag: {
-          id: matchedTag.id ?? 0,
-          key: matchedTag.key ?? matchedTag.label ?? String(matchedTag.id ?? ''),
-          label: matchedTag.label ?? matchedTag.key ?? String(matchedTag.id ?? ''),
-          emoji: decodeEmojiString(matchedTag.emoji ?? (rr.emoji ?? '')),
-          description: matchedTag.description ?? rr.description ?? undefined,
-        },
-      };
-    }
-
-    const tagLabel = rr.label ?? rr.key ?? rr.report_tag?.label ?? String(rr);
-    const tagEmoji = rr.emoji ?? rr.report_tag?.emoji ?? '';
-
-    return {
-      id: rr.id ?? idx + 1,
-      report_id: reportId,
-      report_tag_id: 0,
-      created_at: rr.created_at ?? rr.createdAt ?? undefined,
-      report_tag: {
-        id: 0,
-        key: tagLabel,
-        label: tagLabel,
-        emoji: tagEmoji,
-        description: rr.description ?? undefined,
-      },
-    };
-  };
-
-  const mapReport = (r: any, reasonsMap: Record<string, any>, canonicalTags: any[]): any => {
-    const reportId = r.report_id ?? r.id ?? r.reportId;
-    const userId = r.user_id ?? r.userId ?? r.user?.id ?? r.user;
-
-    let rawReasons = Array.isArray(r.reason)
-      ? r.reason
-      : Array.isArray(r.reasons)
-      ? r.reasons
-      : [];
-
-    if ((!rawReasons || rawReasons.length === 0) && (r.report_tag || r.reportTag || r.reportTagId || r.report_tag_id)) {
-      const embedded = r.report_tag ?? r.reportTag ?? undefined;
-      if (embedded) rawReasons = [{ report_tag: embedded }];
-      else if (r.reportTagId || r.report_tag_id) {
-        rawReasons = [{ report_tag: { id: r.reportTagId ?? r.report_tag_id, key: String(r.reportTagId ?? r.report_tag_id), label: String(r.reportTagId ?? r.report_tag_id) } }];
-      }
-    }
-
-    const reasonArr = rawReasons.map((rr: any, idx: number) => mapReason(rr, idx, reportId, reasonsMap));
-
-    return {
-      report_id: reportId,
-      user_id: userId,
-      title: r.title ?? r.subject ?? r.name,
-      description: r.description ?? r.body ?? r.details,
-      created_at: r.created_at ?? r.createdAt ?? r.created,
-      is_resolved: !!(r.is_resolved ?? r.isResolved ?? r.resolved),
-      reason: reasonArr,
-    };
   };
 
   const buildParams = () => {
@@ -257,40 +269,40 @@ export default function App() {
     }
   };
 
+  const checkAuthAndFetch = async () => {
+    if (isAuthorized === false) return;
+
+    if (isAuthorized === null) {
+      try {
+        const token = await tokenService.getAuthToken();
+        if (!token) {
+          setIsAuthorized(false);
+          return;
+        }
+        const payload = decodeJwtPayload(token);
+        if (!isAdminUser(payload)) {
+          setIsAuthorized(false);
+          return;
+        }
+        setIsAuthorized(true);
+
+        let canonical = await fetchCanonicalTags();
+        if (!canonical || canonical.length === 0) {
+          canonical = await fetchCanonicalTagsFallback();
+        }
+        setReportTags(canonical);
+        await fetchReports(canonical);
+      } catch (e) {
+        console.error('Auth check failed', e);
+        setIsAuthorized(false);
+      }
+    } else if (isAuthorized === true) {
+      await fetchReports();
+    }
+  };
+
   useEffect(() => {
     // First, check authorization. If isAuthorized is null we are still checking.
-    const checkAuthAndFetch = async () => {
-      if (isAuthorized === false) return;
-
-      if (isAuthorized === null) {
-        try {
-          const token = await tokenService.getAuthToken();
-          if (!token) {
-            setIsAuthorized(false);
-            return;
-          }
-          const payload = decodeJwtPayload(token);
-          if (!isAdminUser(payload)) {
-            setIsAuthorized(false);
-            return;
-          }
-          setIsAuthorized(true);
-
-          let canonical = await fetchCanonicalTags();
-          if (!canonical || canonical.length === 0) {
-            canonical = await fetchCanonicalTagsFallback();
-          }
-          setReportTags(canonical);
-          await fetchReports(canonical);
-        } catch (e) {
-          console.error('Auth check failed', e);
-          setIsAuthorized(false);
-        }
-      } else if (isAuthorized === true) {
-        await fetchReports();
-      }
-    };
-
     checkAuthAndFetch();
     // Only re-run when authorization status changes, page changes, or search is triggered
   }, [isAuthorized, router, currentPage, isSearching]);
