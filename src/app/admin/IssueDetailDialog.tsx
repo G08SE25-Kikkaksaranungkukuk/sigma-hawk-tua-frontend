@@ -38,6 +38,11 @@ export function IssueDetailDialog({
     });
   };
 
+  const cardClass = "bg-gray-800/40 border-gray-700";
+  const cardHeaderClass = "pb-2 pt-3 px-4";
+  const cardTitleClass = "text-xs text-orange-300";
+  const cardContentClass = "px-4 pb-3";
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="bg-gray-900/95 backdrop-blur-sm border-orange-500/30 text-white max-w-xl">
@@ -69,31 +74,31 @@ export function IssueDetailDialog({
           <Separator className="bg-orange-500/20" />
 
           {/* Title */}
-          <Card className="bg-gray-800/40 border-gray-700">
-            <CardHeader className="pb-2 pt-3 px-4">
-              <CardTitle className="text-xs text-orange-300">Title</CardTitle>
+          <Card className={cardClass}>
+            <CardHeader className={cardHeaderClass}>
+              <CardTitle className={cardTitleClass}>Title</CardTitle>
             </CardHeader>
-            <CardContent className="px-4 pb-3">
+            <CardContent className={cardContentClass}>
               <p className="text-white font-medium text-sm">{report.title}</p>
             </CardContent>
           </Card>
 
           {/* Description */}
-          <Card className="bg-gray-800/40 border-gray-700">
-            <CardHeader className="pb-2 pt-3 px-4">
-              <CardTitle className="text-xs text-orange-300">Description</CardTitle>
+          <Card className={cardClass}>
+            <CardHeader className={cardHeaderClass}>
+              <CardTitle className={cardTitleClass}>Description</CardTitle>
             </CardHeader>
-            <CardContent className="px-4 pb-3">
+            <CardContent className={cardContentClass}>
               <p className="text-orange-100/90 leading-relaxed text-sm">{report.description}</p>
             </CardContent>
           </Card>
 
           {/* Tags */}
-          <Card className="bg-gray-800/40 border-gray-700">
-            <CardHeader className="pb-2 pt-3 px-4">
-              <CardTitle className="text-xs text-orange-300">Tags</CardTitle>
+          <Card className={cardClass}>
+            <CardHeader className={cardHeaderClass}>
+              <CardTitle className={cardTitleClass}>Tags</CardTitle>
             </CardHeader>
-            <CardContent className="px-4 pb-3">
+            <CardContent className={cardContentClass}>
               <div className="flex flex-wrap gap-2">
                 {report.reason.map((r) => (
                   <div key={r.id} className="flex flex-col gap-0.5">
@@ -113,26 +118,26 @@ export function IssueDetailDialog({
 
           {/* Metadata */}
           <div className="grid grid-cols-2 gap-3">
-            <Card className="bg-gray-800/40 border-gray-700">
-              <CardHeader className="pb-2 pt-3 px-4">
-                <CardTitle className="text-xs text-orange-300 flex items-center gap-1.5">
+            <Card className={cardClass}>
+              <CardHeader className={cardHeaderClass}>
+                <CardTitle className={`${cardTitleClass} flex items-center gap-1.5`}>
                   <User className="h-3.5 w-3.5" />
                   User ID
                 </CardTitle>
               </CardHeader>
-              <CardContent className="px-4 pb-3">
+              <CardContent className={cardContentClass}>
                 <p className="text-white font-medium text-sm">{report.user_id}</p>
               </CardContent>
             </Card>
 
-            <Card className="bg-gray-800/40 border-gray-700">
-              <CardHeader className="pb-2 pt-3 px-4">
-                <CardTitle className="text-xs text-orange-300 flex items-center gap-1.5">
+            <Card className={cardClass}>
+              <CardHeader className={cardHeaderClass}>
+                <CardTitle className={`${cardTitleClass} flex items-center gap-1.5`}>
                   <Calendar className="h-3.5 w-3.5" />
                   Created At
                 </CardTitle>
               </CardHeader>
-              <CardContent className="px-4 pb-3">
+              <CardContent className={cardContentClass}>
                 <p className="text-white text-xs font-medium">{formatFullDate(report.created_at)}</p>
               </CardContent>
             </Card>
