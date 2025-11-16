@@ -1,8 +1,15 @@
 import { test, expect } from '@playwright/test';
-import { TEST_USERS_DATA } from '../setup/db-seeding';
+import { TEST_USERS_DATA, cleanupTestUsers, seedTestUsers } from "../setup/db-seeding"
 import { TestHelpers } from '../test-helpers';
 
 test.describe('Group Tests', () => {
+  test.beforeEach(async () => {
+        try {
+            await cleanupTestUsers();
+            await seedTestUsers();
+        } catch (error) {
+        }
+  });
 
   test('Create Group', async ({ page }) => {
     const testUser = TEST_USERS_DATA.testUser2;
@@ -47,7 +54,7 @@ test.describe('Group Tests', () => {
   test('Share Group', async ({ page }) => {
     const testUser = TEST_USERS_DATA.testUser1;
     await TestHelpers.loginUser(page, testUser);
-    await page.getByRole('button', { name: 'View' }).click();
+    await page.getByRole('button', { name: 'View' }).first().click();
     await page.getByRole('button', { name: 'Share' }).click();
     await page.getByRole('button', { name: 'Copy' }).click();
     await expect(page.getByRole('button', { name: 'Copied!' })).toBeVisible();
@@ -66,7 +73,7 @@ test.describe('Group Tests', () => {
     await TestHelpers.loginUser(page, testUser);
     await page.getByRole('button', { name: 'View' }).first().click();
     await page.getByRole('button', { name: 'Manage Group' }).click();
-      await page.getByRole('tab', { name: 'Members' }).click();
+    await page.getByRole('tab', { name: 'Members' }).click();
     const memberRow = page.locator('div').filter({hasText: /^Jane Doejanetest@gmail.com • 27Y$/}).first();
     await memberRow.scrollIntoViewIfNeeded();
     await expect(memberRow).toBeVisible();
