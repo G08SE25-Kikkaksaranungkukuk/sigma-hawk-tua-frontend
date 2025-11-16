@@ -52,5 +52,5 @@ variable "rapid_api_key" {
   description = "RapidAPI key for place services"
   type        = string
   sensitive   = true
-  default     = "90f810ae8emsh1dbbac66f4e33bfp19a3afjsn97630dbbbc1b"
+  default     = "9974f6952amsh0983f1fdbba613fp1f38f0jsn2c9d67db43d1"
 }

@@ -64,6 +64,7 @@ module "cloud_run" {
     NEXT_PUBLIC_BASE_API_URL = var.backend_url
     NEXT_PUBLIC_API_BASE = var.backend_url
     NEXT_PUBLIC_API_URL = "${var.backend_url}"
+    NEXT_PUBLIC_RAPID_API_KEY = var.rapid_api_key
   }
   
   secret_env_vars = {}
