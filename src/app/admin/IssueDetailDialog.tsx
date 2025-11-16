@@ -1,3 +1,5 @@
+ 'use client';
+
 import {
   Dialog,
   DialogContent,
@@ -10,13 +12,14 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Hash, User, Calendar, CheckCircle, XCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import type { Report } from '@/lib/types/admin';
 
 interface IssueDetailDialogProps {
   readonly report: Report | null;
   readonly isOpen: boolean;
   readonly onOpenChange: (open: boolean) => void;
-  readonly onToggleResolved: (reportId: number) => void;
+  readonly onToggleResolved: (reportId: number) => void | Promise<void>;
 }
 
 export function IssueDetailDialog({
@@ -26,6 +29,26 @@ export function IssueDetailDialog({
   onToggleResolved,
 }: IssueDetailDialogProps) {
   if (!report) return null;
+  const router = useRouter();
+
+  const handleToggleResolved = async () => {
+    try {
+      const maybePromise: any = onToggleResolved(report.report_id);
+      if (maybePromise && typeof maybePromise.then === 'function') {
+        await maybePromise;
+      }
+    } catch (err) {
+      console.warn('onToggleResolved handler threw', err);
+    } finally {
+      // close the dialog and refresh data
+      try {
+        onOpenChange(false);
+      } catch {}
+      try {
+        router.refresh();
+      } catch {}
+    }
+  };
 
   const formatFullDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -147,7 +170,7 @@ export function IssueDetailDialog({
           <div className="flex gap-2 pt-1">
             {report.is_resolved ? (
               <Button
-                onClick={() => onToggleResolved(report.report_id)}
+                onClick={handleToggleResolved}
                 variant="outline"
                 size="sm"
                 className="border-orange-600/50 bg-orange-950/30 text-orange-100 hover:bg-orange-900/40 hover:text-orange-50 hover:border-orange-500 text-xs"
@@ -157,7 +180,7 @@ export function IssueDetailDialog({
               </Button>
             ) : (
               <Button
-                onClick={() => onToggleResolved(report.report_id)}
+                onClick={handleToggleResolved}
                 size="sm"
                 className="bg-gradient-to-r from-[#ff6600] to-[#ff8533] hover:from-[#e55a00] hover:to-[#ff6600] text-white shadow-lg text-xs"
               >

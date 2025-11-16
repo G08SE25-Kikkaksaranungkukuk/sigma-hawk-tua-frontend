@@ -133,10 +133,13 @@ export function ReportedIssuesTable({
     }
   }, [initialPagination]);
 
-  // Filter reports based on search and filters
-  const filteredReports = initialPagination
-    ? (initialReports || [])
-    : reports.filter((report) => doesReportMatchFilters(report, searchQuery, statusFilter, tagFilter));
+  // Filter reports based on search and filters.
+  // Always base filtering on the component's internal `reports` state so
+  // optimistic updates (toggleResolved) and local changes are reflected
+  // even when the parent passed `initialReports`/`initialPagination`.
+  const filteredReports = (reports || []).filter((report) =>
+    doesReportMatchFilters(report, searchQuery, statusFilter, tagFilter)
+  );
 
   const getEffectivePagination = () => {
     const effectiveTotalRecords = initialPagination
@@ -161,9 +164,7 @@ export function ReportedIssuesTable({
 
   const displayedReports = initialPagination
     ? filteredReports
-    : initialReports && Array.isArray(initialReports)
-    ? filteredReports.slice((currentPage - 1) * perPage, currentPage * perPage)
-    : filteredReports;
+    : filteredReports.slice((currentPage - 1) * perPage, currentPage * perPage);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
