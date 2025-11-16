@@ -41,4 +41,15 @@ test.describe("User Profile Tests", () => {
         await expect(page.getByText("Engagement Score")).toBeVisible() 
         await expect(page.getByText("Experience Score")).toBeVisible()
     })
+
+    test('Travel History', async ({ page }) => {
+        const testUser = TEST_USERS_DATA.testUser2
+        await TestHelpers.loginUser(page, testUser)
+        await page.getByRole('button', { name: 'J', exact: true }).click();
+        await page.getByRole('menuitem', { name: 'Your Profile' }).click();
+        await page.waitForTimeout(5000);
+        await expect(page.getByRole('heading', { name: 'Travel History' })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Samyan' })).toBeVisible();
+    });
+
 })
