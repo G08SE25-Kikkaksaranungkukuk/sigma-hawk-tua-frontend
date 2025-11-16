@@ -363,6 +363,7 @@ async function setupGroupsAndItineraries(axiosInstance: any, userEmail: string):
     const createdGroupIds: number[] = []
     
     for (const [groupKey, group] of Object.entries(TEST_GROUP_DATA)) {
+        console.log(groupKey)
         console.log(`🏗️  Creating group ${group.group_name} for user ${userEmail}...`)
         const groupId = await createTestGroup(axiosInstance, group, userEmail)
         
@@ -479,6 +480,110 @@ export async function seedTestUsers() {
     console.log(`\n📊 Total groups created: ${allGroupIds.length} (IDs: ${allGroupIds.join(', ')})\n`)
     printSeedingSummary(results)
 }
+
+interface CleanupStats {
+    cleaned: number
+    notFound: number
+    failed: number
+}
+
+/**
+ * Attempts to delete a single test user
+ */
+async function deleteTestUser(user: TestUser, stats: CleanupStats): Promise<boolean> {
+    try {
+        console.log(`🔑 Attempting login for: ${user.email}`)
+
+        const axiosInstance = axios.create({
+            withCredentials: true,
+            timeout: 10000,
+            validateStatus: (status) => status < 500,
+        })
+
+        const loginResponse = await axiosInstance.post(
+            `${API_BASE_URL}/auth/login`,
+            {
+                email: user.email,
+                password: user.password,
+            }
+        )
+
+        if (loginResponse.status !== 200) {
+            console.log(`❌ Login failed for ${user.email}: ${loginResponse.status}`)
+            stats.notFound++
+            return true
+        }
+
+        console.log(`✅ Login successful for: ${user.email}`)
+
+        const deleteResult = await performUserDeletion(axiosInstance, user, loginResponse.headers["set-cookie"])
+        
+        if (deleteResult === 'deleted') {
+            stats.cleaned++
+        } else if (deleteResult === 'not_found') {
+            stats.notFound++
+        } else {
+            stats.failed++
+        }
+        
+        return true
+    } catch (error: any) {
+        return handleCleanupError(error, user.email, stats)
+    }
+}
+
+/**
+ * Performs the actual user deletion request
+ */
+async function performUserDeletion(
+    axiosInstance: any,
+    user: TestUser,
+    cookies?: string[]
+): Promise<'deleted' | 'not_found' | 'failed'> {
+    const deleteHeaders: any = {
+        "Content-Type": "application/json",
+    }
+
+    if (cookies && cookies.length > 0) {
+        deleteHeaders["Cookie"] = cookies.join("; ")
+    }
+
+    const response = await axiosInstance.post(
+        `${API_BASE_URL}/user/delete`,
+        { password: user.password },
+        { headers: deleteHeaders }
+    )
+
+    if (response.status === 200 || response.status === 204) {
+        console.log(`✅ Deleted test user: ${user.email}`)
+        return 'deleted'
+    } else if (response.status === 404) {
+        console.log(`ℹ️  Test user not found: ${user.email}`)
+        return 'not_found'
+    } else {
+        console.log(`⚠️  Could not delete ${user.email}: ${response.status} - ${response.data}`)
+        return 'failed'
+    }
+}
+
+/**
+ * Handles cleanup errors
+ */
+function handleCleanupError(error: any, email: string, stats: CleanupStats): boolean {
+    if (error.response?.status === 404) {
+        stats.notFound++
+        console.log(`ℹ️  Test user not found: ${email}`)
+        return true
+    } else if (error.code === "ECONNREFUSED") {
+        console.log(`⚠️  Backend not available for cleanup`)
+        return false
+    } else {
+        stats.failed++
+        console.error(`⚠️  Failed to cleanup user ${email}:`, error.message)
+        return true
+    }
+}
+
 /**
  * Cleans up test users after tests complete
  * Note: This requires a DELETE endpoint on your backend
@@ -486,91 +591,23 @@ export async function seedTestUsers() {
 export async function cleanupTestUsers() {
     console.log("🧹 Cleaning up test users from database...")
 
-    let cleaned = 0
-    let notFound = 0
-    let failed = 0
+    const stats: CleanupStats = {
+        cleaned: 0,
+        notFound: 0,
+        failed: 0,
+    }
 
     for (const user of Object.values(TEST_USERS_DATA)) {
-        try {
-            console.log(`🔑 Attempting login for: ${user.email}`)
-
-            // Create axios instance with cookie jar for session management
-            const axiosInstance = axios.create({
-                withCredentials: true,
-                timeout: 10000,
-                validateStatus: (status) => status < 500,
-            })
-
-            const loginResponse = await axiosInstance.post(
-                `${API_BASE_URL}/auth/login`,
-                {
-                    email: user.email,
-                    password: user.password,
-                }
-            )
-
-            if (loginResponse.status !== 200) {
-                console.log(
-                    `❌ Login failed for ${user.email}: ${loginResponse.status}`
-                )
-                notFound++
-                continue
-            }
-
-            console.log(`✅ Login successful for: ${user.email}`)
-
-            // Extract cookies from login response
-            const cookies = loginResponse.headers["set-cookie"]
-            // console.log(`🍪 Cookies received:`, cookies)
-
-            // Now attempt to delete the authenticated user with explicit cookie headers
-            const deleteHeaders: any = {
-                "Content-Type": "application/json",
-            }
-
-            if (cookies && cookies.length > 0) {
-                deleteHeaders["Cookie"] = cookies.join("; ")
-            }
-
-            const response = await axiosInstance.post(
-                `${API_BASE_URL}/user/delete`,
-                { password: user.password },
-                { headers: deleteHeaders }
-            )
-
-            if (response.status === 200 || response.status === 204) {
-                cleaned++
-                console.log(`✅ Deleted test user: ${user.email}`)
-            } else if (response.status === 404) {
-                notFound++
-                console.log(`ℹ️  Test user not found: ${user.email}`)
-            } else {
-                failed++
-                console.log(
-                    `⚠️  Could not delete ${user.email}: ${response.status} - ${response.data}`
-                )
-            }
-        } catch (error: any) {
-            if (error.response?.status === 404) {
-                notFound++
-                console.log(`ℹ️  Test user not found: ${user.email}`)
-            } else if (error.code === "ECONNREFUSED") {
-                console.log(`⚠️  Backend not available for cleanup`)
-                break
-            } else {
-                failed++
-                console.error(
-                    `⚠️  Failed to cleanup user ${user.email}:`,
-                    error.message
-                )
-            }
+        const shouldContinue = await deleteTestUser(user, stats)
+        if (!shouldContinue) {
+            break
         }
     }
 
     console.log(`\n📊 Cleanup Summary:`)
-    console.log(`   Deleted: ${cleaned}`)
-    console.log(`   Not found: ${notFound}`)
-    console.log(`   Failed: ${failed}\n`)
+    console.log(`   Deleted: ${stats.cleaned}`)
+    console.log(`   Not found: ${stats.notFound}`)
+    console.log(`   Failed: ${stats.failed}\n`)
 
     console.log("✅ Cleanup completed\n")
 }

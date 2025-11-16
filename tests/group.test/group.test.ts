@@ -8,6 +8,8 @@ test.describe("Group Tests", () => {
             await cleanupTestUsers();
             await seedTestUsers();
         } catch (error) {
+            console.error("Error during test user setup:", error);
+            throw error;
         }
     });
 
