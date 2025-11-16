@@ -85,6 +85,31 @@ export const TEST_GROUP_DATA = {
         start_date: new Date("2023-01-01"),
         end_date: new Date("2023-12-31"),
         interest_fields: ["SEA"],
+        ownerKey: "testUser1", // Default owner
+    },
+    testGroup2: {
+        group_name: "beach-trip",
+        description: "Weekend beach getaway",
+        destination: "Samyan",
+        max_members: 8,
+        profile: "",
+        profile_url: "",
+        start_date: new Date("2025-11-15"),
+        end_date: new Date("2025-11-18"),
+        interest_fields: ["SEA", "FOOD_STREET"],
+        ownerKey: "testUser2",
+    },
+    testGroup3: {
+        group_name: "city-food-tour",
+        description: "Explore the city's best food spots",
+        destination: "Bangkok",
+        max_members: 12,
+        profile: "",
+        profile_url: "",
+        start_date: new Date("2024-06-10"),
+        end_date: new Date("2024-06-12"),
+        interest_fields: ["FOOD_STREET", "CAFE"],
+        ownerKey: "testUser1",
     },
 }
 
@@ -194,7 +219,7 @@ async function createAuthenticatedAxios(user: TestUser): Promise<any> {
 /**
  * Creates form data for group creation
  */
-function createGroupFormData(group: typeof TEST_GROUP_DATA.testGroup1): FormData {
+function createGroupFormData(group: (typeof TEST_GROUP_DATA)[keyof typeof TEST_GROUP_DATA]): FormData {
     const formData = new FormData()
 
     formData.append("group_name", group.group_name)
@@ -223,7 +248,7 @@ function createGroupFormData(group: typeof TEST_GROUP_DATA.testGroup1): FormData
  */
 async function createTestGroup(
     axiosInstance: any,
-    group: typeof TEST_GROUP_DATA.testGroup1,
+    group: (typeof TEST_GROUP_DATA)[keyof typeof TEST_GROUP_DATA],
     userEmail: string
 ): Promise<number | undefined> {
     try {
@@ -332,18 +357,26 @@ async function createGroupItineraries(axiosInstance: any, groupId: number): Prom
 }
 
 /**
- * Handles group creation and itinerary setup for first user
+ * Handles group creation and itinerary setup - creates all groups in TEST_GROUP_DATA
  */
-async function setupGroupsAndItineraries(axiosInstance: any, userEmail: string): Promise<number | undefined> {
-    for (const group of Object.values(TEST_GROUP_DATA)) {
+async function setupGroupsAndItineraries(axiosInstance: any, userEmail: string): Promise<number[]> {
+    const createdGroupIds: number[] = []
+    
+    for (const [groupKey, group] of Object.entries(TEST_GROUP_DATA)) {
+        console.log(`🏗️  Creating group ${group.group_name} for user ${userEmail}...`)
         const groupId = await createTestGroup(axiosInstance, group, userEmail)
-
+        
         if (groupId) {
             await createGroupItineraries(axiosInstance, groupId)
-            return groupId
+            createdGroupIds.push(groupId)
+            console.log(`✅ Successfully created and setup group: ${group.group_name} (ID: ${groupId})`)
+        } else {
+            console.log(`❌ Failed to create group: ${group.group_name}`)
         }
     }
-    return undefined
+    
+    console.log(`📋 Created ${createdGroupIds.length} groups total: [${createdGroupIds.join(', ')}]`)
+    return createdGroupIds
 }
 
 /**
@@ -379,26 +412,28 @@ async function processUser(
     user: TestUser,
     results: SeedResults,
     isFirstUser: boolean,
-    existingGroupId?: number
-): Promise<number | undefined> {
+    existingGroupIds: number[] = []
+): Promise<number[]> {
     const registrationResult = await registerUser(user)
     results[registrationResult.status].push(user.email)
 
     const axiosInstance = await createAuthenticatedAxios(user)
     if (!axiosInstance) {
-        return existingGroupId
+        return existingGroupIds
     }
 
-    let groupId = existingGroupId
+    let allGroupIds = [...existingGroupIds]
     if (isFirstUser) {
-        groupId = await setupGroupsAndItineraries(axiosInstance, user.email)
+        const newGroupIds = await setupGroupsAndItineraries(axiosInstance, user.email)
+        allGroupIds.push(...newGroupIds)
     }
 
-    if (groupId) {
+    // Join all existing groups
+    for (const groupId of allGroupIds) {
         await joinGroup(axiosInstance, groupId, user.email)
     }
 
-    return groupId
+    return allGroupIds
 }
 
 /**
@@ -433,14 +468,15 @@ export async function seedTestUsers() {
         failed: [],
     }
 
-    let groupId: number | undefined
+    let allGroupIds: number[] = []
     let isFirstUser = true
 
     for (const user of Object.values(TEST_USERS_DATA)) {
-        groupId = await processUser(user, results, isFirstUser, groupId)
+        allGroupIds = await processUser(user, results, isFirstUser, allGroupIds)
         isFirstUser = false
     }
 
+    console.log(`\n📊 Total groups created: ${allGroupIds.length} (IDs: ${allGroupIds.join(', ')})\n`)
     printSeedingSummary(results)
 }
 /**
