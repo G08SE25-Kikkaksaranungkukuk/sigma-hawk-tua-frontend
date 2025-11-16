@@ -2,6 +2,8 @@ import { test, expect } from "@playwright/test"
 import { TEST_USERS_DATA } from "../setup/db-seeding"
 import { TestHelpers } from "../test-helpers"
 
+test.describe.configure({ mode: 'serial' });
+
 test.describe("User Profile Tests", () => {
     test("user can view other user's profile", async ({ page }) => {
         const testUser = TEST_USERS_DATA.testUser2

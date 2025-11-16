@@ -42,7 +42,21 @@ export default defineConfig({
   /* Configure projects for major browsers */
   projects: [
     {
+      name: 'setup',
+      testMatch: 'tests/user.test/userProfile.test.ts',
+      use: { 
+        ...devices['Desktop Chrome'],
+        headless: process.env.CI ? true : false,
+        viewport: { width: 1280, height: 720 },
+        launchOptions: {
+          slowMo: process.env.CI ? 0 : 1000,
+        },
+       },
+    },
+    {
       name: 'chromium',
+      dependencies: ['setup'], // This ensures setup runs first
+      testIgnore: 'tests/user.test/userProfile.test.ts', // Exclude from this project since it runs in setup
       use: { 
         ...devices['Desktop Chrome'],
         headless: process.env.CI ? true : false, // Headless in CI, headed locally
