@@ -5,7 +5,7 @@ module.exports = {
       script: 'node_modules/next/dist/bin/next',
       args: 'start',
       cwd: './',
-      instances: 1, // Single instance
+      instances: 'max', // Use all available CPU cores
       exec_mode: 'cluster',
       autorestart: true,
       watch: false,
