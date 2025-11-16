@@ -20,7 +20,7 @@ test.describe("Group Tests", () => {
         await page.getByRole('textbox', { name: 'Describe your travel group' }).dblclick();
         await page.getByRole('textbox', { name: 'Describe your travel group' }).fill('go go samyan');
         await page.getByRole('textbox', { name: 'Where are you planning to go?' }).click();
-        await page.getByRole('textbox', { name: 'Where are you planning to go?' }).fill('gtake some rest');
+        await page.getByRole('textbox', { name: 'Where are you planning to go?' }).fill('go take some rest');
         await page.getByRole('textbox').nth(3).fill('2025-12-15');
         await page.getByRole('textbox').nth(4).fill('2025-12-18');
         await page.getByRole('button', { name: '🏖️ Sea & Beach' }).click();
@@ -32,16 +32,17 @@ test.describe("Group Tests", () => {
         await page.getByRole('textbox', { name: 'End Date' }).fill('2025-12-16');
         await page.getByRole('textbox', { name: 'Description' }).dblclick();
         await page.getByRole('textbox', { name: 'Description' }).fill('KFC');
-        // await page.getByRole('button', { name: 'Search Places' }).click();
-        // await page.getByRole('textbox', { name: 'Search for places,' }).fill('chula');
-        // await page.getByRole('button', { name: 'Chulalongkorn University 4.7' }).click();
-        // await page.getByRole('button', { name: 'Create Itinerary' }).click();
+        await page.getByRole('button', { name: 'Search Places' }).click();
+        await page.getByRole('textbox', { name: 'Search for places,' }).fill('chula');
+        await page.waitForTimeout(5000);
+        await page.getByRole('button', { name: 'Chulalongkorn University 4.7' }).click();
+        await page.getByRole('button', { name: 'Create Itinerary' }).click();
         await page.getByRole("button", { name: "Create Itinerary" }).click();
         await expect(page.getByRole('heading', { name: 'test1' })).toBeVisible();
         await expect(page.getByText('KFC', { exact: true })).toBeVisible();
         await expect(page.getByText('Dec 15, 2025 - Dec 16,')).toBeVisible();
         await expect(page.getByText('day')).toBeVisible();
-        // await expect(page.getByText('1 place')).toBeVisible();
+        await expect(page.getByText('1 place')).toBeVisible();
     });
 
     test('View Schedule', async ({ page }) => {
@@ -49,11 +50,12 @@ test.describe("Group Tests", () => {
         await TestHelpers.loginUser(page, testUser)
         await page.getByRole('button', { name: 'View' }).first().click();
         await page.getByRole('button', { name: 'Itinerary' }).click();
+        await page.waitForTimeout(5000);
         await expect(page.getByRole('heading', { name: 'Samyan' })).toBeVisible();
         await expect(page.getByText('Relaxing day at the beach with water activities')).toBeVisible();
         await expect(page.getByText('Jun 15, 2023 - Jun 15, 2023')).toBeVisible();
         await expect(page.getByText('1 day')).toBeVisible();
-        // await expect(page.getByText('1 place').first()).toBeVisible();
+        await expect(page.getByText('1 place').first()).toBeVisible();
     });
 
     test("user can manage group itineraries", async ({ page }) => {
@@ -79,8 +81,6 @@ test.describe("Group Tests", () => {
         await expect(page.getByRole("heading", { name: "test123" })).toBeVisible();
         await expect(page.getByText("Jun 16, 2023 - Jun 17, 2023")).toBeVisible();
 
-        //just delay
-        await page.waitForTimeout(10000);
 
         // Update existing itinerary
         await page.getByRole("button").nth(4).click()
