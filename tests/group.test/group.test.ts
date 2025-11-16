@@ -3,15 +3,6 @@ import { TEST_USERS_DATA, cleanupTestUsers, seedTestUsers } from "../setup/db-se
 import { TestHelpers } from "../test-helpers"
 
 test.describe("Group Tests", () => {
-    test.beforeEach(async () => {
-        try {
-            await cleanupTestUsers();
-            await seedTestUsers();
-        } catch (error) {
-            console.error("Error during test user setup:", error);
-            throw error;
-        }
-    });
 
     test('Create Schedule', async ({ page }) => {
         const testUser = TEST_USERS_DATA.testUser2
