@@ -3,6 +3,7 @@
 import { UserProfile, UpdateUserProfile } from "../../types/user"
 import { tokenService } from "./tokenService"
 import { apiClient } from "@/lib/api"
+import { Group } from "next/dist/shared/lib/router/utils/route-regex"
 class UserService {
     private baseUrl = process.env.NEXT_PUBLIC_BASE_API_URL
 
@@ -36,11 +37,11 @@ class UserService {
     Transform backend user data to frontend UserProfile format
   */
     private transformUserData(backendData: any): UserProfile {
-        // Construct full profile image URL if profile_url exists
-        // Add timestamp to bust browser cache
+        // Return null for profileImage if user doesn't have one
+        // This allows UI to display first character of user's name as fallback
         const profileImageUrl = backendData.profile_url
             ? `http://localhost:6969/${backendData.profile_url}?t=${Date.now()}`
-            : undefined
+            : null
 
         return {
             firstName: backendData.first_name || "",
@@ -69,6 +70,7 @@ class UserService {
         console.log("getUserProfile called with command:", command)
         let user: UserProfile | null = null
         let userEmail: string = ""
+
         try {
             const token = await tokenService.getAuthToken()
 
@@ -77,13 +79,32 @@ class UserService {
             }
 
             user = await tokenService.decodeTokenData(token)
-            // if(user?.email)
+
             if (command === "current-user" || command === "") {
+                // Use current user's email for current user requests
                 userEmail = user ? user.email : ""
+            } else if (/^\d+$/.test(command)) {
+                // If command is a user_id, we need to get the email from session storage
+                // This is stored when we navigate from components that have both user_id and email
+                const userIdToEmailMap =
+                    sessionStorage.getItem("userIdToEmailMap")
+                const emailMap = userIdToEmailMap
+                    ? JSON.parse(userIdToEmailMap)
+                    : {}
+                userEmail = emailMap[command] || ""
+
+                if (!userEmail) {
+                    throw new Error(
+                        `Unable to find email for user ID: ${command}. Please navigate from a page with user information.`
+                    )
+                }
             } else {
+                // Otherwise treat it as email (for backwards compatibility)
                 userEmail = command
             }
+
             console.log("Determined userEmail for profile fetch:", userEmail)
+
             if (!userEmail) {
                 throw new Error("Unable to get user email")
             }
@@ -195,6 +216,33 @@ class UserService {
         } catch (error) {
             console.error("Error updating user profile:", error)
             throw new Error("Failed to update user profile")
+        }
+    }
+
+    async getTravelHistory() : Promise<Group[]> {
+         try {
+            const token = await tokenService.getAuthToken()
+
+            if (!token) {
+                throw new Error("No authentication token found")
+            }
+
+            // Use fetch instead of apiClient for file upload to avoid Content-Type conflicts
+            const response = await fetch(
+                `${this.baseUrl}api/v2/travel/me`,
+                {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        // Don't set Content-Type - let browser set it with boundary
+                    },
+                    credentials: "include",
+                }
+            )
+            return (await response.json())['data']
+        } catch (error) {
+            console.error("Error fetching travel history:", error)
+            throw new Error("Failed to fetch travel history")
         }
     }
 }

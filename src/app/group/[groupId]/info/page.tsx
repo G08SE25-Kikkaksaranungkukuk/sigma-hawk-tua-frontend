@@ -153,6 +153,7 @@ export default function GroupInfoPage({
     const membersData = {
         members: groupInfo.members.map((member, index) => ({
             id: member.user_id.toString(),
+            userId: member.user_id.toString(), // Add userId for secure routing
             name: `${member.first_name} ${member.last_name}`,
             avatar: member.profile_url
                 ? `http://localhost:6969/${member.profile_url}?t=${Date.now()}`
