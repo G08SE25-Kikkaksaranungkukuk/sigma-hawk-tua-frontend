@@ -42,7 +42,7 @@ test.describe("User Tests", () => {
     })
 
     test("user can not delete account", async ({ page }) => {
-        const testUser = TEST_USERS_DATA.testUser1
+        const testUser = TEST_USERS_DATA.testUser2
         console.log(
             `🧪 Testing can not account deletion for: ${testUser.email} with "Wrong Password"`
         )
