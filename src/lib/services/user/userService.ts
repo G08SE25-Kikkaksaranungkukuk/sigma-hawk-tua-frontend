@@ -3,6 +3,7 @@
 import { UserProfile, UpdateUserProfile } from "../../types/user"
 import { tokenService } from "./tokenService"
 import { apiClient } from "@/lib/api"
+import { APP_CONFIG } from "@/config/shared/app"
 import { Group } from "next/dist/shared/lib/router/utils/route-regex"
 class UserService {
     private baseUrl = process.env.NEXT_PUBLIC_BASE_API_URL
@@ -40,7 +41,7 @@ class UserService {
         // Return null for profileImage if user doesn't have one
         // This allows UI to display first character of user's name as fallback
         const profileImageUrl = backendData.profile_url
-            ? `http://localhost:6969/${backendData.profile_url}?t=${Date.now()}`
+            ? `${APP_CONFIG.FILE_SERVER_URL}/${backendData.profile_url}?t=${Date.now()}`
             : null
 
         return {

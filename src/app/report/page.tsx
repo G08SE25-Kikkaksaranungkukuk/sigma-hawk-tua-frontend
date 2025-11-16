@@ -8,6 +8,7 @@ import { tokenService } from '@/lib/services/user/tokenService';
 import { z } from 'zod';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { APP_CONFIG } from "@/config/shared/app";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -97,7 +98,7 @@ export default function ReportCreatePage() {
                 const headers: Record<string, string> = { 'Content-Type': 'application/json' };
                 if (token) headers.Authorization = `Bearer ${token}`;
 
-                const baseUrl = (process.env.NEXT_PUBLIC_BASE_API_URL || 'http://localhost:8080').replace(/\/$/, '');
+                const baseUrl = APP_CONFIG.BASE_API_URL.replace(/\/$/, '');
                 const res = await fetch(`${baseUrl}/api/v2/reports/reasons`, { headers });
                 if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
                 const json = await res.json();

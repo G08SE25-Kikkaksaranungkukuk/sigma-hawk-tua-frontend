@@ -2,6 +2,7 @@ import type { Node as TiptapNode } from "@tiptap/pm/model"
 import { NodeSelection, Selection, TextSelection } from "@tiptap/pm/state"
 import type { Editor } from "@tiptap/react"
 import { apiClient } from "./api"
+import { APP_CONFIG } from "@/config/shared/app"
 
 
 export const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB

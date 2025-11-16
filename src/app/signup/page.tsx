@@ -16,6 +16,7 @@ import {
     CardHeader,
     CardTitle,
 } from "../../components/ui/card";
+import { APP_CONFIG } from "@/config/shared/app";
 import {
     ArrowLeft,
     Loader2,
@@ -120,7 +121,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
     };
 
     // Get API base URL from environment
-    const API_BASE_URL = process.env.NEXT_PUBLIC_BASE_API_URL || "http://localhost:8080";
+    const API_BASE_URL = APP_CONFIG.BASE_API_URL;
 
     // Email existence check function
     const checkEmailExists = async (email: string): Promise<boolean> => {
@@ -190,7 +191,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
             console.log("Sending payload:", payload);
 
             const response = await axios.post(
-                "http://localhost:8080/api/v1/auth/register",
+                `${API_BASE_URL}/api/v1/auth/register`,
                 payload
             );
 

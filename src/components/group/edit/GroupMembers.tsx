@@ -12,6 +12,7 @@ import TravelInviteModal from "@/components/TravelInviteModal";
 import { groupService } from "@/lib/services/group/group-service";
 import { Member as APIMember } from "@/lib/types";
 import { useRouter } from "next/navigation";
+import { APP_CONFIG } from "@/config/shared/app";
 
 interface MemberWithOwner extends APIMember {
   isOwner?: boolean;
@@ -184,7 +185,7 @@ export function GroupMembers({ groupId, maxMembers }: { groupId: number; maxMemb
                     <Avatar className="border-2 border-orange-400/30">
                       <AvatarImage 
                         src={member.profile_url 
-                          ? `http://localhost:6969/${member.profile_url}?t=${Date.now()}` 
+                          ? `${APP_CONFIG.FILE_SERVER_URL}/${member.profile_url}?t=${Date.now()}` 
                           : `https://ui-avatars.com/api/?name=${encodeURIComponent(getFullName(member))}&background=ff6600&color=ffffff&size=128`
                         } 
                       />

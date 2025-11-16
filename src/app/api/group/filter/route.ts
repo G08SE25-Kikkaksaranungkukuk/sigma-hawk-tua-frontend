@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import axios from "axios";
+import { APP_CONFIG } from "@/config/shared/app";
 
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
@@ -11,7 +12,8 @@ export async function GET(req: NextRequest) {
     if (searchParams.get("page")) params.append("page", searchParams.get("page")!);
     if (searchParams.get("page_size")) params.append("page_size", searchParams.get("page_size")!);
 
-    const backendUrl = `http://localhost:8080/api/v1/group/filter?${params.toString()}`;   
+    const baseUrl = APP_CONFIG.BASE_API_URL.replace(/\/$/, '');
+    const backendUrl = `${baseUrl}/api/v1/group/filter?${params.toString()}`;   
     try {
         const res = await axios.get(backendUrl);
         return NextResponse.json(res.data);

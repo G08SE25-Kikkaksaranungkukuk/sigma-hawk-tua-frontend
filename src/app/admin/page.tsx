@@ -12,6 +12,7 @@ import NotFound from '@/app/not-found';
 import { tokenService } from '@/lib/services/user/tokenService';
 import { reportService as reportClientService } from '@/lib/services/report';
 import { reportService as adminReportService } from '@/lib/services/admin/reportService';
+import { APP_CONFIG } from '@/config/shared/app';
 
 const decodeJwtPayload = (token: string): any | null => {
   try {
@@ -198,7 +199,7 @@ export default function App() {
 
   const fetchCanonicalTagsFallback = async (): Promise<any[]> => {
     try {
-      const baseUrl = (process.env.NEXT_PUBLIC_BASE_API_URL || 'http://localhost:8080').replace(/\/$/, '');
+      const baseUrl = APP_CONFIG.BASE_API_URL.replace(/\/$/, '');
       const token = await tokenService.getAuthToken();
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',

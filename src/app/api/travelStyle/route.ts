@@ -1,10 +1,12 @@
 import axios from "axios";
 import { NextResponse } from "next/server";
+import { APP_CONFIG } from "@/config/shared/app";
 
 export async function GET() {
     try {
+        const baseUrl = APP_CONFIG.BASE_API_URL.replace(/\/$/, '');
         const response = await axios.get(
-            "http://localhost:8080/api/v1/user/travel-styles/all"
+            `${baseUrl}/api/v1/user/travel-styles/all`
         );
         return NextResponse.json(response.data);
     } catch (error: any) {

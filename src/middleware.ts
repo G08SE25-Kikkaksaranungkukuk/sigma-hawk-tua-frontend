@@ -2,6 +2,7 @@ import axios from 'axios'
 import { NextResponse, NextRequest } from 'next/server'
 import { AuthCredentials } from './lib/utils'
 import { RequestCookies, ResponseCookies } from 'next/dist/compiled/@edge-runtime/cookies';
+import { APP_CONFIG } from './config/shared/app';
 
 // This function can be marked `async` if using `await` inside
 export async function middleware(request: NextRequest) {
@@ -9,7 +10,8 @@ export async function middleware(request: NextRequest) {
     const refreshToken = request.cookies.get("refreshToken")
     const res = new NextResponse();
     if (!accessToken && refreshToken) {
-        const ret = await (await axios.post("http://localhost:8080/api/v1/auth/refresh",{},{
+        const baseUrl = APP_CONFIG.BASE_API_URL.replace(/\/$/, '');
+        const ret = await (await axios.post(`${baseUrl}/api/v1/auth/refresh`,{},{
             headers : {
                 Authorization : `Bearer ${refreshToken.value}`
             },

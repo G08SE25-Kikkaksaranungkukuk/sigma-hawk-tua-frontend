@@ -12,6 +12,7 @@ import { ActionSuccess } from "@/components/group/info/ActionButton"
 import { Interest, GroupResponse, Member } from "@/lib/types"
 import { FloatingElements } from "@/components/shared"
 import { UserData } from "@/lib/types/user"
+import { APP_CONFIG } from "@/config/shared/app"
 
 import React, { useState, useEffect } from "react"
 import { groupService } from "@/lib/services/group/group-service"
@@ -156,7 +157,7 @@ export default function GroupInfoPage({
             userId: member.user_id.toString(), // Add userId for secure routing
             name: `${member.first_name} ${member.last_name}`,
             avatar: member.profile_url
-                ? `http://localhost:6969/${member.profile_url}?t=${Date.now()}`
+                ? `${APP_CONFIG.FILE_SERVER_URL}/${member.profile_url}?t=${Date.now()}`
                 : `https://ui-avatars.com/api/?name=${encodeURIComponent(
                       `${member.first_name} ${member.last_name}`
                   )}&background=ff6600&color=ffffff&size=128`,
