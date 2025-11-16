@@ -63,243 +63,232 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isSearching, setIsSearching] = useState(false);
 
+  const isAdminUser = (payload: any): boolean => {
+    const role = payload?.role ?? payload?.roles ?? payload?.isAdmin ?? payload?.is_admin;
+    return (typeof role === 'string' && role.toUpperCase() === 'ADMIN') || role === true;
+  };
+
+  const fetchCanonicalTags = async (): Promise<any[]> => {
+    try {
+      const tagsRes = await reportClientService.getReasons();
+      return (tagsRes?.reasons ?? []).map((t: any) => ({
+        ...t,
+        emoji: decodeEmojiString(t?.emoji ?? ''),
+      }));
+    } catch (err) {
+      console.warn('reportService.getReasons() failed', err);
+      return [];
+    }
+  };
+
+  const fetchCanonicalTagsFallback = async (): Promise<any[]> => {
+    try {
+      const baseUrl = (process.env.NEXT_PUBLIC_BASE_API_URL || 'http://localhost:8080').replace(/\/$/, '');
+      const token = await tokenService.getAuthToken();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const reasonsRes = await fetch(`${baseUrl}/api/v2/reports/reasons`, { headers });
+      if (reasonsRes.ok) {
+        const reasonsJson = await reasonsRes.json();
+        const canonical = Array.isArray(reasonsJson?.data?.reasons)
+          ? reasonsJson.data.reasons
+          : Array.isArray(reasonsJson?.reasons)
+          ? reasonsJson.reasons
+          : Array.isArray(reasonsJson?.data)
+          ? reasonsJson.data
+          : Array.isArray(reasonsJson)
+          ? reasonsJson
+          : [];
+        return canonical.map((t: any) => ({
+          ...t,
+          emoji: decodeEmojiString(t?.emoji ?? ''),
+        }));
+      }
+    } catch (err) {
+      console.warn('Direct fetch fallback for report tags failed', err);
+    }
+    return [];
+  };
+
+  const buildReasonsMap = (rawTags: any[]): Record<string, any> => {
+    const reasonsMap: Record<string, any> = {};
+    (rawTags || []).forEach((t) => {
+      if (!t) return;
+      const key = t.key ?? t.label ?? String(t.id ?? '');
+      if (key) reasonsMap[String(key).toUpperCase()] = t;
+      if (t.label) reasonsMap[String(t.label).toUpperCase()] = t;
+    });
+    return reasonsMap;
+  };
+
+  const mapReason = (rr: any, idx: number, reportId: any, reasonsMap: Record<string, any>) => {
+    if (rr.report_tag) {
+      const existing = rr.report_tag;
+      return {
+        id: rr.id ?? existing.id ?? idx + 1,
+        report_id: reportId,
+        report_tag_id: existing.id ?? 0,
+        created_at: rr.created_at ?? existing.created_at ?? existing.createdAt ?? undefined,
+        report_tag: {
+          id: existing.id ?? 0,
+          key: existing.key ?? existing.label ?? String(existing.id ?? ''),
+          label: existing.label ?? existing.key ?? String(existing.id ?? ''),
+          emoji: decodeEmojiString(existing.emoji ?? ''),
+          description: existing.description ?? existing.desc ?? undefined,
+        },
+      };
+    }
+
+    const lookupKey = (rr.label ?? rr.key ?? rr.report_tag?.label ?? String(rr)).toString().toUpperCase();
+    const matchedTag = reasonsMap[lookupKey];
+
+    if (matchedTag) {
+      return {
+        id: rr.id ?? matchedTag.id ?? idx + 1,
+        report_id: reportId,
+        report_tag_id: matchedTag.id ?? 0,
+        created_at: rr.created_at ?? rr.createdAt ?? undefined,
+        report_tag: {
+          id: matchedTag.id ?? 0,
+          key: matchedTag.key ?? matchedTag.label ?? String(matchedTag.id ?? ''),
+          label: matchedTag.label ?? matchedTag.key ?? String(matchedTag.id ?? ''),
+          emoji: decodeEmojiString(matchedTag.emoji ?? (rr.emoji ?? '')),
+          description: matchedTag.description ?? rr.description ?? undefined,
+        },
+      };
+    }
+
+    const tagLabel = rr.label ?? rr.key ?? rr.report_tag?.label ?? String(rr);
+    const tagEmoji = rr.emoji ?? rr.report_tag?.emoji ?? '';
+
+    return {
+      id: rr.id ?? idx + 1,
+      report_id: reportId,
+      report_tag_id: 0,
+      created_at: rr.created_at ?? rr.createdAt ?? undefined,
+      report_tag: {
+        id: 0,
+        key: tagLabel,
+        label: tagLabel,
+        emoji: tagEmoji,
+        description: rr.description ?? undefined,
+      },
+    };
+  };
+
+  const mapReport = (r: any, reasonsMap: Record<string, any>, canonicalTags: any[]): any => {
+    const reportId = r.report_id ?? r.id ?? r.reportId;
+    const userId = r.user_id ?? r.userId ?? r.user?.id ?? r.user;
+
+    let rawReasons = Array.isArray(r.reason)
+      ? r.reason
+      : Array.isArray(r.reasons)
+      ? r.reasons
+      : [];
+
+    if ((!rawReasons || rawReasons.length === 0) && (r.report_tag || r.reportTag || r.reportTagId || r.report_tag_id)) {
+      const embedded = r.report_tag ?? r.reportTag ?? undefined;
+      if (embedded) rawReasons = [{ report_tag: embedded }];
+      else if (r.reportTagId || r.report_tag_id) {
+        rawReasons = [{ report_tag: { id: r.reportTagId ?? r.report_tag_id, key: String(r.reportTagId ?? r.report_tag_id), label: String(r.reportTagId ?? r.report_tag_id) } }];
+      }
+    }
+
+    const reasonArr = rawReasons.map((rr: any, idx: number) => mapReason(rr, idx, reportId, reasonsMap));
+
+    return {
+      report_id: reportId,
+      user_id: userId,
+      title: r.title ?? r.subject ?? r.name,
+      description: r.description ?? r.body ?? r.details,
+      created_at: r.created_at ?? r.createdAt ?? r.created,
+      is_resolved: !!(r.is_resolved ?? r.isResolved ?? r.resolved),
+      reason: reasonArr,
+    };
+  };
+
+  const buildParams = () => {
+    const params: any = { page: currentPage, limit: 10 };
+    if (statusFilter && statusFilter !== 'all') {
+      params.is_resolved = statusFilter === 'resolved';
+    }
+    if (tagFilter && tagFilter !== 'all') params.reason = tagFilter;
+    if (searchQuery) {
+      const num = parseInt(searchQuery);
+      if (!isNaN(num)) {
+        params.id = num;
+      } else {
+        params.title = searchQuery;
+      }
+    }
+    return params;
+  };
+
+  const normalizeReports = (response: any): any[] => {
+    const anyJson: any = { data: { reports: response.reports ?? [] }, pagination: response.pagination };
+    if (Array.isArray(anyJson?.data?.reports)) return anyJson.data.reports;
+    if (Array.isArray(anyJson?.reports)) return anyJson.reports;
+    if (Array.isArray(anyJson?.data)) return anyJson.data;
+    if (Array.isArray(anyJson)) return anyJson;
+    return [];
+  };
+
+  const fetchReports = async (canonicalTags: any[] = []) => {
+    try {
+      setIsLoadingReports(true);
+      setReportsError(null);
+
+      const params = buildParams();
+      const response = await adminReportService.getReports(params as any);
+      console.log('Raw response from backend in admin page:', response);
+
+      const reasonsMap = buildReasonsMap(canonicalTags.length ? canonicalTags : reportTags);
+      const rawReports = normalizeReports(response);
+      const mapped = rawReports.map((r: any) => mapReport(r, reasonsMap, canonicalTags));
+
+      setReports(mapped);
+      setPagination(response.pagination);
+    } catch (err) {
+      console.error('Failed to fetch reports', err);
+      setReportsError(err instanceof Error ? err.message : 'Failed to fetch reports');
+      setReports([]);
+    } finally {
+      setIsLoadingReports(false);
+    }
+  };
+
   useEffect(() => {
     // First, check authorization. If isAuthorized is null we are still checking.
-  const checkAuthAndFetch = async () => {
-    // If we've already checked and found not authorized, skip.
-    if (isAuthorized === false) return;      const controller = new AbortController();
-      const fetchReports = async (canonicalTags: any[] = []) => {
-        try {
-          setIsLoadingReports(true);
-          setReportsError(null);
-          // Use the adminReportService which wraps apiClient and respects NEXT_PUBLIC_BASE_API_URL
-          const params: any = {};
-          params.page = currentPage;
-          params.limit = 10;
-          if (statusFilter && statusFilter !== 'all') {
-            params.is_resolved = statusFilter === 'resolved';
-          }
-          if (tagFilter && tagFilter !== 'all') params.reason = tagFilter;
-          if (searchQuery) {
-            const num = parseInt(searchQuery);
-            if (!isNaN(num)) {
-              params.id = num;
-            } else {
-              params.title = searchQuery;
-            }
-          }
+    const checkAuthAndFetch = async () => {
+      if (isAuthorized === false) return;
 
-          const response = await adminReportService.getReports(params as any);
-          const json = { data: { reports: response.reports ?? [] }, pagination: response.pagination };
-
-          console.log('Raw response from backend in admin page:', response);
-        // Build lookup by key and label using canonicalTags (passed in) or fallback to state
-        let reasonsMap: Record<string, any> = {};
-        try {
-          const rawTags: any[] = Array.isArray(canonicalTags) && canonicalTags.length ? canonicalTags : reportTags;
-          (rawTags || []).forEach((t) => {
-            if (!t) return;
-            const key = t.key ?? t.label ?? String(t.id ?? '');
-            if (key) reasonsMap[String(key).toUpperCase()] = t;
-            if (t.label) reasonsMap[String(t.label).toUpperCase()] = t;
-          });
-        } catch (err) {
-          console.warn('Failed to build report reasons map', err);
-        }
-
-  // Backend may return several shapes. Normalize to an array of report objects.
-  const anyJson: any = json as any;
-  let rawReports: any[] = [];
-  if (Array.isArray(anyJson?.data?.reports)) rawReports = anyJson.data.reports;
-  else if (Array.isArray(anyJson?.reports)) rawReports = anyJson.reports;
-  else if (Array.isArray(anyJson?.data)) rawReports = anyJson.data;
-  else if (Array.isArray(anyJson)) rawReports = anyJson;
-
-        // Map backend report items into the Report type expected by the table.
-        const mapped = rawReports.map((r: any) => {
-          // normalize common id fields
-          const reportId = r.report_id ?? r.id ?? r.reportId;
-          const userId = r.user_id ?? r.userId ?? r.user?.id ?? r.user;
-
-          // normalize reason/tags: backend may send [{ emoji, label }] or nested report_reason objects
-          let rawReasons = Array.isArray(r.reason)
-            ? r.reason
-            : Array.isArray(r.reasons)
-            ? r.reasons
-            : [];
-
-          // Some backend responses embed a single report_tag on the report object
-          // instead of an array under `reason`/`reasons`. Normalize that shape.
-          if ((!rawReasons || rawReasons.length === 0) && (r.report_tag || r.reportTag || r.reportTagId || r.report_tag_id)) {
-            const embedded = r.report_tag ?? r.reportTag ?? undefined;
-            if (embedded) rawReasons = [ { report_tag: embedded } ];
-            else if (r.reportTagId || r.report_tag_id) {
-              // minimal placeholder when only id is present
-              rawReasons = [ { report_tag: { id: r.reportTagId ?? r.report_tag_id, key: String(r.reportTagId ?? r.report_tag_id), label: String(r.reportTagId ?? r.report_tag_id) } } ];
-            }
-          }
-
-          const reasonArr = rawReasons.map((rr: any, idx: number) => {
-            // If already has report_tag shape, normalize and use it
-            if (rr.report_tag) {
-              const existing = rr.report_tag;
-              return {
-                id: rr.id ?? existing.id ?? idx + 1,
-                report_id: reportId,
-                report_tag_id: existing.id ?? 0,
-                created_at: rr.created_at ?? existing.created_at ?? existing.createdAt ?? undefined,
-                report_tag: {
-                  id: existing.id ?? 0,
-                  key: existing.key ?? existing.label ?? String(existing.id ?? ''),
-                  label: existing.label ?? existing.key ?? String(existing.id ?? ''),
-                  emoji: decodeEmojiString(existing.emoji ?? ''),
-                  description: existing.description ?? existing.desc ?? undefined,
-                },
-              };
-            }
-
-            // Try to match rr to a canonical tag from reasonsMap (by label or key)
-            const lookupKey = (rr.label ?? rr.key ?? rr.report_tag?.label ?? String(rr)).toString().toUpperCase();
-            const matchedTag = reasonsMap[lookupKey];
-
-            if (matchedTag) {
-              return {
-                id: rr.id ?? matchedTag.id ?? idx + 1,
-                report_id: reportId,
-                report_tag_id: matchedTag.id ?? 0,
-                created_at: rr.created_at ?? rr.createdAt ?? undefined,
-                report_tag: {
-                  id: matchedTag.id ?? 0,
-                  key: matchedTag.key ?? matchedTag.label ?? String(matchedTag.id ?? ''),
-                  label: matchedTag.label ?? matchedTag.key ?? String(matchedTag.id ?? ''),
-                  emoji: decodeEmojiString(matchedTag.emoji ?? (rr.emoji ?? '')),
-                  description: matchedTag.description ?? rr.description ?? undefined,
-                },
-              };
-            }
-
-            // Fallback: construct a lightweight report_reason with embedded report_tag from rr
-            const tagLabel = rr.label ?? rr.key ?? rr.report_tag?.label ?? String(rr);
-            const tagEmoji = rr.emoji ?? rr.report_tag?.emoji ?? '';
-
-            return {
-              id: rr.id ?? idx + 1,
-              report_id: reportId,
-              report_tag_id: 0,
-              created_at: rr.created_at ?? rr.createdAt ?? undefined,
-              report_tag: {
-                id: 0,
-                key: tagLabel,
-                label: tagLabel,
-                emoji: tagEmoji,
-                description: rr.description ?? undefined,
-              },
-            };
-          });
-
-          return {
-            report_id: reportId,
-            user_id: userId,
-            title: r.title ?? r.subject ?? r.name,
-            description: r.description ?? r.body ?? r.details,
-            created_at: r.created_at ?? r.createdAt ?? r.created,
-            is_resolved: !!(r.is_resolved ?? r.isResolved ?? r.resolved),
-            reason: reasonArr,
-          };
-        });
-
-        setReports(mapped);
-        setPagination(response.pagination);
-      } catch (err) {
-        if ((err as any).name === 'AbortError') return;
-        console.error('Failed to fetch reports', err);
-        setReportsError(err instanceof Error ? err.message : 'Failed to fetch reports');
-        setReports([]);
-      } finally {
-        setIsLoadingReports(false);
-      }
-    };
-      // Only fetch reports if we have confirmed admin access
       if (isAuthorized === null) {
-        // check token role quickly before fetching
         try {
           const token = await tokenService.getAuthToken();
           if (!token) {
             setIsAuthorized(false);
-            // don't redirect; we'll render the app's NotFound component on the client
             return;
           }
           const payload = decodeJwtPayload(token);
-          const role = payload?.role ?? payload?.roles ?? payload?.isAdmin ?? payload?.is_admin;
-          const adminDetected = (typeof role === 'string' && role.toUpperCase() === 'ADMIN') || role === true;
-          if (!adminDetected) {
+          if (!isAdminUser(payload)) {
             setIsAuthorized(false);
-            // don't redirect; we'll render the app's NotFound component on the client
             return;
           }
           setIsAuthorized(true);
-          // fetch canonical report tags from backend
-          try {
-            let canonical: any[] = [];
-            try {
-              const tagsRes = await reportClientService.getReasons();
-              canonical = (tagsRes?.reasons ?? []).map((t: any) => ({
-                ...t,
-                emoji: decodeEmojiString(t?.emoji ?? ''),
-              }));
-            } catch (err) {
-              console.warn('reportService.getReasons() failed', err);
-            }
 
-            // Fallback: if no tags returned, try direct fetch to backend base URL
-            if (!canonical || canonical.length === 0) {
-              try {
-                const baseUrl = (process.env.NEXT_PUBLIC_BASE_API_URL || 'http://localhost:8080').replace(/\/$/, '');
-                const token = await tokenService.getAuthToken();
-                const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-                if (token) headers.Authorization = `Bearer ${token}`;
-                const reasonsRes = await fetch(`${baseUrl}/api/v2/reports/reasons`, { headers });
-                    if (reasonsRes.ok) {
-                      const reasonsJson = await reasonsRes.json();
-                      canonical = Array.isArray(reasonsJson?.data?.reasons)
-                        ? reasonsJson.data.reasons
-                        : Array.isArray(reasonsJson?.reasons)
-                        ? reasonsJson.reasons
-                        : Array.isArray(reasonsJson?.data)
-                        ? reasonsJson.data
-                        : Array.isArray(reasonsJson)
-                        ? reasonsJson
-                        : [];
-                      // decode emoji fields if they are escaped sequences
-                      canonical = canonical.map((t: any) => ({
-                        ...t,
-                        emoji: decodeEmojiString(t?.emoji ?? ''),
-                      }));
-                    }
-              } catch (err) {
-                console.warn('Direct fetch fallback for report tags failed', err);
-              }
-            }
-
-            setReportTags(canonical);
-            // now actually fetch reports with canonical tags
-            await fetchReports(canonical);
-          } catch (err) {
-            // if tags fetch fails, still attempt to fetch reports without canonical tags
-            console.warn('Failed to load canonical report tags, continuing without them', err);
-            await fetchReports([]);
+          let canonical = await fetchCanonicalTags();
+          if (!canonical || canonical.length === 0) {
+            canonical = await fetchCanonicalTagsFallback();
           }
+          setReportTags(canonical);
+          await fetchReports(canonical);
         } catch (e) {
           console.error('Auth check failed', e);
           setIsAuthorized(false);
-          // on error we'll render NotFound instead of redirecting
         }
       } else if (isAuthorized === true) {
-        // authorized and can fetch
         await fetchReports();
       }
-
-      return () => controller.abort();
     };
 
     checkAuthAndFetch();

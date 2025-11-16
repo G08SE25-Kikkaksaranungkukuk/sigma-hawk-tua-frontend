@@ -21,19 +21,19 @@ import { reportService } from '@/lib/services/admin/reportService';
 import type { Report } from '@/lib/types/admin';
 
 interface ReportedIssuesTableProps {
-  searchQuery: string;
-  statusFilter: string;
-  tagFilter: string;
+  readonly searchQuery: string;
+  readonly statusFilter: string;
+  readonly tagFilter: string;
   // Optional pre-fetched reports (when the parent fetches them)
-  initialReports?: Report[];
-  initialLoading?: boolean;
-  initialPagination?: {
-    current_page?: number;
-    total_pages?: number;
-    total_records?: number;
-    per_page?: number;
+  readonly initialReports?: Report[];
+  readonly initialLoading?: boolean;
+  readonly initialPagination?: {
+    readonly current_page?: number;
+    readonly total_pages?: number;
+    readonly total_records?: number;
+    readonly per_page?: number;
   };
-  onPageChange?: (page: number) => void;
+  readonly onPageChange?: (page: number) => void;
 }
 
 export function ReportedIssuesTable({
@@ -55,6 +55,58 @@ export function ReportedIssuesTable({
   const [totalPages, setTotalPages] = useState<number>(1);
   const [totalRecords, setTotalRecords] = useState<number>(0);
 
+  const fetchReports = async (page: number = 1) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await reportService.getReports({
+        search: searchQuery || undefined,
+        status: statusFilter as 'all' | 'resolved' | 'unresolved',
+        tag: tagFilter !== 'all' ? tagFilter : undefined,
+        page,
+        limit: perPage,
+      });
+
+      console.log('Raw response from backend:', response);
+
+      setReports(response.reports ?? []);
+
+      // Wire pagination info if available from the backend
+      const pagination = response.pagination ?? {};
+      setCurrentPage(pagination.current_page ?? pagination.page ?? page);
+      setTotalPages(pagination.total_pages ?? pagination.totalPages ?? 1);
+      setPerPage(pagination.per_page ?? pagination.perPage ?? perPage);
+      setTotalRecords(pagination.total_records ?? pagination.totalRecords ?? pagination.total ?? 0);
+    } catch (err) {
+      console.error('Failed to fetch reports:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load reports');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const doesReportMatchFilters = (report: Report, searchQuery: string, statusFilter: string, tagFilter: string): boolean => {
+    const reasons = Array.isArray(report.reason) ? report.reason : [];
+
+    const matchesSearch =
+      searchQuery === '' ||
+      (report.report_id ?? '').toString().includes(searchQuery) ||
+      (report.user_id ?? '').toString().includes(searchQuery) ||
+      (report.title ?? '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (report.description ?? '').toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === 'all' ||
+      (statusFilter === 'resolved' && report.is_resolved) ||
+      (statusFilter === 'unresolved' && !report.is_resolved);
+
+    const matchesTag =
+      tagFilter === 'all' ||
+      reasons.some((r) => (r?.report_tag?.key ?? r?.report_tag ?? '').toString() === tagFilter);
+
+    return matchesSearch && matchesStatus && matchesTag;
+  };
+
   // If parent passed initialReports, use them and skip internal fetching.
   useEffect(() => {
     if (initialReports) {
@@ -63,36 +115,6 @@ export function ReportedIssuesTable({
       // When parent provides initial reports we skip internal pagination.
       return;
     }
-
-    const fetchReports = async (page: number = 1) => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const response = await reportService.getReports({
-          search: searchQuery || undefined,
-          status: statusFilter as 'all' | 'resolved' | 'unresolved',
-          tag: tagFilter !== 'all' ? tagFilter : undefined,
-          page,
-          limit: perPage,
-        });
-
-        console.log('Raw response from backend:', response);
-
-        setReports(response.reports ?? []);
-
-        // Wire pagination info if available from the backend
-        const pagination = response.pagination ?? {};
-        setCurrentPage(pagination.current_page ?? pagination.page ?? page);
-        setTotalPages(pagination.total_pages ?? pagination.totalPages ?? 1);
-        setPerPage(pagination.per_page ?? pagination.perPage ?? perPage);
-        setTotalRecords(pagination.total_records ?? pagination.totalRecords ?? pagination.total ?? 0);
-      } catch (err) {
-        console.error('Failed to fetch reports:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load reports');
-      } finally {
-        setIsLoading(false);
-      }
-    };
 
     // fetch the current page
     fetchReports(currentPage);
@@ -114,41 +136,23 @@ export function ReportedIssuesTable({
   // Filter reports based on search and filters
   const filteredReports = initialPagination
     ? (initialReports || [])
-    : reports.filter((report) => {
-        const reasons = Array.isArray(report.reason) ? report.reason : [];
+    : reports.filter((report) => doesReportMatchFilters(report, searchQuery, statusFilter, tagFilter));
 
-        const safeToString = (v: any) => (v === null || v === undefined ? '' : String(v));
+  const getEffectivePagination = () => {
+    const effectiveTotalRecords = initialPagination
+      ? initialPagination.total_records ?? 0
+      : initialReports && Array.isArray(initialReports)
+      ? filteredReports.length
+      : totalRecords;
+    const effectiveTotalPages = initialPagination
+      ? initialPagination.total_pages ?? 1
+      : initialReports && Array.isArray(initialReports)
+      ? Math.max(1, Math.ceil(effectiveTotalRecords / perPage))
+      : totalPages;
+    return { effectiveTotalRecords, effectiveTotalPages };
+  };
 
-        const matchesSearch =
-          searchQuery === '' ||
-          safeToString(report.report_id).includes(searchQuery) ||
-          safeToString(report.user_id).includes(searchQuery) ||
-          safeToString(report.title).toLowerCase().includes(searchQuery.toLowerCase()) ||
-          safeToString(report.description).toLowerCase().includes(searchQuery.toLowerCase());
-
-        const matchesStatus =
-          statusFilter === 'all' ||
-          (statusFilter === 'resolved' && report.is_resolved) ||
-          (statusFilter === 'unresolved' && !report.is_resolved);
-
-        const matchesTag =
-          tagFilter === 'all' ||
-          reasons.some((r) => (r?.report_tag?.key ?? r?.report_tag ?? '').toString() === tagFilter);
-
-        return matchesSearch && matchesStatus && matchesTag;
-      });
-
-  // If parent provided initialReports we handle pagination client-side by slicing the filtered array.
-  const effectiveTotalRecords = initialPagination
-    ? initialPagination.total_records ?? 0
-    : initialReports && Array.isArray(initialReports)
-    ? filteredReports.length
-    : totalRecords;
-  const effectiveTotalPages = initialPagination
-    ? initialPagination.total_pages ?? 1
-    : initialReports && Array.isArray(initialReports)
-    ? Math.max(1, Math.ceil(effectiveTotalRecords / perPage))
-    : totalPages;
+  const { effectiveTotalRecords, effectiveTotalPages } = getEffectivePagination();
 
   // Ensure currentPage is within range for client-side pagination
   if (currentPage > effectiveTotalPages) {
@@ -180,6 +184,22 @@ export function ReportedIssuesTable({
     }
   };
 
+  const applyOptimisticUpdate = (reportId: number, toggled: boolean) => {
+    const updatedReports = reports.map((r) => (r.report_id === reportId ? { ...r, is_resolved: toggled } : r));
+    setReports(updatedReports);
+    if (selectedReport && selectedReport.report_id === reportId) {
+      setSelectedReport({ ...selectedReport, is_resolved: toggled });
+    }
+  };
+
+  const revertOptimisticUpdate = (reportId: number, originalResolved: boolean) => {
+    const reverted = reports.map((r) => (r.report_id === reportId ? { ...r, is_resolved: originalResolved } : r));
+    setReports(reverted);
+    if (selectedReport && selectedReport.report_id === reportId) {
+      setSelectedReport({ ...selectedReport, is_resolved: originalResolved });
+    }
+  };
+
   const toggleResolved = async (reportId: number) => {
     try {
       const report = reports.find((r) => r.report_id === reportId);
@@ -187,23 +207,13 @@ export function ReportedIssuesTable({
 
       // Optimistic update
       const toggled = !report.is_resolved;
-      const updatedReports = reports.map((r) => (r.report_id === reportId ? { ...r, is_resolved: toggled } : r));
-      setReports(updatedReports);
-
-      // Update selected report if it's the one being toggled
-      if (selectedReport && selectedReport.report_id === reportId) {
-        setSelectedReport({ ...selectedReport, is_resolved: toggled });
-      }
+      applyOptimisticUpdate(reportId, toggled);
 
       // Persist to backend using PUT /api/v2/reports/:id
       const res = await reportService.updateReport(reportId, { is_resolved: toggled });
       if (!res || res.success === false) {
         // Revert optimistic update on failure
-        const reverted = reports.map((r) => (r.report_id === reportId ? { ...r, is_resolved: report.is_resolved } : r));
-        setReports(reverted);
-        if (selectedReport && selectedReport.report_id === reportId) {
-          setSelectedReport({ ...selectedReport, is_resolved: report.is_resolved });
-        }
+        revertOptimisticUpdate(reportId, report.is_resolved);
         console.error('Failed to persist report status update', res?.message ?? res);
         alert('Failed to update report status. Please try again.');
       }

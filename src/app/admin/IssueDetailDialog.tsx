@@ -13,10 +13,10 @@ import { Hash, User, Calendar, CheckCircle, XCircle } from 'lucide-react';
 import type { Report } from '@/lib/types/admin';
 
 interface IssueDetailDialogProps {
-  report: Report | null;
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  onToggleResolved: (reportId: number) => void;
+  readonly report: Report | null;
+  readonly isOpen: boolean;
+  readonly onOpenChange: (open: boolean) => void;
+  readonly onToggleResolved: (reportId: number) => void;
 }
 
 export function IssueDetailDialog({
