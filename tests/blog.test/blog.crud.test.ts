@@ -1,6 +1,4 @@
 import { test, expect } from "@playwright/test"
-import { delay } from "framer-motion"
-import { browser } from "process"
 import { TEST_USERS_DATA } from "../setup/db-seeding"
 import { TestHelpers } from "../test-helpers"
 

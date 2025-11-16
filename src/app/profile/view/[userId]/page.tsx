@@ -11,6 +11,8 @@ import {
     interestOptions,
     travel_style_options,
 } from "@/components/editprofile/constants"
+import { ItineraryGroupHistory } from "@/lib/types"
+import { UserTravelHistoryCard } from "@/components/profile/TravelHistoryCard"
 
 export default function UserProfileView({
     params,
@@ -23,6 +25,8 @@ export default function UserProfileView({
     const [error, setError] = useState<string | null>(null)
     const [viewedUserId, setViewedUserId] = useState<string | null>(null)
     const [isOwnProfile, setIsOwnProfile] = useState(false)
+    const [ownTravelHistory,setOwnTravelHistory] = useState<ItineraryGroupHistory[]>([]);
+    const [originalIdQuery,setOriginalIdQuery] = useState<string|null>(null);
 
     // Resolve the userId from the incoming params (params is a Promise in client components)
     // We can't `await` at top-level in a client component, so resolve inside an effect.
@@ -31,22 +35,23 @@ export default function UserProfileView({
     useEffect(() => {
         let mounted = true
 
-        ;(async () => {
-            try {
-                const p = (await params) as { userId: string }
-                let id = p.userId
+            ; (async () => {
+                try {
+                    const p = (await params) as { userId: string }
+                    let id = p.userId
+                    setOriginalIdQuery(id);
 
-                if (id === "current-user") {
-                    // replace with the logged-in user's identifier
-                    const currentUser = await userService.getCurrentUser()
-                    id = currentUser?.email ?? id
+                    if (id === "current-user") { 
+                        // replace with the logged-in user's identifier
+                        const currentUser = await userService.getCurrentUser()
+                        id = currentUser?.email ?? id
+                    }
+
+                    if (mounted) setResolvedUserId(id)
+                } catch (err) {
+                    console.error("Failed to resolve userId from params:", err)
                 }
-
-                if (mounted) setResolvedUserId(id)
-            } catch (err) {
-                console.error("Failed to resolve userId from params:", err)
-            }
-        })()
+            })()
 
         return () => {
             mounted = false
@@ -56,6 +61,18 @@ export default function UserProfileView({
     const userIdentifier = resolvedUserId
         ? decodeURIComponent(resolvedUserId)
         : null // Can be user ID or email
+
+    // fetch own travel history
+    const fetchOwnTravelHistory = useCallback(async () => {
+        const data = await userService.getTravelHistory()
+        const itineraries =  Array.from(data).map((val : any)=>{
+            return val.itineraries
+        }).reduce((prev , curr , idx)=>{
+            return  prev.concat(curr)
+        },[])
+        setOwnTravelHistory(itineraries)
+        
+    },[userIdentifier])
 
     // Memoized fetch function the child can call after it updates ratings.
     const fetchUserAndProfile = useCallback(async () => {
@@ -125,8 +142,6 @@ export default function UserProfileView({
                 scoreRating: rating,
                 reviews: [],
             })
-            console.log("Fetched profile data:", profile)
-            console.log("Fetched rating data:", rating)
             //console.log("Fetched rating data:", formData.scoreRating)
         } catch (err: any) {
             console.error("Error fetching user or profile:", err)
@@ -139,6 +154,7 @@ export default function UserProfileView({
     useEffect(() => {
         if (userIdentifier) {
             fetchUserAndProfile()
+            if(originalIdQuery && originalIdQuery == "current-user") fetchOwnTravelHistory()
         }
     }, [userIdentifier, fetchUserAndProfile])
 
@@ -280,15 +296,15 @@ export default function UserProfileView({
                                         <span className="text-orange-400 font-bold text-lg">
                                             {(
                                                 0.2 *
-                                                    (formData.scoreRating
-                                                        .trust_score ?? 0) +
+                                                (formData.scoreRating
+                                                    .trust_score ?? 0) +
                                                 0.3 *
-                                                    (formData.scoreRating
-                                                        .engagement_score ??
-                                                        0) +
+                                                (formData.scoreRating
+                                                    .engagement_score ??
+                                                    0) +
                                                 0.5 *
-                                                    (formData.scoreRating
-                                                        .experience_score ?? 0)
+                                                (formData.scoreRating
+                                                    .experience_score ?? 0)
                                             ).toFixed(2)}
                                         </span>
                                         <span className="text-yellow-400">
@@ -299,20 +315,20 @@ export default function UserProfileView({
                                                         0,
                                                         Math.ceil(
                                                             0.2 *
-                                                                (formData
-                                                                    .scoreRating
-                                                                    .trust_score ??
-                                                                    0) +
-                                                                0.3 *
-                                                                    (formData
-                                                                        .scoreRating
-                                                                        .engagement_score ??
-                                                                        0) +
-                                                                0.5 *
-                                                                    (formData
-                                                                        .scoreRating
-                                                                        .experience_score ??
-                                                                        0)
+                                                            (formData
+                                                                .scoreRating
+                                                                .trust_score ??
+                                                                0) +
+                                                            0.3 *
+                                                            (formData
+                                                                .scoreRating
+                                                                .engagement_score ??
+                                                                0) +
+                                                            0.5 *
+                                                            (formData
+                                                                .scoreRating
+                                                                .experience_score ??
+                                                                0)
                                                         )
                                                     )
                                                 )
@@ -330,6 +346,9 @@ export default function UserProfileView({
                                 isOwnProfile={isOwnProfile}
                                 onRatingUpdated={fetchUserAndProfile}
                             />
+                        )}
+                        {isOwnProfile && (
+                            <UserTravelHistoryCard itineraries={ownTravelHistory}/>
                         )}
                     </div>
                 </div>

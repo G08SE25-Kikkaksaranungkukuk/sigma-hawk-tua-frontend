@@ -3,6 +3,7 @@
 import { UserProfile, UpdateUserProfile } from "../../types/user"
 import { tokenService } from "./tokenService"
 import { apiClient } from "@/lib/api"
+import { Group } from "next/dist/shared/lib/router/utils/route-regex"
 class UserService {
     private baseUrl = process.env.NEXT_PUBLIC_BASE_API_URL
 
@@ -215,6 +216,33 @@ class UserService {
         } catch (error) {
             console.error("Error updating user profile:", error)
             throw new Error("Failed to update user profile")
+        }
+    }
+
+    async getTravelHistory() : Promise<Group[]> {
+         try {
+            const token = await tokenService.getAuthToken()
+
+            if (!token) {
+                throw new Error("No authentication token found")
+            }
+
+            // Use fetch instead of apiClient for file upload to avoid Content-Type conflicts
+            const response = await fetch(
+                `${this.baseUrl}api/v2/travel/me`,
+                {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        // Don't set Content-Type - let browser set it with boundary
+                    },
+                    credentials: "include",
+                }
+            )
+            return (await response.json())['data']
+        } catch (error) {
+            console.error("Error fetching travel history:", error)
+            throw new Error("Failed to fetch travel history")
         }
     }
 }
