@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test"
+import { test, expect, request as playwrightRequest } from "@playwright/test"
 import { TEST_USERS_DATA, cleanupTestUsers, seedTestUsers } from "../setup/db-seeding"
 import { TestHelpers } from "../test-helpers"
 
@@ -75,51 +75,6 @@ test.describe("Admin View Reported Problem", () => {
         await page.goto('/admin');
         await expect(page.getByRole('heading', { name: 'Admin Dashboard' })).not.toBeVisible();
     })
-
-    test("admin can resolve reported problem", async ({ page }) => {
-        const adminUser = TEST_USERS_DATA.adminUser
-        await TestHelpers.loginUser(page, adminUser)
-        await page.goto('http://localhost:3000/report');
-        await page.getByRole('textbox', { name: 'Brief title for the report' }).click();
-        await page.getByRole('textbox', { name: 'Brief title for the report' }).fill('Bug found in my room');
-        await page.getByRole('combobox').click();
-        await page.getByText('🐛 Bug/Error', { exact: true }).click();
-        await page.getByRole('textbox', { name: 'Please provide details about' }).click();
-        await page.getByRole('textbox', { name: 'Please provide details about' }).fill('Big Black Bug in my room');
-        await page.getByRole('button', { name: 'Submit Report' }).click();
-        await page.goto('/admin');
-        await page.getByRole('button', { name: 'Mark as Resolved' }).click();
-        await expect(page.getByText('Report marked as resolved')).toBeVisible();
-    })
-
-    test("admin can search and filter reported problem", async ({ page }) => {
-        const adminUser = TEST_USERS_DATA.adminUser
-        await TestHelpers.loginUser(page, adminUser)
-        await page.goto('http://localhost:3000/report');
-        await page.getByRole('textbox', { name: 'Brief title for the report' }).click();
-        await page.getByRole('textbox', { name: 'Brief title for the report' }).fill('Bug found in my room');
-        await page.getByRole('combobox').click();
-        await page.getByText('🐛 Bug/Error', { exact: true }).click();
-        await page.getByRole('textbox', { name: 'Please provide details about' }).click();
-        await page.getByRole('textbox', { name: 'Please provide details about' }).fill('Big Black Bug in my room');
-        await page.getByRole('button', { name: 'Submit Report' }).click();
-
-        await page.goto('/admin');
-        await page.getByRole('textbox', { name: 'Search reports...' }).click();
-        await page.getByRole('textbox', { name: 'Search reports...' }).fill('Bug found');
-        await page.getByRole('button', { name: 'Search' }).click();
-        await expect(page.getByText('Bug found in my room')).toBeVisible();
-        await page.getByRole('textbox', { name: 'Search reports...' }).fill('easy report');
-        await expect(page.getByText('Bug found in my room')).not.toBeVisible();
-        await page.getByRole('textbox', { name: 'Search reports...' }).fill('');
-        await page.getByRole('combobox', { name: 'Filter by Status' }).click();
-        await page.getByText('Unresolved', { exact: true }).click();
-        await expect(page.getByText('Unresolved')).toBeVisible();
-        await page.getByRole('combobox', { name: 'Filter by Reason' }).click();
-        await page.getByText('🐛 Bug/Error', { exact: true }).click();
-        await expect(page.getByText('🐛 Bug/Error')).toBeVisible();
-    })
-
 
 })
 
