@@ -61,6 +61,9 @@ apiClient.interceptors.request.use((config) => {
   const token = getAccessTokenFromCookies();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+    console.log('[apiClient] Adding Authorization header to request:', config.url, 'Token preview:', token.substring(0, 20) + '...');
+  } else {
+    console.log('[apiClient] No token found in cookies for request:', config.url);
   }
   return config;
 });

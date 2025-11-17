@@ -171,13 +171,23 @@ class UserService {
                 formData.append("profile", profileImageFile)
                 // formData.append("email", user.email);
 
-                console.log("Uploading profile image with fetch...")
+                console.log("Uploading profile image with apiClient...")
+
+                // Get token to verify it exists
+                const token = await tokenService.getAuthToken()
+                console.log("Token exists:", !!token, "Token preview:", token?.substring(0, 20) + "...")
 
                 // Use apiClient - it will automatically add Authorization header
                 // Don't set Content-Type - axios will set it with proper boundary for multipart/form-data
                 const response_img = await apiClient.post(
                     `${this.baseUrl}/api/v1/user/profile_pic`,
-                    formData
+                    formData,
+                    {
+                        headers: {
+                            // Don't set Content-Type - let axios handle it for FormData
+                            "Content-Type": "multipart/form-data",
+                        }
+                    }
                 )
 
                 console.log("Profile image upload response:", response_img)
