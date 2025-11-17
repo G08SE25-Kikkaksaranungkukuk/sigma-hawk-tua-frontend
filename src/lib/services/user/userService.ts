@@ -93,20 +93,13 @@ class UserService {
                 // Use current user's email for current user requests
                 userEmail = user ? user.email : ""
             } else if (/^\d+$/.test(command)) {
-                // If command is a user_id, we need to get the email from session storage
-                // This is stored when we navigate from components that have both user_id and email
-                const userIdToEmailMap =
-                    sessionStorage.getItem("userIdToEmailMap")
-                const emailMap = userIdToEmailMap
-                    ? JSON.parse(userIdToEmailMap)
-                    : {}
-                userEmail = emailMap[command] || ""
-
-                if (!userEmail) {
-                    throw new Error(
-                        `Unable to find email for user ID: ${command}. Please navigate from a page with user information.`
-                    )
-                }
+                // If command is a user_id, fetch by user ID
+                console.log("Fetching user by ID:", command)
+                const response = await apiClient.get<UserProfile, UserProfile>(
+                    `${this.baseUrl}/api/v1/user/id/${command}`
+                )
+                console.log("User profile response data:", response)
+                return this.transformUserData(response)
             } else {
                 // Otherwise treat it as email (for backwards compatibility)
                 userEmail = command
