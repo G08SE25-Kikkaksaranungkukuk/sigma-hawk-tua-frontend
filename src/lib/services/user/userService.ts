@@ -183,14 +183,14 @@ class UserService {
                 // Use fetch instead of apiClient for file upload to avoid Content-Type conflicts
                 const response_img = await apiClient.post(
                     `${this.baseUrl}/api/v1/user/profile_pic`,
+                    formData,
                     {
-                        method: "POST",
-                        body: formData,
                         headers: {
                             Authorization: `Bearer ${token}`,
                             // Don't set Content-Type - let browser set it with boundary
                         },
-                    }, { withCredentials: true }
+                        withCredentials: true,
+                    }
                 )
 
                 if (response_img.status !== 200) {
