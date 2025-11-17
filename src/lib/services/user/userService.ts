@@ -110,7 +110,7 @@ class UserService {
             }
 
             const response = await apiClient.post<UserProfile, UserProfile>(
-                `${this.baseUrl}api/v1/user/`,
+                `${this.baseUrl}/api/v1/user/`,
                 { email: userEmail },
                 {
                     headers: {
@@ -181,7 +181,7 @@ class UserService {
 
                 // Use fetch instead of apiClient for file upload to avoid Content-Type conflicts
                 const response_img = await fetch(
-                    `${this.baseUrl}api/v1/user/profile_pic`,
+                    `${this.baseUrl}/api/v1/user/profile_pic`,
                     {
                         method: "POST",
                         body: formData,
@@ -201,7 +201,7 @@ class UserService {
                 console.log("Profile image upload response:", uploadResult)
             }
             const response = await apiClient.patch(
-                `${this.baseUrl}api/v1/user/`,
+                `${this.baseUrl}/api/v1/user/`,
                 payload,
                 {
                     headers: {
@@ -229,7 +229,7 @@ class UserService {
 
             // Use fetch instead of apiClient for file upload to avoid Content-Type conflicts
             const response = await fetch(
-                `${this.baseUrl}api/v2/travel/me`,
+                `${this.baseUrl}/api/v2/travel/me`,
                 {
                     method: "GET",
                     headers: {
