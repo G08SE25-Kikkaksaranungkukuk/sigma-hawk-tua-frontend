@@ -40,9 +40,17 @@ class UserService {
     private transformUserData(backendData: any): UserProfile {
         // Return null for profileImage if user doesn't have one
         // This allows UI to display first character of user's name as fallback
-        const profileImageUrl = backendData.profile_url
-            ? `${process.env.NEXT_PUBLIC_BASE_API_URL}/${backendData.profile_url}?t=${Date.now()}`
-            : null
+        let profileImageUrl = null;
+        if (backendData.profile_url) {
+            // Remove leading slash from profile_url if it exists
+            const cleanPath = backendData.profile_url.startsWith('/') 
+                ? backendData.profile_url.substring(1) 
+                : backendData.profile_url;
+            
+            // Use file server URL for profile images
+            const fileServerUrl = process.env.NEXT_PUBLIC_FILE_API_URL || 'https://thamroidufs.duckdns.org';
+            profileImageUrl = `${fileServerUrl}/${cleanPath}?t=${Date.now()}`;
+        }
 
         return {
             firstName: backendData.first_name || "",
@@ -186,7 +194,8 @@ class UserService {
                         headers: {
                             // Don't set Content-Type - let axios handle it for FormData
                             "Content-Type": "multipart/form-data",
-                        }
+                        },
+                        withCredentials: true,
                     }
                 )
 
