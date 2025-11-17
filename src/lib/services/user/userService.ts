@@ -1,5 +1,6 @@
 // User service for handling user-related API calls
 // This service will be used to fetch user data from the database
+import { tree } from "next/dist/build/templates/app-page"
 import { UserProfile, UpdateUserProfile } from "../../types/user"
 import { tokenService } from "./tokenService"
 import { apiClient } from "@/lib/api"
@@ -180,7 +181,7 @@ class UserService {
                 console.log("Uploading profile image with fetch...")
 
                 // Use fetch instead of apiClient for file upload to avoid Content-Type conflicts
-                const response_img = await fetch(
+                const response_img = await apiClient.post(
                     `${this.baseUrl}/api/v1/user/profile_pic`,
                     {
                         method: "POST",
@@ -189,15 +190,14 @@ class UserService {
                             Authorization: `Bearer ${token}`,
                             // Don't set Content-Type - let browser set it with boundary
                         },
-                        credentials: "include",
-                    }
+                    }, { withCredentials: true }
                 )
 
-                if (!response_img.ok) {
+                if (response_img.status !== 200) {
                     throw new Error(`Upload failed: ${response_img.statusText}`)
                 }
 
-                const uploadResult = await response_img.json()
+                const uploadResult = await response_img.data
                 console.log("Profile image upload response:", uploadResult)
             }
             const response = await apiClient.patch(
