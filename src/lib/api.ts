@@ -40,12 +40,30 @@ const apiClient: AxiosInstance = axios.create({
   withCredentials: true,                            // optional: set default if you always need cookies
 });
 
-// Optional: attach auth header if you use tokens
-// apiClient.interceptors.request.use((config) => {
-//   const token = getTokenSomehow();
-//   if (token) config.headers.Authorization = `Bearer ${token}`;
-//   return config;
-// });
+// Helper function to get accessToken from cookies
+function getAccessTokenFromCookies(): string | null {
+  if (typeof document === 'undefined') return null;
+  
+  const cookies = document.cookie.split(';');
+  const accessTokenCookie = cookies.find(cookie => 
+    cookie.trim().startsWith('accessToken=')
+  );
+  
+  if (accessTokenCookie) {
+    return accessTokenCookie.split('=')[1];
+  }
+  
+  return null;
+}
+
+// Attach auth header with token from cookies
+apiClient.interceptors.request.use((config) => {
+  const token = getAccessTokenFromCookies();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 apiClient.interceptors.response.use(
   (response) => {
