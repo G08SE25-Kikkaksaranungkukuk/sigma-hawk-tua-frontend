@@ -126,24 +126,6 @@ export const TEST_GROUP_DATA = {
     },
 }
 
-export const TEST_REPORTS = [
-    {
-        title: 'Spam content in comments',
-        reason: 'SPAM',
-        description: 'User repeatedly posts promotional links and spam messages in comments.',
-    },
-    {
-        title: 'Harassment in chat',
-        reason: 'HARASSMENT',
-        description: 'User sent abusive messages to multiple members in the group chat.',
-    },
-    {
-        title: 'Inappropriate images',
-        reason: 'INAPPROPRIATE_CONTENT',
-        description: 'User uploaded images that violate community guidelines.',
-    },
-];
-
 export const TEST_ITINERARY_DATA = [
     {
         title: "Samyan",
@@ -355,30 +337,6 @@ async function createAndAssignItinerary(
 /**
  * Create a set of test reports using an authenticated axios instance
  */
-async function createTestReports(axiosInstance: any, userEmail: string): Promise<void> {
-    console.log(`📝 Creating test reports as ${userEmail}...`)
-    for (const r of TEST_REPORTS) {
-        try {
-            const res = await axiosInstance.post(
-                `${API_BASE_URL.replace('/v1','/v2')}/reports`,
-                {
-                    title: r.title,
-                    reason: r.reason,
-                    description: r.description,
-                },
-                { withCredentials: true }
-            )
-
-            if (res.status === 200 || res.status === 201) {
-                console.log(`✅ Created report: ${r.title}`)
-            } else {
-                console.log(`⚠️  Report creation returned status ${res.status} for: ${r.title}`)
-            }
-        } catch (error: any) {
-            console.warn(`⚠️  Failed to create report ${r.title}:`, error.response?.data || error.message)
-        }
-    }
-}
 
 /**
  * Assigns an itinerary to a group
@@ -537,15 +495,6 @@ export async function seedTestUsers() {
     }
 
     // Create some sample reports under testUser1 so admin pages have data to display
-    try {
-        const testUser = TEST_USERS_DATA.testUser1
-        const axiosInstance = await createAuthenticatedAxios(testUser)
-        if (axiosInstance) {
-            await createTestReports(axiosInstance, testUser.email)
-        }
-    } catch (err) {
-        console.warn('Failed to create test reports:', err)
-    }
 
     console.log(`\n📊 Total groups created: ${allGroupIds.length} (IDs: ${allGroupIds.join(', ')})\n`)
     printSeedingSummary(results)
