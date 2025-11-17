@@ -37,7 +37,7 @@ const apiClient: AxiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_BASE_API_URL,      
   headers: { "Content-Type": "application/json" },
   // timeout: 15000,                                   // optional: add a timeout
-  // withCredentials: true,                            // optional: set default if you always need cookies
+  withCredentials: true,                            // optional: set default if you always need cookies
 });
 
 // Optional: attach auth header if you use tokens
