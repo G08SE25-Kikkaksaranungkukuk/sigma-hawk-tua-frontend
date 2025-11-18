@@ -75,7 +75,7 @@ class RatingService {
             const userId = await this.getUserIdFromIdentifier(userIdentifier)
 
             const response: any = await apiClient.get(
-                `${this.baseUrl}api/v1/rating/user/${userId}/rating`,
+                `${this.baseUrl}/api/v1/rating/user/${userId}/rating`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -123,7 +123,7 @@ class RatingService {
             const userId = await this.getUserIdFromIdentifier(userIdentifier)
 
             const response: any = await apiClient.put(
-                `${this.baseUrl}api/v1/rating/user/${userId}/rating`,
+                `${this.baseUrl}/api/v1/rating/user/${userId}/rating`,
                 rating,
                 {
                     headers: {
@@ -161,7 +161,7 @@ class RatingService {
             const userId = await this.getUserIdFromIdentifier(userIdentifier)
 
             const response: any = await apiClient.post(
-                `${this.baseUrl}api/v1/rating/user/${userId}/rating`,
+                `${this.baseUrl}/api/v1/rating/user/${userId}/rating`,
                 ratingData,
                 {
                     headers: {
@@ -190,7 +190,7 @@ class RatingService {
             const userId = await this.getUserIdFromIdentifier(userIdentifier)
 
             const response: any = await apiClient.get(
-                `${this.baseUrl}api/v1/rating/user/${userId}/rating`,
+                `${this.baseUrl}/api/v1/rating/user/${userId}/rating`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,

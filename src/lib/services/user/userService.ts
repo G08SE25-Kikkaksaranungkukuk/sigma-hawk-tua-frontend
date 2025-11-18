@@ -1,5 +1,6 @@
 // User service for handling user-related API calls
 // This service will be used to fetch user data from the database
+import { tree } from "next/dist/build/templates/app-page"
 import { UserProfile, UpdateUserProfile } from "../../types/user"
 import { tokenService } from "./tokenService"
 import { apiClient } from "@/lib/api"
@@ -39,9 +40,17 @@ class UserService {
     private transformUserData(backendData: any): UserProfile {
         // Return null for profileImage if user doesn't have one
         // This allows UI to display first character of user's name as fallback
-        const profileImageUrl = backendData.profile_url
-            ? `http://localhost:6969/${backendData.profile_url}?t=${Date.now()}`
-            : null
+        let profileImageUrl = null;
+        if (backendData.profile_url) {
+            // Remove leading slash from profile_url if it exists
+            const cleanPath = backendData.profile_url.startsWith('/') 
+                ? backendData.profile_url.substring(1) 
+                : backendData.profile_url;
+            
+            // Use file server URL for profile images
+            const fileServerUrl = process.env.NEXT_PUBLIC_FILE_API_URL || 'https://thamroidufs.duckdns.org';
+            profileImageUrl = `${fileServerUrl}/${cleanPath}?t=${Date.now()}`;
+        }
 
         return {
             firstName: backendData.first_name || "",
@@ -110,15 +119,8 @@ class UserService {
             }
 
             const response = await apiClient.post<UserProfile, UserProfile>(
-                `${this.baseUrl}api/v1/user/`,
-                { email: userEmail },
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                    },
-                    withCredentials: true,
-                }
+                `${this.baseUrl}/api/v1/user/`,
+                { email: userEmail }
             )
 
             console.log("User profile response data:", response)
@@ -177,39 +179,31 @@ class UserService {
                 formData.append("profile", profileImageFile)
                 // formData.append("email", user.email);
 
-                console.log("Uploading profile image with fetch...")
+                console.log("Uploading profile image with apiClient...")
 
-                // Use fetch instead of apiClient for file upload to avoid Content-Type conflicts
-                const response_img = await fetch(
-                    `${this.baseUrl}api/v1/user/profile_pic`,
+                // Get token to verify it exists
+                const token = await tokenService.getAuthToken()
+                console.log("Token exists:", !!token, "Token preview:", token?.substring(0, 20) + "...")
+
+                // Use apiClient - it will automatically add Authorization header
+                // Don't set Content-Type - axios will set it with proper boundary for multipart/form-data
+                const response_img = await apiClient.post(
+                    `${this.baseUrl}/api/v1/user/profile_pic`,
+                    formData,
                     {
-                        method: "POST",
-                        body: formData,
                         headers: {
-                            Authorization: `Bearer ${token}`,
-                            // Don't set Content-Type - let browser set it with boundary
+                            // Don't set Content-Type - let axios handle it for FormData
+                            "Content-Type": "multipart/form-data",
                         },
-                        credentials: "include",
+                        withCredentials: true,
                     }
                 )
 
-                if (!response_img.ok) {
-                    throw new Error(`Upload failed: ${response_img.statusText}`)
-                }
-
-                const uploadResult = await response_img.json()
-                console.log("Profile image upload response:", uploadResult)
+                console.log("Profile image upload response:", response_img)
             }
             const response = await apiClient.patch(
-                `${this.baseUrl}api/v1/user/`,
-                payload,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                    },
-                    withCredentials: true,
-                }
+                `${this.baseUrl}/api/v1/user/`,
+                payload
             )
             console.log("Update profile response data:", response)
             return this.transformUserData(response)
@@ -221,25 +215,10 @@ class UserService {
 
     async getTravelHistory() : Promise<Group[]> {
          try {
-            const token = await tokenService.getAuthToken()
-
-            if (!token) {
-                throw new Error("No authentication token found")
-            }
-
-            // Use fetch instead of apiClient for file upload to avoid Content-Type conflicts
-            const response = await fetch(
-                `${this.baseUrl}api/v2/travel/me`,
-                {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        // Don't set Content-Type - let browser set it with boundary
-                    },
-                    credentials: "include",
-                }
+            const response = await apiClient.get(
+                `${this.baseUrl}/api/v2/travel/me`
             )
-            return (await response.json())['data']
+            return response['data']
         } catch (error) {
             console.error("Error fetching travel history:", error)
             throw new Error("Failed to fetch travel history")

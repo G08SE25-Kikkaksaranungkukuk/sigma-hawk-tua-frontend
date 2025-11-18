@@ -156,7 +156,7 @@ export default function GroupInfoPage({
             userId: member.user_id.toString(), // Add userId for secure routing
             name: `${member.first_name} ${member.last_name}`,
             avatar: member.profile_url
-                ? `http://localhost:6969/${member.profile_url}?t=${Date.now()}`
+                ? `${process.env.NEXT_PUBLIC_BASE_API_URL}/${member.profile_url}?t=${Date.now()}`
                 : `https://ui-avatars.com/api/?name=${encodeURIComponent(
                       `${member.first_name} ${member.last_name}`
                   )}&background=ff6600&color=ffffff&size=128`,

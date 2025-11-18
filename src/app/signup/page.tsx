@@ -125,7 +125,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
     // Email existence check function
     const checkEmailExists = async (email: string): Promise<boolean> => {
         try {
-           const res = await axios.get(`${API_BASE_URL}api/v1/auth/email/status`, {
+           const res = await axios.get(`${API_BASE_URL}/api/v1/auth/email/status`, {
             params: { email },
         });
             return Boolean(res.data?.data?.exists);
@@ -190,7 +190,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
             console.log("Sending payload:", payload);
 
             const response = await axios.post(
-                "http://localhost:8080/api/v1/auth/register",
+                `${API_BASE_URL}/api/v1/auth/register`,
                 payload
             );
 
