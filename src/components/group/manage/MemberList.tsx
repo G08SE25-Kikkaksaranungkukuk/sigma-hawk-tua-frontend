@@ -1,4 +1,5 @@
-import { Crown, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Crown, Trash2, Users } from "lucide-react";
 
 interface Member {
     user_id: number
@@ -21,7 +22,7 @@ interface Props {
 
 
 // Helper to calculate age from birthdate string or Date
-function getAge(birthDate: Date | string | undefined): number | null {
+function getAge(birthDate: Date | string): number | null {
   if (!birthDate) return null;
   const date = typeof birthDate === 'string' ? new Date(birthDate) : birthDate;
   if (isNaN(date.getTime())) return null;
@@ -58,16 +59,16 @@ export default function MemberList({ members, onDelete, onTransfer }: Props) {
                                 <span></span>
                             )}
                         </div>
-                        <p className="text-sm text-gray-300">{m.birth_date && getAge(m.birth_date) ? `${getAge(m.birth_date)}Y` : '-'} Bangkok, Thailand</p>
+                        <p className="text-sm text-gray-300">{getAge(m.birth_date) ? `${getAge(m.birth_date)}Y` : '-'} Bangkok, Thailand</p>
                     </div>
                 </div>
                 <div className="flex flex-col h-[50px] justify-end items-end">
                   {(!m.isOwner) && (
                     <div className="flex flex-row h-[30px] gap-2">
-                        <button className="bg-amber-500/80 rounded-md p-1 w-auto font-semibold" onClick={()=>onTransfer(m.user_id)} title="Promote to owner">
+                        <button className="bg-amber-500/80 rounded-md p-1 w-auto font-semibold" onClick={()=>onTransfer(m.user_id)}>
                             <p className="text-sm text-black">Promote</p>
                         </button>
-                        <button className="bg-rose-400 rounded-md p-1 h-auto flex items-center justify-center text-black" onClick={()=>{onDelete(m.user_id)}} title="Remove member"><Trash2 size={18}></Trash2></button>
+                        <button className="bg-rose-400 rounded-md p-1 h-auto flex items-center justify-center text-black" onClick={()=>{onDelete(m.user_id)}}><Trash2 size={18}></Trash2></button>
                     </div>
                   )}
                 </div>
