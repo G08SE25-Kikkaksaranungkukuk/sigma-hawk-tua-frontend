@@ -34,3 +34,5 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 use "pnpm test" for testing
 use "pnpm playwright test --workers={i}" if you feel 6 worker is too much.
+
+---
