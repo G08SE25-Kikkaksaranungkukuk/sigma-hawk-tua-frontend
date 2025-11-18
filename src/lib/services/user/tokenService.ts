@@ -86,7 +86,7 @@ class TokenService {
   */
     async refreshToken(): Promise<boolean> {
         try {
-            const response = await fetch(`${this.baseUrl}auth/refresh`, {
+            const response = await fetch(`${this.baseUrl}/api/v1/auth/refresh`, {
                 method: "POST",
                 credentials: "include",
                 headers: {

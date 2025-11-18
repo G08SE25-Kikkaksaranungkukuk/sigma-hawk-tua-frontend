@@ -8,10 +8,10 @@ import { useState, useEffect } from "react";
 
 interface GroupHeroProps {
   title: string;
-  destination: string;
-  dateRange: string;
-  timezone: string;
-  location: string;
+  destination?: string;
+  dateRange?: string;
+  timezone?: string;
+  location?: string;
   interests: Interest[];
   groupType: string;
   isPublic: boolean;
@@ -82,7 +82,7 @@ export function GroupHero({
   // 2. Fallback to groupImage prop (static fallback)
   const displayImage = profileImageUrl || groupImage;
   return (
-    <div className="bg-gradient-to-r from-[#12131a] to-[#1a1b24] rounded-3xl border border-[rgba(255,102,0,0.25)] overflow-hidden">
+    <div className="bg-gray-900/60 backdrop-blur-sm rounded-3xl border border-orange-500/20 overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5 pointer-events-none">
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#ff6600] rounded-full blur-3xl transform translate-x-32 -translate-y-32"></div>
@@ -134,45 +134,53 @@ export function GroupHero({
 
           {/* Details Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="flex items-center gap-3 p-4 bg-black/20 rounded-xl border border-[rgba(255,102,0,0.15)]">
-              <div className="w-10 h-10 bg-[#ff6600]/20 rounded-lg flex items-center justify-center">
-                <MapPin className="w-5 h-5 text-[#ff6600]" />
+            {destination && (
+              <div className="flex items-center gap-3 p-4 bg-black/20 rounded-xl border border-[rgba(255,102,0,0.15)]">
+                <div className="w-10 h-10 bg-[#ff6600]/20 rounded-lg flex items-center justify-center">
+                  <MapPin className="w-5 h-5 text-[#ff6600]" />
+                </div>
+                <div>
+                  <p className="text-gray-400 text-sm">Destination</p>
+                  <p className="text-white font-medium">{destination}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-gray-400 text-sm">Destination</p>
-                <p className="text-white font-medium">{destination}</p>
-              </div>
-            </div>
+            )}
             
-            <div className="flex items-center gap-3 p-4 bg-black/20 rounded-xl border border-[rgba(255,102,0,0.15)]">
-              <div className="w-10 h-10 bg-[#ff6600]/20 rounded-lg flex items-center justify-center">
-                <Calendar className="w-5 h-5 text-[#ff6600]" />
+            {dateRange && (
+              <div className="flex items-center gap-3 p-4 bg-black/20 rounded-xl border border-[rgba(255,102,0,0.15)]">
+                <div className="w-10 h-10 bg-[#ff6600]/20 rounded-lg flex items-center justify-center">
+                  <Calendar className="w-5 h-5 text-[#ff6600]" />
+                </div>
+                <div>
+                  <p className="text-gray-400 text-sm">Date Range</p>
+                  <p className="text-white font-medium">{dateRange}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-gray-400 text-sm">Date Range</p>
-                <p className="text-white font-medium">{dateRange}</p>
-              </div>
-            </div>
+            )}
             
-            <div className="flex items-center gap-3 p-4 bg-black/20 rounded-xl border border-[rgba(255,102,0,0.15)]">
-              <div className="w-10 h-10 bg-[#ff6600]/20 rounded-lg flex items-center justify-center">
-                <Clock className="w-5 h-5 text-[#ff6600]" />
+            {timezone && (
+              <div className="flex items-center gap-3 p-4 bg-black/20 rounded-xl border border-[rgba(255,102,0,0.15)]">
+                <div className="w-10 h-10 bg-[#ff6600]/20 rounded-lg flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-[#ff6600]" />
+                </div>
+                <div>
+                  <p className="text-gray-400 text-sm">Timezone</p>
+                  <p className="text-white font-medium">{timezone}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-gray-400 text-sm">Timezone</p>
-                <p className="text-white font-medium">{timezone}</p>
-              </div>
-            </div>
+            )}
             
-            <div className="flex items-center gap-3 p-4 bg-black/20 rounded-xl border border-[rgba(255,102,0,0.15)]">
-              <div className="w-10 h-10 bg-[#ff6600]/20 rounded-lg flex items-center justify-center">
-                <Globe className="w-5 h-5 text-[#ff6600]" />
+            {location && (
+              <div className="flex items-center gap-3 p-4 bg-black/20 rounded-xl border border-[rgba(255,102,0,0.15)]">
+                <div className="w-10 h-10 bg-[#ff6600]/20 rounded-lg flex items-center justify-center">
+                  <Globe className="w-5 h-5 text-[#ff6600]" />
+                </div>
+                <div>
+                  <p className="text-gray-400 text-sm">Location</p>
+                  <p className="text-white font-medium">{location}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-gray-400 text-sm">Location</p>
-                <p className="text-white font-medium">{location}</p>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Interests */}

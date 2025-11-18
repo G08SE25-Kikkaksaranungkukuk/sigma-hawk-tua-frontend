@@ -1,0 +1,27 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "heading",
+      "attrs": { "textAlign": null, "level": 1 },
+      "content": [
+        { "type": "text", "text": "Uma Musume Trip to Tokyo Racecourse" }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": { "textAlign": null },
+      "content": [
+        { "type": "text", "text": "We gathered the squad for a dream-like day at the racecourse, cheering on our favorite “horse girls” and soaking in the atmosphere!" }
+      ]
+    },
+    {
+      "type": "image",
+      "attrs": {
+        "src": "https://static0.thegamerimages.com/wordpress/wp-content/uploads/wm/2025/07/umamusume-pretty-derby-mejiro-mcqueen-singing.jpg?q=49&fit=crop&w=825&dpr=2",
+        "alt": "Uma Musume Race Scene",
+        "title": "Uma Musume at Tokyo Racecourse"
+      }
+    }
+  ]
+}

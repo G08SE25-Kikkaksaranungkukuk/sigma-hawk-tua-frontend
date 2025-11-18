@@ -1,5 +1,5 @@
 import { useRouter } from "next/navigation";
-import { Group, GroupData } from "../../lib/types/home";
+import { GroupResponse } from '@/lib/types';
 
 type RouterType = ReturnType<typeof useRouter>;
 
@@ -18,14 +18,14 @@ export const handleCreateGroup = (router: RouterType) => {
     console.log('Create group clicked');
 };
 
-export const handleViewGroup = (router: RouterType, group: GroupData) => {
+export const handleViewGroup = (router: RouterType, group: GroupResponse) => {
     router.push(`/group/${group.group_id}/info`);
     console.log('View group:', group);
 };
 
 export const handleLogout = async (router: RouterType) => {
     try {
-        await fetch(`${BASE_API_URL}auth/logout`, {
+        await fetch(`${BASE_API_URL}/api/v1/auth/logout`, {
             method: "POST",
             credentials: "include", // ส่ง cookie ไปด้วย
         });

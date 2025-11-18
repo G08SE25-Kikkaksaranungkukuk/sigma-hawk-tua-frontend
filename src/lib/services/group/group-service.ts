@@ -1,132 +1,274 @@
-import { GroupData, UserData, GroupResponse, CreateGroupRequest, Interest } from "@/lib/types";
-import axios, {AxiosResponse} from "axios";
-import { apiClient } from "@/lib/api";
-import { X } from "lucide-react";
-
-// Sample data for development - move to API/database in production
-export const SAMPLE_GROUP_DATA = {
-  id: "g1",
-  title: "Bangkok → Chiang Mai Lantern Trip",
-  destination: "Chiang Mai, Thailand",
-  dates: "12–16 Nov 2025 • 4 nights",
-  timezone: "GMT+7",
-  description:
-    "We're catching the Yi Peng lantern festival, cafe hopping, and a one‑day trek. Looking for easy‑going travelers who like food, photos, and night markets.",
-  privacy: "Private",
-  maxSize: 8,
-  currentSize: 5,
-  pace: "Balanced",
-  languages: ["English", "ไทย"],
-  interests: ["Food tour", "Temples", "Street photo", "Hiking", "Night market"],
-  requirements: ["ID/passport required for flights", "Comfortable with shared rooms", "Respect local culture"],
-  rules: ["No smoking in rooms", "Split bills with app", "Quiet hours 22:30–07:00"],
-  itinerary: [
-    { day: "Day 1", plan: "Fly BKK → CNX | Nimman dinner" },
-    { day: "Day 2", plan: "Old City temples + cafe crawl" },
-    { day: "Day 3", plan: "Doi Suthep + Hmong village" },
-    { day: "Day 4", plan: "Yi Peng Lantern Festival" },
-  ],
-  hostNote: "We prioritize friendly vibes over strict schedules ✨",
-  members: [
-    { id: "u1", name: "Mild", role: "Host" },
-    { id: "u2", name: "Ken", role: "Co‑host" },
-    { id: "u3", name: "Bea", role: "Member" },
-    { id: "u4", name: "Poom", role: "Member" },
-    { id: "u5", name: "Nui", role: "Member" },
-  ],
-};
+import {
+    UserData,
+    GroupResponse,
+    CreateGroupRequest,
+    UpdateGroupRequest,
+    Interest,
+    ItineraryRequest,
+    Itinerary,
+    ItineraryResponse,
+} from "@/lib/types"
+import axios, { AxiosResponse } from "axios"
+import { apiClient } from "@/lib/api"
+import { create } from "domain"
+import { get } from "http"
 
 // Group service implementation
 export const groupService = {
+    async getUserGroups(): Promise<GroupResponse[]> {
+        const responseGroup = await apiClient.get<
+            GroupResponse[],
+            GroupResponse[]
+        >("/api/v1/group/my/groups", { withCredentials: true })
 
-  async getUserGroups(): Promise<GroupData[]> {
-    const responseGroup = await apiClient.get<GroupResponse[], GroupResponse[]>('group/my/groups', { withCredentials: true });
-    
-    // Get detailed information for each group
-    const groupDetailsPromises = responseGroup.map(group => 
-      this.getGroupDetails(group.group_id.toString())
-    );
-    
-    const groupDetails = await Promise.all(groupDetailsPromises);
-    return groupDetails;
-  },
-  
-  getGroupDetails: async (groupId: string): Promise<GroupData> => {
-    const groupResponse = await apiClient.get<GroupData, GroupData>(`/group/${groupId}`, { withCredentials: true });
-    return groupResponse;
-  },
+        // Get detailed information for each group
+        const groupDetailsPromises = responseGroup.map((group) =>
+            this.getGroupDetails(group.group_id.toString())
+        )
 
-  getGroupProfile: async (groupId: string): Promise<{ data: any | Blob }> => {
-    const response = await apiClient.get(`/group/${groupId}/profile`, { 
-      responseType: 'blob' // Handle both JSON and binary responses
-    });
-    console.log("getGroupProfile response:", response);
-    return response;
-  },
-  
-  getCurrentUser: async (): Promise<UserData> => {
-    const response = await apiClient.get<UserData, UserData>(`/auth/whoami`, { withCredentials: true });
-    return response;
-  },
+        const groupDetails = await Promise.all(groupDetailsPromises)
+        return groupDetails
+    },
 
-  leaveGroup: async (groupId: string): Promise<void> => {
-    await apiClient.delete(`/group/${groupId}/leave`, {
-      withCredentials: true,
-    });
-  },
-  
-  joinGroup: async (groupId: string): Promise<void> => {
-    await apiClient.put(`/group/${groupId}/member`, {}, { withCredentials: true });
-  },
+    getGroupDetails: async (groupId: string): Promise<GroupResponse> => {
+        const groupResponse = await apiClient.get<GroupResponse, GroupResponse>(
+            `/api/v1/group/${groupId}`,
+            { withCredentials: true }
+        )
+        return groupResponse
+    },
 
-  getInterests: async (): Promise<Interest[]> => {
-    try {
-      const response = await apiClient.get<Interest[], Interest[]>('/user/interests/all');
-      return response
-    } catch (error) {
-      console.error('Failed to fetch interests from API:', error);
-      return [];
-    }
-  },
-  
-  createGroup: async (createGroupRequest: CreateGroupRequest): Promise<GroupData> => {
-    // Create FormData to handle file upload
-    const formData = new FormData();
-    
-    // Append text fields
-    formData.append('group_name', createGroupRequest.group_name);
-    if (createGroupRequest.description) {
-      formData.append('description', createGroupRequest.description);
-    }
-    if (createGroupRequest.max_members) {
-      formData.append('max_members', createGroupRequest.max_members.toString());
-    }
-    
-    // Append interest fields as JSON string or individual entries
-    if (createGroupRequest.interest_fields && createGroupRequest.interest_fields.length > 0) {
-      createGroupRequest.interest_fields.forEach((interest, index) => {
-        formData.append(`interest_fields[${index}]`, interest);
-      });
-    }
-    
-    // Append file if provided
-    if (createGroupRequest.profile) {
-      formData.append('profile', createGroupRequest.profile);
-    }
-    
-    const response = await apiClient.post<GroupData, GroupData>('/group', formData, {
-      withCredentials: true,
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response;
-  },
-  
-  contactHost: async (groupId: string, message: string): Promise<void> => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    console.log(`Contacting host for group ${groupId}:`, message);
-  }
-};
+    getGroupProfile: async (groupId: string): Promise<{ data: any | Blob }> => {
+        const response = await apiClient.get(
+            `/api/v1/group/${groupId}/profile`,
+            {
+                responseType: "blob", // Handle both JSON and binary responses
+            }
+        )
+        return response
+    },
+
+    getCurrentUser: async (): Promise<UserData> => {
+        const response = await apiClient.get<UserData, UserData>(
+            `/api/v1/auth/whoami`,
+            { withCredentials: true }
+        )
+        return response
+    },
+
+    leaveGroup: async (groupId: string): Promise<void> => {
+        await apiClient.delete(`/api/v1/group/${groupId}/leave`, {
+            withCredentials: true,
+        })
+    },
+
+    joinGroup: async (groupId: string): Promise<void> => {
+        await apiClient.put(
+            `/api/v1/group/${groupId}/member`,
+            {},
+            { withCredentials: true }
+        )
+    },
+
+    getInterests: async (): Promise<Interest[]> => {
+        try {
+            const response = await apiClient.get<Interest[], Interest[]>(
+                "/api/v1/user/interests/all"
+            )
+            return response
+        } catch (error) {
+            console.error("Failed to fetch interests from API:", error)
+            return []
+        }
+    },
+
+    createGroup: async (
+        createGroupRequest: CreateGroupRequest
+    ): Promise<GroupResponse> => {
+        // Create FormData to handle file upload
+        const formData = new FormData()
+
+        // Append text fields
+        formData.append("group_name", createGroupRequest.group_name)
+        if (createGroupRequest.description) {
+            formData.append("description", createGroupRequest.description)
+        }
+        if (createGroupRequest.max_members) {
+            formData.append(
+                "max_members",
+                createGroupRequest.max_members.toString()
+            )
+        }
+
+        // Append interest fields as JSON string or individual entries
+        if (
+            createGroupRequest.interest_fields &&
+            createGroupRequest.interest_fields.length > 0
+        ) {
+            createGroupRequest.interest_fields.forEach((interest, index) => {
+                formData.append(`interest_fields[${index}]`, interest)
+            })
+        }
+
+        // Append file if provided
+        if (createGroupRequest.profile) {
+            formData.append("profile", createGroupRequest.profile)
+        }
+        console.log("Creating group with data:", { formData })
+        const response = await apiClient.post<GroupResponse, GroupResponse>(
+            "/api/v1/group",
+            formData,
+            {
+                withCredentials: true,
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            }
+        )
+        return response
+    },
+
+    getMemberProfile: async (
+        userEmail: string
+    ): Promise<{ data: any | Blob }> => {
+        const response = await apiClient.get(
+            `/api/v1/user/${userEmail}/profile_pic`,
+            { responseType: "blob" }
+        )
+        return response
+    },
+
+    contactHost: async (groupId: string, message: string): Promise<void> => {
+        // Simulate API call
+        await new Promise((resolve) => setTimeout(resolve, 500))
+
+        console.log(`Contacting host for group ${groupId}:`, message)
+    },
+
+    removeMember: async (groupId: string, userId: number): Promise<void> => {
+        await apiClient.delete(`/api/v1/group/${groupId}/member`, {
+            data: { user_id: userId },
+            withCredentials: true,
+        })
+    },
+
+    transferOwnership: async (
+        groupId: string,
+        userId: number
+    ): Promise<void> => {
+        await apiClient.patch(
+            `/api/v1/group/${groupId}/owner`,
+            {
+                user_id: userId,
+            },
+            {
+                withCredentials: true,
+            }
+        )
+    },
+
+    updateGroup: async (
+        groupId: string,
+        updateGroupRequest: UpdateGroupRequest
+    ): Promise<GroupResponse> => {
+        // Create FormData to handle file upload (same as createGroup)
+        const formData = new FormData()
+
+        // Append text fields
+        formData.append("group_name", updateGroupRequest.group_name)
+        if (updateGroupRequest.description) {
+            formData.append("description", updateGroupRequest.description)
+        }
+        formData.append(
+            "max_members",
+            updateGroupRequest.max_members.toString()
+        )
+
+        // Append interest fields as individual entries
+        if (
+            updateGroupRequest.interest_fields &&
+            updateGroupRequest.interest_fields.length > 0
+        ) {
+            updateGroupRequest.interest_fields.forEach((interest, index) => {
+                formData.append(`interest_fields[${index}]`, interest)
+            })
+        }
+
+        // Append file if provided
+        if (updateGroupRequest.profile) {
+            formData.append("profile", updateGroupRequest.profile)
+        }
+
+        const response = await apiClient.put<GroupResponse, GroupResponse>(
+            `/api/v1/group/${groupId}`,
+            formData,
+            {
+                withCredentials: true,
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            }
+        )
+        return response
+    },
+
+    getItineraries: async (groupId: string): Promise<ItineraryResponse[]> => {
+        const response = await apiClient.get<
+            ItineraryResponse[],
+            ItineraryResponse[]
+        >(`/api/v2/groups/${groupId}/itineraries`, {
+            withCredentials: true,
+        })
+        return response
+    },
+
+    updateItinerary: async (
+        groupId: string,
+        itinerary: ItineraryResponse
+    ): Promise<ItineraryResponse> => {
+        const response = await apiClient.put<
+            ItineraryResponse,
+            ItineraryResponse
+        >(`/api/v2/itineraries/${itinerary.itinerary_id}`, itinerary, {
+            withCredentials: true,
+        })
+        return response
+    },
+
+    createItinerary: async (
+        createItineraryRequest: ItineraryRequest
+    ): Promise<ItineraryResponse> => {
+        const response = await apiClient.post<
+            ItineraryResponse,
+            ItineraryResponse
+        >(`/api/v2/itineraries`, createItineraryRequest, {
+            withCredentials: true,
+        })
+        return response
+    },
+
+    assignItineraryToGroup: async (
+        groupId: string,
+        itinerary_id: number
+    ): Promise<void> => {
+        await apiClient.post(
+            `/api/v2/groups/${groupId}/itineraries/assign`,
+            { itinerary_id: itinerary_id },
+            {
+                withCredentials: true,
+            }
+        )
+    },
+
+    deleteItinerary: async (
+        groupId: string,
+        itineraryId: number
+    ): Promise<void> => {
+        await apiClient.delete(
+            `/api/v2/groups/${groupId}/itineraries/${itineraryId}`,
+            {
+                withCredentials: true,
+            }
+        )
+    },
+}

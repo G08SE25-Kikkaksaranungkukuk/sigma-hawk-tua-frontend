@@ -25,8 +25,8 @@ import {
     X,
     ChevronDown,
 } from "lucide-react";
-import { termsOfService } from "./termsOfService";
-import { privacyPolicy } from "./privacyPolicy";
+import TermsOfServiceModal from "./TermsOfServiceModal";
+import PrivacyPolicyModal from "./PrivacyPolicyModal";
 import axios from "axios";
 import { useFormValidation } from "../utils/validation";
 import { useRouter } from "next/navigation";
@@ -71,6 +71,8 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
     const [open, setOpen] = useState(false);
     const [showTermsModal, setShowTermsModal] = useState(false);
     const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+    const [scrolledTos, setScrolledTos] = useState(false);
+    const [scrolledPrivacy, setScrolledPrivacy] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [loading, setLoading] = useState(false);
     // Form States
@@ -88,6 +90,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
         []
     );
     const [consent, setConsent] = useState(false);
+    const [emailError, setEmailError] = useState("");
 
     // Toggle functions
     const toggleInterest = (id: string) => {
@@ -116,9 +119,25 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
         });
     };
 
+    // Get API base URL from environment
+    const API_BASE_URL = process.env.NEXT_PUBLIC_BASE_API_URL || "http://localhost:8080";
+
+    // Email existence check function
+    const checkEmailExists = async (email: string): Promise<boolean> => {
+        try {
+           const res = await axios.get(`${API_BASE_URL}/api/v1/auth/email/status`, {
+            params: { email },
+        });
+            return Boolean(res.data?.data?.exists);
+        } catch (err) {
+            return false;
+        }
+    };
+
     // Submit Handler
     const createUser = async (e: React.FormEvent) => {
         e.preventDefault();
+        setEmailError("");
 
         // สร้าง form data object สำหรับ validation
         const formData = {
@@ -141,9 +160,19 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
             return;
         }
 
-        try {
-            setLoading(true);
+        // เช็ค email ซ้ำก่อน submit
+        setLoading(true);
+        const emailExists = await checkEmailExists(email.trim());
+        
+        if (emailExists) {
+            setEmailError("This email cannot be used for registration.");
+            setLoading(false);
+            return;
+        }
+       
+    
 
+        try {
             // เตรียม payload สำหรับ backend
             const payload = {
                 first_name: firstName.trim(),
@@ -161,7 +190,7 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
             console.log("Sending payload:", payload);
 
             const response = await axios.post(
-                "http://localhost:8080/auth/register",
+                `${API_BASE_URL}/api/v1/auth/register`,
                 payload
             );
 
@@ -180,6 +209,9 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
             setLoading(false);
         }
     };
+
+    // Consent can only be checked if both have been scrolled
+    const canAgree = scrolledTos && scrolledPrivacy;
 
     return (
         <div className="min-h-screen bg-black p-4 bg-floating-shapes">
@@ -554,6 +586,11 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                                         ⚠️ {getError("email")}
                                     </p>
                                 )}
+                                {emailError && (
+                                    <p className="text-sm text-red-400 flex items-center gap-1">
+                                        ⚠️ {emailError}
+                                    </p>
+                                )}
                             </div>
 
                             {/* Password */}
@@ -622,11 +659,14 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                                     <Checkbox
                                         id="consent"
                                         checked={consent}
+                                        disabled={!canAgree}
                                         onCheckedChange={(checked) => {
-                                            setConsent(!!checked);
-                                            clearError("consent");
+                                            if (canAgree) {
+                                                setConsent(!!checked);
+                                                clearError("consent");
+                                            }
                                         }}
-                                        className="mt-1 border-2 border-orange-500/50"
+                                        className={`mt-1 border-2 border-orange-500/50 ${!canAgree ? "opacity-50 cursor-not-allowed" : ""}`}
                                     />
                                     <div className="text-sm leading-relaxed text-orange-200">
                                         ✅ I agree to the{" "}
@@ -655,6 +695,11 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                                         ⚠️ {getError("consent")}
                                     </p>
                                 )}
+                                {!canAgree && (
+                                    <div className="text-xs text-orange-400 mt-2 text-center">
+                                        Please read the Terms of Service and Privacy Policy before agreeing.
+                                    </div>
+                                )}
                             </div>
 
                             {/* Submit Button */}
@@ -675,48 +720,20 @@ export default function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
                         </form>
 
                         {/* Terms Modal */}
-                        {showTermsModal && (
-                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-                                <div className="bg-gray-900 border border-orange-500/30 rounded-xl p-6 max-w-lg w-full relative shadow-2xl">
-                                    <button
-                                        className="absolute top-3 right-3 text-orange-400 hover:text-orange-600"
-                                        onClick={() => setShowTermsModal(false)}
-                                        aria-label="Close"
-                                    >
-                                        <X className="w-6 h-6" />
-                                    </button>
-                                    <h2 className="text-xl font-bold text-orange-400 mb-2">
-                                        Terms of Service
-                                    </h2>
-                                    <div className="text-orange-200 text-sm max-h-64 overflow-y-auto whitespace-pre-line">
-                                        {termsOfService}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                        <TermsOfServiceModal
+                            isOpen={showTermsModal}
+                            onClose={() => setShowTermsModal(false)}
+                            onScrolledToBottom={() => setScrolledTos(true)}
+                            scrolledToBottom={scrolledTos}
+                        />
 
                         {/* Privacy Modal */}
-                        {showPrivacyModal && (
-                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-                                <div className="bg-gray-900 border border-orange-500/30 rounded-xl p-6 max-w-lg w-full relative shadow-2xl">
-                                    <button
-                                        className="absolute top-3 right-3 text-orange-400 hover:text-orange-600"
-                                        onClick={() =>
-                                            setShowPrivacyModal(false)
-                                        }
-                                        aria-label="Close"
-                                    >
-                                        <X className="w-6 h-6" />
-                                    </button>
-                                    <h2 className="text-xl font-bold text-orange-400 mb-2">
-                                        Privacy Policy (PDPA)
-                                    </h2>
-                                    <div className="text-orange-200 text-sm max-h-64 overflow-y-auto whitespace-pre-line">
-                                        {privacyPolicy}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                        <PrivacyPolicyModal
+                            isOpen={showPrivacyModal}
+                            onClose={() => setShowPrivacyModal(false)}
+                            onScrolledToBottom={() => setScrolledPrivacy(true)}
+                            scrolledToBottom={scrolledPrivacy}
+                        />
                     </CardContent>
                 </Card>
             </div>

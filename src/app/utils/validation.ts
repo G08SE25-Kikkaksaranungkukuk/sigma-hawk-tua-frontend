@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { signUpSchema, loginSchema } from "./schemas";
+import { signUpSchema, loginSchema, reportSchema } from "./schemas";
 
 export const useFormValidation = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -74,10 +74,36 @@ export const useFormValidation = () => {
     return errors[fieldName] || "";
   };
 
+  const validateReportForm = (formData: {
+    title: string;
+    reason: string;
+    description: string;
+  }): boolean => {
+    const result = reportSchema.safeParse(formData);
+
+    if (!result.success) {
+      // แปลง Zod errors เป็น error object
+      const newErrors: Record<string, string> = {};
+      result.error.issues.forEach((issue) => {
+        const path = issue.path[0] as string;
+        newErrors[path] = issue.message;
+      });
+      
+      setErrors(newErrors);
+      console.log("Report validation errors:", newErrors);
+      return false;
+    }
+
+    // ถ้า validation ผ่าน clear errors
+    setErrors({});
+    return true;
+  };
+
   return {
     errors,
     validateSignUpForm,
     validateLoginForm,
+    validateReportForm,
     clearError,
     getError,
   };

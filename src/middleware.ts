@@ -9,7 +9,7 @@ export async function middleware(request: NextRequest) {
     const refreshToken = request.cookies.get("refreshToken")
     const res = new NextResponse();
     if (!accessToken && refreshToken) {
-        const ret = await (await axios.post("http://localhost:8080/auth/refresh",{},{
+        const ret = await (await axios.post(`${process.env.NEXT_PUBLIC_BASE_API_URL}/api/v1/auth/refresh`,{},{
             headers : {
                 Authorization : `Bearer ${refreshToken.value}`
             },
