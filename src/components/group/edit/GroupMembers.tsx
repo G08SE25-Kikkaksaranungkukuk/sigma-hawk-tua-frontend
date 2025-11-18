@@ -184,7 +184,7 @@ export function GroupMembers({ groupId, maxMembers }: { groupId: number; maxMemb
                     <Avatar className="border-2 border-orange-400/30">
                       <AvatarImage 
                         src={member.profile_url 
-                          ? `http://localhost:6969/${member.profile_url}?t=${Date.now()}` 
+                          ? `${process.env.NEXT_PUBLIC_BASE_API_URL}/${member.profile_url}?t=${Date.now()}` 
                           : `https://ui-avatars.com/api/?name=${encodeURIComponent(getFullName(member))}&background=ff6600&color=ffffff&size=128`
                         } 
                       />

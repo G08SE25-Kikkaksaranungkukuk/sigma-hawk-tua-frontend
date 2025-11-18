@@ -1,10 +1,15 @@
 import { Button } from "@/components/ui/button";
-import { Calendar, MapPin, Clock, Pencil, Trash2, Link2 } from "lucide-react";
+import { Calendar, MapPin, Clock, Pencil, Trash2, Star } from "lucide-react";
 import { format } from "date-fns";
-import { Itinerary } from "@/lib/types";
+import { Itinerary, Place } from "@/lib/types";
+import { PlacePreviewCard } from "@/components/group/place/PlacePreviewCard";
+
+interface ItineraryWithPlaces extends Itinerary {
+  places?: Place[];
+}
 
 interface ItineraryCardProps {
-  itinerary: Itinerary;
+  itinerary: ItineraryWithPlaces;
   onEdit?: () => void;
   onDelete?: () => void;
 }
@@ -21,6 +26,9 @@ export function ItineraryCard({ itinerary, onEdit, onDelete }: ItineraryCardProp
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     return format(dateObj, "MMM d, yyyy");
   };
+
+  // Safely handle places array (can be undefined in old data)
+  const places = itinerary.places || [];
 
   return (
     <div className="border border-orange-500/20 bg-gray-900/60 backdrop-blur-sm rounded-xl p-4 hover:border-[#ff6600]/50 transition-colors">
@@ -72,42 +80,36 @@ export function ItineraryCard({ itinerary, onEdit, onDelete }: ItineraryCardProp
         </div>
         <div className="flex items-center gap-2 text-orange-200/70">
           <MapPin className="h-4 w-4" />
-          <span>{itinerary.place_links.length} {itinerary.place_links.length === 1 ? 'place' : 'places'}</span>
+          <span>{places.length} {places.length === 1 ? 'place' : 'places'}</span>
         </div>
       </div>
 
-      {/* Places links */}
-      {itinerary.place_links.length > 0 && (
+      {/* Places preview */}
+      {places.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-orange-300/80">
-            <Link2 className="w-4 h-4" />
+            <MapPin className="w-4 h-4" />
             <span className="text-sm font-medium">Places to visit</span>
           </div>
 
-          <div className="space-y-2">
-            {itinerary.place_links.slice(0, 3).map((link, index) => (
-              <a
-                key={index}
-                href={link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block px-3 py-2 rounded-lg bg-[#0b0b0c]/50 border border-gray-700/50 hover:border-orange-400/50 transition-colors text-orange-200/90 hover:text-orange-400 text-sm truncate"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold">{index + 1}.</span>
-                  <span className="truncate">{link}</span>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {places.slice(0, 4).map((place: Place, index: number) => (
+              <div key={index} className="relative">
+                <PlacePreviewCard place={place} />
+                <div className="absolute bottom-2 left-2 bg-[#ff6600]/90 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  {index + 1}
                 </div>
-              </a>
-            ))}
-
-            {itinerary.place_links.length > 3 && (
-              <div className="px-3 py-2 rounded-lg border border-dashed border-gray-700 bg-[#0b0b0c]/30 text-center">
-                <span className="text-xs text-orange-200/60 font-medium">
-                  +{itinerary.place_links.length - 3} more {itinerary.place_links.length - 3 === 1 ? 'place' : 'places'}
-                </span>
               </div>
-            )}
+            ))}
           </div>
+
+          {places.length > 4 && (
+            <div className="px-3 py-2 rounded-lg border border-dashed border-gray-700 bg-[#0b0b0c]/30 text-center">
+              <span className="text-xs text-orange-200/60 font-medium">
+                +{places.length - 4} more {places.length - 4 === 1 ? 'place' : 'places'}
+              </span>
+            </div>
+          )}
         </div>
       )}
     </div>

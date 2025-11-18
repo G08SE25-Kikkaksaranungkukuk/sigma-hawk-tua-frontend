@@ -1,6 +1,7 @@
-import { MapPin } from "lucide-react";
+import { MapPin, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Place } from "@/lib/types";
+import { ImageWithFallback } from "@/components/ImageWithFallback";
 
 interface PlaceSearchCardProps {
   place: Place;
@@ -8,18 +9,27 @@ interface PlaceSearchCardProps {
 }
 
 export function PlaceSearchCard({ place, onSelect }: PlaceSearchCardProps) {
+  const firstPhoto = place.photos_sample?.[0];
+  
+  // Debug logging
+  if (firstPhoto) {
+    console.log('PlaceSearchCard photo URL:', firstPhoto.photo_url_large || firstPhoto.photo_url);
+  }
+  
   return (
     <button
       onClick={onSelect}
-      className="w-full relative overflow-hidden rounded-lg border border-gray-800/70 hover:border-[#ff6600]/50 transition-all text-left group h-48"
+      className="w-full relative overflow-hidden rounded-lg border border-gray-800/70 hover:border-[#ff6600]/50 transition-all text-left group h-62"
     >
       {/* Background Image */}
       <div className="absolute inset-0 bg-gray-800/50">
-        {place.picture_url ? (
-          <img
-            src={place.picture_url}
+        {firstPhoto ? (
+          <ImageWithFallback
+            src={firstPhoto.photo_url_large || firstPhoto.photo_url}
             alt={place.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+            referrerPolicy="no-referrer"
+            crossOrigin="anonymous"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
@@ -33,13 +43,22 @@ export function PlaceSearchCard({ place, onSelect }: PlaceSearchCardProps) {
       {/* Content Overlay */}
       <div className="relative h-full flex flex-col justify-between p-4">
         {/* Top Section - Badge */}
-        <div className="flex justify-end">
-          {place.place_type && (
+        <div className="flex justify-between items-start gap-2">
+          {place.rating > 0 && (
             <Badge 
               variant="secondary" 
-              className="bg-[#ff6600]/90 text-white border-none hover:bg-[#ff6600] backdrop-blur-sm"
+              className="bg-[#ff6600]/90 text-white border-none hover:bg-[#ff6600] backdrop-blur-sm flex items-center gap-1"
             >
-              {place.place_type}
+              <Star className="h-3 w-3 fill-white" />
+              {place.rating.toFixed(1)}
+            </Badge>
+          )}
+          {place.opening_status && (
+            <Badge 
+              variant="secondary" 
+              className="bg-green-600/90 text-white border-none hover:bg-green-600 backdrop-blur-sm text-xs"
+            >
+              {place.opening_status}
             </Badge>
           )}
         </div>
@@ -50,16 +69,16 @@ export function PlaceSearchCard({ place, onSelect }: PlaceSearchCardProps) {
             {place.name}
           </h4>
 
-          {place.description && (
+          {place.summary && (
             <p className="text-white/90 text-sm line-clamp-2 leading-snug">
-              {place.description}
+              {place.summary}
             </p>
           )}
 
-          {place.address && (
+          {place.full_address && (
             <div className="flex items-center gap-1 text-white/80 text-xs">
               <MapPin className="h-3 w-3 shrink-0" />
-              <span className="truncate">{place.address}</span>
+              <span className="truncate">{place.full_address}</span>
             </div>
           )}
         </div>

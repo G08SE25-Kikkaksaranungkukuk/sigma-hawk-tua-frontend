@@ -1,103 +1,152 @@
-import { Users, MapPin, Calendar } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Users, MapPin, Calendar } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useRouter } from "next/navigation"
 
 interface Member {
-  id: string;
-  name: string;
-  avatar: string;
-  joinDate: string;
-  isHost?: boolean;
+    id: string
+    name: string
+    avatar: string
+    joinDate: string
+    isHost?: boolean
+    email: string
+    userId?: string // Add userId for secure routing
 }
 
 interface GroupMembersCardProps {
-  members: Member[];
-  totalMembers: number;
-  maxMembers: number;
+    members: Member[]
+    totalMembers: number
+    maxMembers: number
 }
 
-export function GroupMembersCard({ members, totalMembers, maxMembers }: GroupMembersCardProps) {
-  return (
-    <Card className="bg-gray-900/60 backdrop-blur-sm border-orange-500/20 rounded-2xl overflow-hidden">
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-white">
-          <Users className="w-5 h-5 text-[#ff6600]" />
-          Group Members
-          <Badge 
-            variant="secondary" 
-            className="bg-[rgba(255,102,0,0.15)] text-[#ff6600] border border-[rgba(255,102,0,0.3)] ml-auto"
-          >
-            {totalMembers}/{maxMembers}
-          </Badge>
-        </CardTitle>
-      </CardHeader>
-      
-      <CardContent className="space-y-4">
-        {/* Members List */}
-        <div className="space-y-3">
-          {members.map((member) => (
-            <div key={member.id} className="flex items-center gap-3 p-3 rounded-xl bg-[rgba(255,102,0,0.05)] border border-[rgba(255,102,0,0.1)] hover:bg-[rgba(255,102,0,0.1)] transition-colors">
-              {/* Member Avatar */}
-              <div className="relative">
-                <Avatar className="w-12 h-12 ring-2 ring-[#ff6600]/20">
-                  <AvatarImage src={member.avatar} alt={member.name} />
-                  <AvatarFallback className="bg-[#ff6600]/80 text-white text-sm">
-                    {member.name.slice(0, 2)}
-                  </AvatarFallback>
-                </Avatar>
-              </div>
+export function GroupMembersCard({
+    members,
+    totalMembers,
+    maxMembers,
+}: GroupMembersCardProps) {
+    const router = useRouter()
 
-              {/* Member Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <h4 className="text-white font-medium truncate">{member.name}</h4>
-                  {member.isHost && (
-                    <Badge 
-                      variant="secondary" 
-                      className="bg-[#ff6600] text-white text-xs px-1.5 py-0.5 h-auto"
+    const handleMemberClick = (member: Member) => {
+        console.log(
+            "Member clicked:",
+            member.name,
+            "User ID:",
+            member.userId || member.id
+        )
+
+        // Store user ID to email mapping for secure navigation
+        if (member.userId && member.email) {
+            const existingMap = sessionStorage.getItem("userIdToEmailMap")
+            const userIdToEmailMap = existingMap ? JSON.parse(existingMap) : {}
+            userIdToEmailMap[member.userId] = member.email
+            sessionStorage.setItem(
+                "userIdToEmailMap",
+                JSON.stringify(userIdToEmailMap)
+            )
+        }
+
+        // Use userId if available (for security), otherwise fall back to id for backwards compatibility
+        const identifier = member.userId || member.id
+        router.push(`/profile/view/${identifier}`)
+    }
+
+    return (
+        <Card className="bg-gray-900/60 backdrop-blur-sm border-orange-500/20 rounded-2xl overflow-hidden">
+            <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-white">
+                    <Users className="w-5 h-5 text-[#ff6600]" />
+                    Group Members
+                    <Badge
+                        variant="secondary"
+                        className="bg-[rgba(255,102,0,0.15)] text-[#ff6600] border border-[rgba(255,102,0,0.3)] ml-auto"
                     >
-                      Host
+                        {totalMembers}/{maxMembers}
                     </Badge>
-                  )}
-                </div>
-                <div className="flex items-center gap-4 mt-1">
-                  <div className="flex items-center gap-1 text-gray-400 text-sm">
-                    <Calendar className="w-3 h-3" />
-                    <span>Joined {member.joinDate}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+                </CardTitle>
+            </CardHeader>
 
-        {/* Show More Members Indicator */}
-        {totalMembers > members.length && (
-          <div className="text-center pt-2 border-t border-[rgba(255,102,0,0.25)]">
-            <p className="text-gray-400 text-sm">
-              +{totalMembers - members.length} more member{totalMembers - members.length !== 1 ? 's' : ''}
-            </p>
-          </div>
-        )}
+            <CardContent className="space-y-4">
+                {/* Members List */}
+                <div className="space-y-3">
+                    {members.map((member) => (
+                        <div
+                            key={member.id}
+                            className="flex items-center gap-3 p-3 rounded-xl bg-[rgba(255,102,0,0.05)] border border-[rgba(255,102,0,0.1)] hover:bg-[rgba(255,102,0,0.1)] transition-colors cursor-pointer"
+                            onClick={() => handleMemberClick(member)}
+                        >
+                            {/* Member Avatar */}
+                            <div className="relative">
+                                <Avatar className="w-12 h-12 ring-2 ring-[#ff6600]/20">
+                                    <AvatarImage
+                                        src={member.avatar}
+                                        alt={member.name}
+                                    />
+                                    <AvatarFallback className="bg-[#ff6600]/80 text-white text-sm">
+                                        {member.name.slice(0, 2)}
+                                    </AvatarFallback>
+                                </Avatar>
+                            </div>
 
-        {/* Available Spots */}
-        {totalMembers < maxMembers && (
-          <div className="bg-[rgba(255,102,0,0.1)] border border-[rgba(255,102,0,0.2)] rounded-xl p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-white font-medium">
-                  {maxMembers - totalMembers} spot{maxMembers - totalMembers !== 1 ? 's' : ''} available
-                </p>
-                <p className="text-gray-400 text-sm">Join this amazing group trip!</p>
-              </div>
-              <div className="w-12 h-12 bg-[rgba(255,102,0,0.2)] rounded-full flex items-center justify-center">
-                <Users className="w-6 h-6 text-[#ff6600]" />
-              </div>
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
+                            {/* Member Info */}
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                    <h4 className="text-white font-medium truncate">
+                                        {member.name}
+                                    </h4>
+                                    {member.isHost && (
+                                        <Badge
+                                            variant="secondary"
+                                            className="bg-[#ff6600] text-white text-xs px-1.5 py-0.5 h-auto"
+                                        >
+                                            Host
+                                        </Badge>
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-4 mt-1">
+                                    <div className="flex items-center gap-1 text-gray-400 text-sm">
+                                        <Calendar className="w-3 h-3" />
+                                        <span>Joined {member.joinDate}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Show More Members Indicator */}
+                {totalMembers > members.length && (
+                    <div className="text-center pt-2 border-t border-[rgba(255,102,0,0.25)]">
+                        <p className="text-gray-400 text-sm">
+                            +{totalMembers - members.length} more member
+                            {totalMembers - members.length !== 1 ? "s" : ""}
+                        </p>
+                    </div>
+                )}
+
+                {/* Available Spots */}
+                {totalMembers < maxMembers && (
+                    <div className="bg-[rgba(255,102,0,0.1)] border border-[rgba(255,102,0,0.2)] rounded-xl p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-white font-medium">
+                                    {maxMembers - totalMembers} spot
+                                    {maxMembers - totalMembers !== 1
+                                        ? "s"
+                                        : ""}{" "}
+                                    available
+                                </p>
+                                <p className="text-gray-400 text-sm">
+                                    Join this amazing group trip!
+                                </p>
+                            </div>
+                            <div className="w-12 h-12 bg-[rgba(255,102,0,0.2)] rounded-full flex items-center justify-center">
+                                <Users className="w-6 h-6 text-[#ff6600]" />
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    )
 }

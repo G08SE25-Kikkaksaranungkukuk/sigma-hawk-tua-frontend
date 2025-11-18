@@ -1,4 +1,5 @@
 import { Interest } from "./interest"
+import { Place } from "../place"
 
 export interface SearchGroupsParams {
   query?: string;
@@ -45,22 +46,16 @@ export interface Itinerary {
   place_links: string[];
 }
 
+export interface ItineraryGroupHistory {
+  id : number;
+  group_id : number;
+  itinerary_id : number;
+  created_at : Date;
+  itinerary : Itinerary
+}
+
 // Alias for backwards compatibility
 export type ItineraryResponse = Itinerary;
-
-export interface Place {
-  place_id: number;
-  name: string;
-  description?: string;
-  place_type?: string;
-  latitude?: number;
-  longitude?: number;
-  picture_url?: string;
-  phone_num?: string;
-  social_media?: string;
-  address?: string;
-  rating?: number;
-}
 
 export interface GroupResponse {
   group_id: number

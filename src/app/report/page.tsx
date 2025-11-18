@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useCurrentUser } from "@/lib/hooks/user";
 import React from "react";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { tokenService } from '@/lib/services/user/tokenService';
 import { z } from 'zod';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,15 +36,11 @@ const reportSchema = z.object({
 
 type ReportSchema = z.infer<typeof reportSchema>;
 
-const reportReasons = [
-    { id: "HARASSMENT", label: "🚫 Harassment", description: "Bullying, threats, or intimidation" },
-    { id: "INAPPROPRIATE_CONTENT", label: "⚠️ Inappropriate Content", description: "Offensive or unsuitable material" },
-    { id: "SPAM", label: "📧 Spam", description: "Repetitive or unwanted messages" },
-    { id: "FAKE_PROFILE", label: "🎭 Fake Profile", description: "False identity or impersonation" },
-    { id: "SCAM", label: "💰 Scam", description: "Fraudulent or deceptive behavior" },
-    { id: "VIOLENCE", label: "⚔️ Violence", description: "Threats or promotion of violence" },
-    { id: "OTHER", label: "❓ Other", description: "Other violations not listed above" },
-];
+// reportTags will be fetched from the backend endpoint /api/v2/reports/reasons
+// Expected shape (example): { success: true, data: { reasons: [{ id, key, label, emoji, description }, ...] } }
+const DEFAULT_REASONS: any[] = [];
+
+
 
 // Success Modal Component
 function ReportSuccess({ isOpen }: { isOpen: boolean }) {
@@ -52,7 +49,7 @@ function ReportSuccess({ isOpen }: { isOpen: boolean }) {
     return (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
-            
+
             <div className="relative z-50 max-w-md w-full mx-auto">
                 <div className="bg-gray-900/95 backdrop-blur-sm border border-orange-500/20 rounded-2xl p-8 text-center shadow-2xl animate-in fade-in zoom-in-95 duration-300">
                     {/* Success Icon */}
@@ -64,7 +61,7 @@ function ReportSuccess({ isOpen }: { isOpen: boolean }) {
                     <h2 className="text-2xl font-bold text-white mb-3">
                         Report Submitted
                     </h2>
-                    
+
                     <p className="text-gray-300 mb-6 leading-relaxed">
                         Thank you for your report. Our team will review it and take appropriate action if necessary.
                     </p>
@@ -75,7 +72,7 @@ function ReportSuccess({ isOpen }: { isOpen: boolean }) {
                         <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
                         <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce"></div>
                     </div>
-                    
+
                     <p className="text-sm text-orange-300 mt-4">
                         Redirecting to home page...
                     </p>
@@ -87,6 +84,42 @@ function ReportSuccess({ isOpen }: { isOpen: boolean }) {
 
 export default function ReportCreatePage() {
     const router = useRouter();
+    // fetched report tags
+    const [reportTags, setReportTags] = useState<any[]>(DEFAULT_REASONS);
+    const [tagsLoading, setTagsLoading] = useState<boolean>(false);
+
+    useEffect(() => {
+        let mounted = true;
+        const fetchTags = async () => {
+            setTagsLoading(true);
+            try {
+                const token = await tokenService.getAuthToken();
+                const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+                if (token) headers.Authorization = `Bearer ${token}`;
+
+                const baseUrl = (process.env.NEXT_PUBLIC_BASE_API_URL || 'http://localhost:8080').replace(/\/$/, '');
+                const res = await fetch(`${baseUrl}/api/v2/reports/reasons`, { headers });
+                if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+                const json = await res.json();
+                const raw: any[] = Array.isArray(json?.data?.reasons)
+                    ? json.data.reasons
+                    : Array.isArray(json?.reasons)
+                    ? json.reasons
+                    : Array.isArray(json?.data)
+                    ? json.data
+                    : Array.isArray(json)
+                    ? json
+                    : [];
+                if (mounted) setReportTags(raw.map((t) => ({ ...t, emoji: (function(s){ try { if (/\\u[0-9a-fA-F]{4}/.test(s)) return JSON.parse('"'+String(s).replace(/"/g,'\\"')+'"'); } catch(e){} return s; })(t?.emoji ?? '') } )));
+            } catch (err) {
+                console.warn('Failed to fetch report tags', err);
+            } finally {
+                if (mounted) setTagsLoading(false);
+            }
+        };
+        fetchTags();
+        return () => { mounted = false; };
+    }, []);
     const [formData, setFormData] = useState<ReportSchema>({ 
         title: '', 
         reason: '', 
@@ -95,7 +128,7 @@ export default function ReportCreatePage() {
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
-    
+
     const {
         currentUser,
         loading: userLoading,
@@ -121,12 +154,16 @@ export default function ReportCreatePage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (tagsLoading) {
+            alert('Please wait for report reasons to finish loading');
+            return;
+        }
         try {
             // Validate the form data
             reportSchema.parse(formData);
             console.log('Form submitted:', formData);
             setErrors({});
-            
+
             // Submit to API
             setLoading(true);
             await apiClient.post(
@@ -138,9 +175,9 @@ export default function ReportCreatePage() {
                 },
                 { withCredentials: true }
             );
-            
+
             setShowSuccessModal(true);
-            
+
             // Redirect after delay
             setTimeout(() => {
                 router.push("/home");
@@ -201,7 +238,7 @@ export default function ReportCreatePage() {
 
                     <CardContent className="p-6">
                         <form onSubmit={handleSubmit} className="space-y-6">
-                           
+
                             {/* Title Input */}
                             <div className="space-y-2">
                                 <Label className="text-orange-300 font-medium">
@@ -213,9 +250,8 @@ export default function ReportCreatePage() {
                                     placeholder="Brief title for the report"
                                     value={formData.title}
                                     onChange={(e) => handleChange('title', e.target.value)}
-                                    className={`bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-orange-500 focus:ring-orange-500/20 ${
-                                        errors.title ? 'border-red-500' : ''
-                                    }`}
+                                    className={`bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-orange-500 focus:ring-orange-500/20 ${errors.title ? 'border-red-500' : ''
+                                        }`}
                                     maxLength={100}
                                 />
                                 {errors.title && <p className="text-red-400 text-sm flex items-center gap-1">
@@ -229,25 +265,31 @@ export default function ReportCreatePage() {
                                 <Label className="text-orange-300 font-medium">
                                     Reason *
                                 </Label>
-                                <Select value={formData.reason} onValueChange={(value) => handleChange('reason', value)}>
+                                <Select value={formData.reason} onValueChange={(value) => handleChange('reason', value)} disabled={tagsLoading}>
                                     <SelectTrigger className={`pb-7 pt-7 bg-gray-800/50 border-gray-600 text-white focus:border-orange-500 focus:ring-orange-500/20 ${
                                         errors.reason ? 'border-red-500' : ''
                                     }`}>
                                         <SelectValue placeholder="Select reason" />
                                     </SelectTrigger>
                                     <SelectContent className="bg-gray-800 border-gray-600">
-                                        {reportReasons.map((reasonItem) => (
-                                            <SelectItem 
-                                                key={reasonItem.id} 
-                                                value={reasonItem.id}
-                                                className="text-white hover:bg-gray-700 focus:bg-gray-700"
-                                            >
-                                                <div>
-                                                    <div className="font-medium text-left">{reasonItem.label}</div>
-                                                    <div className="text-sm text-gray-400">{reasonItem.description}</div>
-                                                </div>
+                                        {tagsLoading ? (
+                                            <SelectItem value="__loading" disabled className="text-gray-400">
+                                                Loading...
                                             </SelectItem>
-                                        ))}
+                                        ) : (
+                                            reportTags.map((tag) => (
+                                                <SelectItem
+                                                    key={tag.id ?? tag.key}
+                                                    value={tag.key ?? String(tag.id)}
+                                                    className="text-white hover:bg-gray-700 focus:bg-gray-700"
+                                                >
+                                                    <div>
+                                                        <div className="font-medium text-left">{(tag.emoji ? `${tag.emoji} ` : '') + (tag.label ?? tag.key)}</div>
+                                                        <div className="text-sm text-gray-400">{tag.description}</div>
+                                                    </div>
+                                                </SelectItem>
+                                            ))
+                                        )}
                                     </SelectContent>
                                 </Select>
                                 {errors.reason && <p className="text-red-400 text-sm flex items-center gap-1">
@@ -266,9 +308,8 @@ export default function ReportCreatePage() {
                                     placeholder="Please provide details about the incident..."
                                     value={formData.description}
                                     onChange={(e) => handleChange('description', e.target.value)}
-                                    className={`bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-orange-500 focus:ring-orange-500/20 min-h-[120px] resize-none ${
-                                        errors.description ? 'border-red-500' : ''
-                                    }`}
+                                    className={`bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-orange-500 focus:ring-orange-500/20 min-h-[120px] resize-none ${errors.description ? 'border-red-500' : ''
+                                        }`}
                                     maxLength={500}
                                 />
                                 <div className="flex justify-between items-center">

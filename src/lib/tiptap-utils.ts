@@ -321,7 +321,7 @@ export const handleImageUpload = async (
   }
   onProgress?.({progress : 100})
 
-  return new URL(ret.path,"http://localhost:6969/").toString()
+  return new URL(ret.path,process.env.NEXT_PUBLIC_FILE_API_URL || "http://localhost:8080/").toString()
 }
 
 type ProtocolOptions = {
