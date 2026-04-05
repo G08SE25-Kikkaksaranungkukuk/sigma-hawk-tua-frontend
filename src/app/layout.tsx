@@ -1,8 +1,8 @@
 "use client";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { useRouter, usePathname } from "next/navigation";
-import { useEffect, useState, Suspense } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { AppHeader, AppFooter } from "../components/shared";
 import { useCurrentUser } from "../lib/hooks/user";
 import { 
@@ -29,6 +29,7 @@ export default function RootLayout({
 }>) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [triggerRefresh, setTriggerRefresh] = useState(false);
   
   // Define pages where header should not be shown
@@ -45,9 +46,7 @@ export default function RootLayout({
 
   // Check if profile was updated and trigger refresh
   useEffect(() => {
-    // Check URL params directly instead of using useSearchParams hook
-    const urlParams = new URLSearchParams(window.location.search);
-    const profileUpdated = urlParams.get('profileUpdated');
+    const profileUpdated = searchParams.get('profileUpdated');
     const localStorageFlag = localStorage.getItem('profileUpdated');
     
     if (profileUpdated === 'true' || localStorageFlag === 'true') {
@@ -70,7 +69,7 @@ export default function RootLayout({
         setTriggerRefresh(false);
       }, 100);
     }
-  }, [pathname]); // Changed dependency from searchParams to pathname
+  }, [searchParams]);
 
   // Additional check on component mount for localStorage flag
   useEffect(() => {

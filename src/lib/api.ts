@@ -37,36 +37,15 @@ const apiClient: AxiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_BASE_API_URL,      
   headers: { "Content-Type": "application/json" },
   // timeout: 15000,                                   // optional: add a timeout
-  withCredentials: true,                            // optional: set default if you always need cookies
+  // withCredentials: true,                            // optional: set default if you always need cookies
 });
 
-// Helper function to get accessToken from cookies
-function getAccessTokenFromCookies(): string | null {
-  if (typeof document === 'undefined') return null;
-  
-  const cookies = document.cookie.split(';');
-  const accessTokenCookie = cookies.find(cookie => 
-    cookie.trim().startsWith('accessToken=')
-  );
-  
-  if (accessTokenCookie) {
-    return accessTokenCookie.split('=')[1];
-  }
-  
-  return null;
-}
-
-// Attach auth header with token from cookies
-apiClient.interceptors.request.use((config) => {
-  const token = getAccessTokenFromCookies();
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-    console.log('[apiClient] Adding Authorization header to request:', config.url, 'Token preview:', token.substring(0, 20) + '...');
-  } else {
-    console.log('[apiClient] No token found in cookies for request:', config.url);
-  }
-  return config;
-});
+// Optional: attach auth header if you use tokens
+// apiClient.interceptors.request.use((config) => {
+//   const token = getTokenSomehow();
+//   if (token) config.headers.Authorization = `Bearer ${token}`;
+//   return config;
+// });
 
 apiClient.interceptors.response.use(
   (response) => {

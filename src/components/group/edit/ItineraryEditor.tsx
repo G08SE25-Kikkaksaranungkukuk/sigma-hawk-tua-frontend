@@ -4,21 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { MapPin, Plus, X, Calendar, ArrowLeft } from "lucide-react";
-import { Itinerary, ItineraryRequest, Place } from '@/lib/types'
+import { Badge } from "@/components/ui/badge";
+import { MapPin, Star, Plus, X, Calendar, ArrowLeft, Link2 } from "lucide-react";
+import { Itinerary, ItineraryRequest } from '@/lib/types'
 import { groupService } from "@/lib/services/group/group-service";
 import { toast } from "sonner";
-import { PlaceSearchModal } from "@/components/group/place/PlaceSearchModal";
-import { PlacePreviewCard } from "@/components/group/place/PlacePreviewCard";
-
-// Extended Itinerary type with fetched places
-interface ItineraryWithPlaces extends Itinerary {
-  places?: Place[];
-}
 
 interface ItineraryEditorProps {
   groupId: number;
-  itinerary?: ItineraryWithPlaces;
+  itinerary?: Itinerary;
   onSave: () => void;
   onCancel: () => void;
 }
@@ -31,8 +25,8 @@ export function ItineraryEditor({ groupId, itinerary, onSave, onCancel }: Itiner
     end_date: itinerary?.end_date ? formatDateForInput(itinerary.end_date) : ""
   });
 
-  const [places, setPlaces] = useState<Place[]>(itinerary?.places || []);
-  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [places, setPlaces] = useState<string[]>(itinerary?.place_links || []);
+  const [newPlaceLink, setNewPlaceLink] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleCreateItinerary = async (itineraryData: ItineraryRequest) => {
@@ -60,19 +54,23 @@ export function ItineraryEditor({ groupId, itinerary, onSave, onCancel }: Itiner
     }
   }
 
-  const handleSelectPlace = (place: Place) => {
-    // Check if place already exists (by name and address)
-    const isDuplicate = places.some(
-      (p) => p.name === place.name && p.full_address === place.full_address
-    );
-
-    if (isDuplicate) {
-      toast.error("This place is already in your itinerary");
+  const handleAddPlace = () => {
+    const trimmedLink = newPlaceLink.trim();
+    
+    if (!trimmedLink) {
+      toast.error("Please enter a Google Maps link");
       return;
     }
 
-    setPlaces([...places, place]);
-    toast.success("Place added to itinerary");
+    // Check if link already exists
+    if (places.includes(trimmedLink)) {
+      toast.error("This place link is already added");
+      return;
+    }
+
+    setPlaces([...places, trimmedLink]);
+    setNewPlaceLink("");
+    toast.success("Place link added to itinerary");
   };
 
   const handleRemovePlace = (index: number) => {
@@ -92,28 +90,28 @@ export function ItineraryEditor({ groupId, itinerary, onSave, onCancel }: Itiner
     setIsSubmitting(true);
 
     try {
+      const itineraryData: ItineraryRequest = {
+        title: formData.title,
+        description: formData.description,
+        start_date: new Date(formData.start_date),
+        end_date: new Date(formData.end_date),
+        place_links: places
+      };
+
       if (itinerary?.itinerary_id) {
-        // For update, we need to include all Itinerary fields with place_links
+        // For update, we need to include all Itinerary fields
         const updateData: Itinerary = {
           itinerary_id: itinerary.itinerary_id,
           title: formData.title,
           description: formData.description,
           start_date: new Date(formData.start_date),
           end_date: new Date(formData.end_date),
-          place_links: places.map(p => p.bussiness_id), // Send business IDs, not Place objects
+          place_links: places,
           created_at: itinerary.created_at
         };
         await updateItinerary(updateData);
       } else {
-        // For create, use ItineraryRequest format
-        const createData: ItineraryRequest = {
-          title: formData.title,
-          description: formData.description,
-          start_date: new Date(formData.start_date),
-          end_date: new Date(formData.end_date),
-          place_links: places.map(p => p.bussiness_id)
-        };
-        await handleCreateItinerary(createData);
+        await handleCreateItinerary(itineraryData);
       }
     } catch (error) {
       // Error handling is done in the individual functions
@@ -242,60 +240,58 @@ export function ItineraryEditor({ groupId, itinerary, onSave, onCancel }: Itiner
         {/* Places Card */}
         <Card className="bg-gray-900/60 backdrop-blur-sm border-orange-500/20">
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-orange-400">Places</CardTitle>
-                <CardDescription className="text-orange-200/60">
-                  Add places to visit using the search feature
-                </CardDescription>
-              </div>
-              <Button 
-                type="button" 
-                onClick={() => setIsSearchModalOpen(true)}
-                className="bg-gradient-to-r from-[#ff6600] to-[#ff8533] hover:from-[#ff7722] hover:to-[#ff9944] text-white shadow-lg shadow-[#ff6600]/30 hover:shadow-[#ff6600]/50 transition-all"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Search Places
-              </Button>
+            <div>
+              <CardTitle className="text-orange-400">Places</CardTitle>
+              <CardDescription className="text-orange-200/60">
+                Add Google Maps links for places to visit (placeholder for Google API fetch)
+              </CardDescription>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Add Place Input */}
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <Input
+                  placeholder="Paste Google Maps link here..."
+                  value={newPlaceLink}
+                  onChange={(e) => setNewPlaceLink(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddPlace();
+                    }
+                  }}
+                  className="bg-[#0b0b0c]/50 border-gray-700/50 text-white placeholder:text-gray-500 focus:border-orange-400/50 focus:ring-orange-400/30"
+                />
+              </div>
+              <Button 
+                type="button" 
+                onClick={handleAddPlace}
+                className="bg-gradient-to-r from-[#ff6600] to-[#ff8533] hover:from-[#ff7722] hover:to-[#ff9944] text-white shadow-lg shadow-[#ff6600]/30 hover:shadow-[#ff6600]/50 transition-all"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add
+              </Button>
+            </div>
+
             {/* Places List */}
             {places.length === 0 ? (
               <div className="text-center py-12 border-2 border-dashed border-gray-700/50 rounded-lg bg-[#0b0b0c]/30">
-                <MapPin className="mx-auto h-12 w-12 text-orange-400/50 mb-4" />
+                <Link2 className="mx-auto h-12 w-12 text-orange-400/50 mb-4" />
                 <h4 className="text-orange-200/90 text-lg font-semibold">No places added yet</h4>
                 <p className="text-orange-200/60 mt-2">
-                  Start building your itinerary by searching for places
+                  Start building your itinerary by adding Google Maps links
                 </p>
-                <Button 
-                  type="button" 
-                  variant="outline"
-                  onClick={() => setIsSearchModalOpen(true)}
-                  className="mt-4 border-orange-400/50 text-orange-200 hover:bg-orange-500/10 hover:text-orange-400"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add First Place
-                </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="space-y-3">
                 {places.map((place, index) => (
-                  <div key={index} className="relative group">
-                    <PlacePreviewCard place={place} />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-red-500/90 hover:bg-red-600 text-white rounded-full h-6 w-6"
-                      onClick={() => handleRemovePlace(index)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                    <div className="absolute bottom-2 left-2 bg-[#ff6600]/90 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
-                      {index + 1}
-                    </div>
-                  </div>
+                  <PlaceCard
+                    key={index}
+                    place={place}
+                    index={index}
+                    onRemove={() => handleRemovePlace(index)}
+                  />
                 ))}
               </div>
             )}
@@ -321,18 +317,51 @@ export function ItineraryEditor({ groupId, itinerary, onSave, onCancel }: Itiner
           </Button>
         </div>
       </form>
-
-      {/* Place Search Modal */}
-      <PlaceSearchModal
-        isOpen={isSearchModalOpen}
-        onClose={() => setIsSearchModalOpen(false)}
-        onSelectPlace={handleSelectPlace}
-      />
     </div>
   );
 }
 
-function MapPreview({ places }: { places: Place[] }) {
+function PlaceCard({ place, index, onRemove }: { place: string; index: number; onRemove: () => void }) {
+  return (
+    <div className="relative group flex items-center gap-3 p-3 border border-gray-700/50 rounded-lg hover:border-orange-400/50 transition-colors bg-[#0b0b0c]/30">
+      {/* Place Number Badge */}
+      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-[#ff6600] to-[#ff8533] text-white font-semibold shrink-0 shadow-lg shadow-[#ff6600]/30">
+        {index + 1}
+      </div>
+
+      {/* Link Icon */}
+      <Link2 className="h-5 w-5 text-orange-400 shrink-0" />
+
+      {/* Place Link */}
+      <div className="flex-1 min-w-0">
+        <a 
+          href={place}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-orange-200/90 hover:text-orange-400 truncate block transition-colors"
+        >
+          {place}
+        </a>
+        <p className="text-xs text-orange-200/50 mt-0.5">
+          Google Maps Link (placeholder for API fetch)
+        </p>
+      </div>
+
+      {/* Remove Button */}
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/10 hover:text-red-400"
+        onClick={onRemove}
+      >
+        <X className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
+
+function MapPreview({ places }: { places: string[] }) {
   return (
     <div className="relative w-full h-64 bg-[#0b0b0c]/50 rounded-lg overflow-hidden border border-gray-800/50">
       {/* Map Background with Grid Pattern */}
@@ -366,12 +395,9 @@ function MapPreview({ places }: { places: Place[] }) {
               >
                 <div className="relative group">
                   {/* eslint-disable-next-line react/forbid-dom-props */}
-                  <MapPin 
-                    className="h-8 w-8 fill-[#ff6600] text-[#ff8533] drop-shadow-lg animate-bounce pin-animation" 
-                    style={{ animationDelay: `${index * 0.1}s`, animationDuration: '2s' }} 
-                  />
+                  <MapPin className="h-8 w-8 fill-[#ff6600] text-[#ff8533] drop-shadow-lg animate-bounce pin-animation" style={{ animationDelay: `${index * 0.1}s`, animationDuration: '2s' }} />
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-[#12131a]/95 backdrop-blur-sm border border-orange-400/30 rounded shadow-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                    <p className="text-xs text-orange-200/90 font-semibold">{place.name}</p>
+                    <p className="text-xs text-orange-200/90">Place {index + 1}</p>
                   </div>
                 </div>
               </div>

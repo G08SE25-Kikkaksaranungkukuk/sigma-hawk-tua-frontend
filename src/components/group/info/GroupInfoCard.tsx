@@ -3,17 +3,11 @@
 import { useState, useEffect } from "react";
 import { ExpandableSection } from "./ExpandableSection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Interest, Member, Itinerary, Place } from "@/lib/types";
+import { Interest, Member, ItineraryResponse } from "@/lib/types";
 import { ItineraryCard } from "@/components/group/Itinerary/ItineraryCard";
 import { groupService } from "@/lib/services/group/group-service";
-import { placeService } from "@/lib/services/place/placeService";
 import { CalendarDays, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-
-// Extended Itinerary type with fetched places
-interface ItineraryWithPlaces extends Itinerary {
-  places?: Place[];
-}
 
 export interface GroupInfoProps {
   group_id: number
@@ -28,7 +22,7 @@ export interface GroupInfoProps {
 }
 
 export function GroupInfoCard({ groupInfo }: { groupInfo: GroupInfoProps }) {
-  const [itineraries, setItineraries] = useState<ItineraryWithPlaces[]>([]);
+  const [itineraries, setItineraries] = useState<ItineraryResponse[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -39,37 +33,7 @@ export function GroupInfoCard({ groupInfo }: { groupInfo: GroupInfoProps }) {
     try {
       setLoading(true);
       const data = await groupService.getItineraries(groupInfo.group_id.toString());
-      
-      // Fetch place details for each itinerary
-      const itinerariesWithPlaces = await Promise.all(
-        data.map(async (itinerary) => {
-          if (!itinerary.place_links || itinerary.place_links.length === 0) {
-            return { ...itinerary, places: [] };
-          }
-
-          // Fetch details for each business ID
-          const placesPromises = itinerary.place_links.map(async (businessId) => {
-            try {
-              const place = await placeService.getBusinessDetails(businessId);
-              return place;
-            } catch (error) {
-              console.error(`Error fetching place ${businessId}:`, error);
-              return null;
-            }
-          });
-
-          const places = await Promise.all(placesPromises);
-          // Filter out null values (failed requests)
-          const validPlaces = places.filter((place): place is Place => place !== null);
-
-          return {
-            ...itinerary,
-            places: validPlaces
-          };
-        })
-      );
-
-      setItineraries(itinerariesWithPlaces);
+      setItineraries(data);
     } catch (error) {
       console.error("Error fetching itineraries:", error);
       toast.error("Failed to load itineraries");

@@ -7,7 +7,6 @@ import { ItineraryEditor } from "@/components/group/edit/ItineraryEditor";
 import { ItineraryCard } from "@/components/group/Itinerary/ItineraryCard";
 import { Itinerary, Place } from "@/lib/types";
 import { groupService } from "@/lib/services/group/group-service";
-import { placeService } from "@/lib/services/place/placeService";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,15 +18,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-// Extended Itinerary type with fetched places
-interface ItineraryWithPlaces extends Itinerary {
-  places?: Place[];
-}
-
 export function GroupItineraries({ groupId }: { groupId: number }) {
-  const [itineraries, setItineraries] = useState<ItineraryWithPlaces[]>([]);
+  const [itineraries, setItineraries] = useState<Itinerary[]>([]);
   const [isEditing, setIsEditing] = useState(false);
-  const [editingItinerary, setEditingItinerary] = useState<ItineraryWithPlaces | undefined>(undefined);
+  const [editingItinerary, setEditingItinerary] = useState<Itinerary | undefined>(undefined);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -36,37 +30,7 @@ export function GroupItineraries({ groupId }: { groupId: number }) {
     try {
       setIsLoading(true);
       const data = await groupService.getItineraries(groupId.toString());
-      
-      // Fetch place details for each itinerary
-      const itinerariesWithPlaces = await Promise.all(
-        data.map(async (itinerary) => {
-          if (!itinerary.place_links || itinerary.place_links.length === 0) {
-            return { ...itinerary, places: [] };
-          }
-
-          // Fetch details for each business ID
-          const placesPromises = itinerary.place_links.map(async (businessId) => {
-            try {
-              const place = await placeService.getBusinessDetails(businessId);
-              return place;
-            } catch (error) {
-              console.error(`Error fetching place ${businessId}:`, error);
-              return null;
-            }
-          });
-
-          const places = await Promise.all(placesPromises);
-          // Filter out null values (failed requests)
-          const validPlaces = places.filter((place): place is Place => place !== null);
-
-          return {
-            ...itinerary,
-            places: validPlaces
-          };
-        })
-      );
-
-      setItineraries(itinerariesWithPlaces);
+      setItineraries(data);
     } catch (error) {
       console.error("Error fetching itineraries:", error);
       toast.error("Failed to load itineraries");
@@ -84,7 +48,7 @@ export function GroupItineraries({ groupId }: { groupId: number }) {
     setIsEditing(true);
   };
 
-  const handleEditItinerary = (itinerary: ItineraryWithPlaces) => {
+  const handleEditItinerary = (itinerary: Itinerary) => {
     setEditingItinerary(itinerary);
     setIsEditing(true);
   };
@@ -97,7 +61,7 @@ export function GroupItineraries({ groupId }: { groupId: number }) {
 
   const handleDeleteItinerary = async (id: number) => {
     try {
-      await groupService.deleteItinerary(String(groupId), id);
+      await groupService.deleteItinerary(id);
       toast.success("Itinerary deleted successfully");
       // Refetch itineraries after delete
       await fetchItineraries();

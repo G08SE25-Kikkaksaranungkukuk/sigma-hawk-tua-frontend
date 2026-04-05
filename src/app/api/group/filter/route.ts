@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     if (searchParams.get("page")) params.append("page", searchParams.get("page")!);
     if (searchParams.get("page_size")) params.append("page_size", searchParams.get("page_size")!);
 
-    const backendUrl = `${process.env.NEXT_PUBLIC_BASE_API_URL}/api/v1/group/filter?${params.toString()}`;   
+    const backendUrl = `http://localhost:8080/api/v1/group/filter?${params.toString()}`;   
     try {
         const res = await axios.get(backendUrl);
         return NextResponse.json(res.data);
